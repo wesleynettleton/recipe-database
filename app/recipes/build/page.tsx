@@ -248,18 +248,24 @@ function BuildRecipePageComponent() {
     if (!allergies) return []
     if (typeof allergies === 'string') {
       try {
-        allergies = JSON.parse(allergies)
+        const parsed = JSON.parse(allergies)
+        // If parsing succeeds, it's likely a JSON string of our objects, so re-run with the parsed version
+        if (Array.isArray(parsed)) {
+            return parseAllergies(parsed)
+        }
       } catch {
-        return []
+        // If it fails to parse, treat it as a simple comma-separated string, e.g., "Gluten,Soya"
+        return allergies.split(',').map(name => ({ name: name.trim(), status: 'has' }))
       }
     }
     if (Array.isArray(allergies)) {
       return allergies.map(a => {
         if (typeof a === 'string') {
-          const [name, status] = a.split(':')
-          return { name, status: (status as 'has' | 'may') || 'has' }
+          // Handles simple strings from the initial search result, e.g., ["Gluten", "Soya"]
+          return { name: a, status: 'has' }
         }
         if (typeof a === 'object' && a.name && a.status) {
+          // Handles the internal format, e.g., [{ name: 'Gluten', status: 'has' }]
           return a
         }
         return null
