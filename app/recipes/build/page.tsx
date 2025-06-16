@@ -185,6 +185,9 @@ function BuildRecipePageComponent() {
     setSelectedIngredients(selectedIngredients.filter((_, i) => i !== index))
   }
 
+  const totalCost = selectedIngredients.reduce((sum, ing) => sum + ing.cost, 0)
+  const costPerServing = servings > 0 ? totalCost / servings : 0
+
   const saveRecipe = async () => {
     if (!recipeName || selectedIngredients.length === 0) {
       setSaveMessage('Please enter a recipe name and add at least one ingredient.')
@@ -210,7 +213,7 @@ function BuildRecipePageComponent() {
       photo,
       selectedIngredients: ingredientsForApi,
       totalCost,
-      costPerServing
+      costPerServing,
     }
 
     try {
@@ -240,9 +243,6 @@ function BuildRecipePageComponent() {
       setIsSaving(false)
     }
   }
-
-  const totalCost = selectedIngredients.reduce((sum, ing) => sum + ing.cost, 0)
-  const costPerServing = servings > 0 ? totalCost / servings : 0
 
   const parseAllergies = (allergies: any): { name: string; status: 'has' | 'may' }[] => {
     if (!allergies) return []
@@ -456,12 +456,31 @@ function BuildRecipePageComponent() {
               <div className="border-t border-gray-200 pt-4">
                 <button
                   onClick={saveRecipe}
-                  disabled={isSaving}
-                  className="w-full px-6 py-3 bg-green-600 text-white font-bold rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isSaving || !recipeName || selectedIngredients.length === 0}
+                  className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-md hover:bg-blue-700 disabled:bg-blue-300 transition duration-300"
                 >
                   {isSaving ? 'Saving...' : 'Save Recipe'}
                 </button>
-                {saveMessage && <p className="text-sm text-center mt-4">{saveMessage}</p>}
+                {saveMessage && <p className="text-center text-gray-600 mt-4">{saveMessage}</p>}
+              </div>
+
+              {/* Recipe Summary */}
+              <div className="bg-white p-6 rounded-lg shadow">
+                <h3 className="text-xl font-semibold text-gray-800 mb-4">Recipe Summary</h3>
+                <div className="space-y-3 text-gray-700">
+                  <div className="flex justify-between">
+                    <span>Total Cost:</span>
+                    <span className="font-semibold">£{totalCost.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Servings:</span>
+                    <span className="font-semibold">{servings}</span>
+                  </div>
+                  <div className="flex justify-between border-t pt-3 mt-3">
+                    <span className="font-bold">Cost per Serving:</span>
+                    <span className="font-bold">£{costPerServing.toFixed(2)}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
