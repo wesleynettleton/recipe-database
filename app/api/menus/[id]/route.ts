@@ -31,7 +31,7 @@ export async function DELETE(request: Request, context: { params: { id: string }
     if (!menuDate) {
       return NextResponse.json({ success: false, error: 'Menu date is required' }, { status: 400 });
     }
-    const deleted = db.deleteMenuByDate(menuDate);
+    const deleted = await db.deleteMenuByDate(menuDate);
     if (deleted) {
       return NextResponse.json({ success: true, message: 'Menu deleted successfully' });
     } else {

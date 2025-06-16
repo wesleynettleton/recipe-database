@@ -192,25 +192,31 @@ function BuildMenuPageComponent() {
     setIsLoading(true)
     setError(null)
     try {
+      console.log('[Menu Builder] Fetching menu for date:', date)
       const response = await fetch(`/api/menus?date=${date}`)
       if (response.ok) {
         const data = await response.json()
+        console.log('[Menu Builder] API response:', data)
         if (data.success && data.menu) {
           setMenuName(data.menu.name || '')
           setWeeklyMenu(data.menu.weeklyMenu || initialWeeklyMenu)
+          console.log('[Menu Builder] Loaded menu:', data.menu)
         } else {
           setMenuName('')
           setWeeklyMenu(initialWeeklyMenu)
+          console.log('[Menu Builder] No menu found, resetting form')
         }
       } else {
         setError('Failed to load menu for the selected date.')
         setMenuName('')
         setWeeklyMenu(initialWeeklyMenu)
+        console.log('[Menu Builder] API response not ok')
       }
     } catch (err) {
       setError('An error occurred while loading menu data.')
       setMenuName('')
       setWeeklyMenu(initialWeeklyMenu)
+      console.error('[Menu Builder] Error loading menu:', err)
     } finally {
       setIsLoading(false)
     }

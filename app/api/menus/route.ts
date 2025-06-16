@@ -30,12 +30,13 @@ export async function GET(request: NextRequest) {
     const date = searchParams.get('date')
     const db = getDatabase()
     
-    const { menu, weekStartDate } = await db.getMenuForWeek(date)
+    console.log('[API /api/menus] Requested date:', date)
+    const menu = await db.getMenuForWeek(date)
+    console.log('[API /api/menus] DB result:', menu)
 
     return NextResponse.json({
       success: true,
-      menu,
-      weekStartDate
+      menu
     })
 
   } catch (error) {

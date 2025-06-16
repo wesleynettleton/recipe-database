@@ -346,7 +346,11 @@ export default function IngredientsPage() {
               </div>
               <div className="bg-white rounded-lg p-4 shadow">
                 <div className="text-2xl font-bold text-green-600">
-                  {ingredients.filter(i => i.allergies.length === 0).length}
+                  {ingredients.filter(i => {
+                    const allergies = parseAllergies(i.allergies);
+                    // Only count as allergy-free if all allergies have "no" status
+                    return allergies.length > 0 && allergies.every(a => a.status === 'no');
+                  }).length}
                 </div>
                 <div className="text-sm text-gray-500">Allergy-Free Items</div>
               </div>
