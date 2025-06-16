@@ -1,0 +1,9 @@
+Please create a file named `allergy-form-template.xlsx` in the root of your project. This file should be an Excel spreadsheet with the same layout as the screenshot you provided. I will use this as a template to populate the allergy data.
+
+Specifically, it should have:
+- A cell where I can put the week's date range (e.g., "WEEK 2 - 09/06/25 - 13/06/25").
+- The title "Food Allergens & Intolerances : Ingredient List".
+- The allergen headers (Celery, Gluten, etc.).
+- The day headers (Monday, Tuesday, etc.).
+
+I will populate the food items and the checkmarks in the corresponding cells. Let me know when you have created this file.
