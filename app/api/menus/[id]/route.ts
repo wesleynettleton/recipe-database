@@ -42,4 +42,6 @@ export async function DELETE(request: Request, context: { params: { id: string }
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     return NextResponse.json({ success: false, error: 'Failed to delete menu', details: errorMessage }, { status: 500 });
   }
-} 
+}
+
+// Force redeploy: trivial comment to ensure Vercel uses latest code 
