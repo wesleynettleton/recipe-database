@@ -10,7 +10,7 @@ export async function GET(request: Request, context: { params: { id: string } })
       return NextResponse.json({ success: false, error: 'Menu date is required' }, { status: 400 });
     }
 
-    const menu = db.getMenuByDate(menuDate);
+    const menu = await db.getMenuByDate(menuDate);
 
     if (menu) {
       return NextResponse.json({ success: true, menu });
