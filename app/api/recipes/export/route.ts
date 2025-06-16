@@ -134,20 +134,28 @@ async function generatePDFHTML(recipe: RecipeWithIngredients, db: any, templateP
 
   // Generate table rows for ingredients with separate allergen columns
   const ingredientRows = (recipe.ingredients || []).map((recipeIngredient: any) => {
-    const ingredient = recipeIngredient.ingredient
     const containsAllergens: string[] = []
     const mayContainAllergens: string[] = []
     
-    // Parse allergies from the ingredient
-    if (ingredient.allergies && ingredient.allergies.length > 0) {
-      ingredient.allergies.forEach((allergyString: string) => {
-        const [allergen, status] = allergyString.split(':')
-        if (status === 'has') {
-          containsAllergens.push(allergen.charAt(0).toUpperCase() + allergen.slice(1))
-        } else if (status === 'may') {
-          mayContainAllergens.push(allergen.charAt(0).toUpperCase() + allergen.slice(1))
+    // Parse allergies from ingredientAllergies
+    if (recipeIngredient.ingredientAllergies) {
+      try {
+        const allergies = JSON.parse(recipeIngredient.ingredientAllergies)
+        if (Array.isArray(allergies)) {
+          allergies.forEach((allergy: any) => {
+            const allergen = typeof allergy === 'string' ? allergy.split(':')[0] : allergy.allergy
+            const status = typeof allergy === 'string' ? allergy.split(':')[1] : allergy.status
+            
+            if (status === 'has') {
+              containsAllergens.push(allergen.charAt(0).toUpperCase() + allergen.slice(1))
+            } else if (status === 'may') {
+              mayContainAllergens.push(allergen.charAt(0).toUpperCase() + allergen.slice(1))
+            }
+          })
         }
-      })
+      } catch (error) {
+        console.error('Error parsing allergies:', error)
+      }
     }
 
     // Generate contains allergen HTML
@@ -155,7 +163,7 @@ async function generatePDFHTML(recipe: RecipeWithIngredients, db: any, templateP
     if (containsAllergens.length > 0) {
       containsHTML += `
         <div class="allergen-list">
-          ${containsAllergens.map(allergen => `<span class="allergen-badge">${allergen}</span>`).join('')}
+          ${containsAllergens.map(allergen => `<span class="contains-badge">${allergen}</span>`).join('')}
         </div>
       `
     } else {
@@ -179,7 +187,7 @@ async function generatePDFHTML(recipe: RecipeWithIngredients, db: any, templateP
     return `
       <tr>
         <td><div class="ingredient-code">${recipeIngredient.originalProductCode}</div></td>
-        <td><div class="ingredient-name">${ingredient.name}</div></td>
+        <td><div class="ingredient-name">${recipeIngredient.ingredientName}</div></td>
         <td>
           <div class="quantity-unit">
             <span class="quantity">${recipeIngredient.quantity}</span>

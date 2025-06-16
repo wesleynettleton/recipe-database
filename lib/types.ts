@@ -56,6 +56,7 @@ export interface RecipeIngredient {
   ingredientPrice?: number;
   ingredientWeight?: number;
   ingredientUnit?: string;
+  ingredientAllergies?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -65,7 +66,7 @@ export interface RecipeWithIngredients extends Recipe {
     ingredient: IngredientWithAllergies;
     cost: number;
   })[];
-  allergies: string[];
+  allergies?: string[];
 }
 
 export interface UploadResult {

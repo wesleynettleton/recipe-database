@@ -84,7 +84,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
     const writeRecipeRow = async (partialRecipe: any, rowIndex: number) => {
         if (!partialRecipe || !partialRecipe.id) return;
         
-        const recipe = await db.getRecipeWithIngredients(partialRecipe.id, true);
+        const recipe = await db.getRecipeWithIngredients(partialRecipe.id);
         if (!recipe) return;
 
         // Write recipe name and code to column A
@@ -92,11 +92,32 @@ export async function GET(request: Request, { params }: { params: { id: string }
         sheet.cell(`A${rowIndex}`).value(recipeName);
 
         // Get all unique allergies for the recipe, excluding 'may'
-        const recipeAllergies = new Set(
-          recipe.allergies
-            .filter(a => a.endsWith(':has'))
-            .map(a => a.split(':')[0])
-        );
+        const recipeAllergies = new Set<string>();
+        
+        // Safely process allergies from ingredients
+        if (recipe.ingredients && Array.isArray(recipe.ingredients)) {
+            recipe.ingredients.forEach(ingredient => {
+                if (ingredient.ingredientAllergies) {
+                    try {
+                        const allergies = JSON.parse(ingredient.ingredientAllergies);
+                        if (Array.isArray(allergies)) {
+                            allergies.forEach((allergy: string | { allergy: string; status: string }) => {
+                                if (typeof allergy === 'string') {
+                                    const [name, status] = allergy.split(':');
+                                    if (status === 'has') {
+                                        recipeAllergies.add(name);
+                                    }
+                                } else if (typeof allergy === 'object' && allergy.allergy && allergy.status === 'has') {
+                                    recipeAllergies.add(allergy.allergy);
+                                }
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error parsing allergies for ingredient:', ingredient.ingredientName, error);
+                    }
+                }
+            });
+        }
         
         // Place a checkmark in the correct column for each allergy
         for (const allergy of Array.from(recipeAllergies)) {

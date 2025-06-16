@@ -3,17 +3,22 @@ import { getDatabase } from '@/lib/database'
 
 export async function GET(request: Request) {
   try {
+    console.log('GET /api/recipes called')
     const { searchParams } = new URL(request.url)
     const query = searchParams.get('q')
+    console.log('Search query:', query)
     const db = getDatabase()
 
     let recipes
     if (query) {
+      console.log('Searching recipes with query:', query)
       recipes = await db.searchRecipes(query)
     } else {
+      console.log('Fetching all recipes')
       recipes = await db.getAllRecipes()
     }
     
+    console.log('Found recipes:', recipes.length)
     return NextResponse.json({ success: true, recipes })
   } catch (error) {
     console.error('Failed to fetch recipes:', error)
@@ -69,7 +74,7 @@ export async function POST(request: Request) {
     for (const ingredient of selectedIngredients) {
       await database.addRecipeIngredient({
         recipeId,
-        productCode: ingredient.productCode,
+        originalProductCode: ingredient.originalProductCode,
         quantity: ingredient.quantity,
         unit: ingredient.unit || null,
         notes: ingredient.notes || null

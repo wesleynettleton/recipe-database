@@ -25,7 +25,12 @@ export async function GET(
       )
     }
 
-    return NextResponse.json({ recipe })
+    console.log('Recipe data from database:', JSON.stringify(recipe, null, 2))
+    console.log('First ingredient:', recipe.ingredients?.[0])
+    console.log('First ingredient allergies (raw):', recipe.ingredients?.[0]?.ingredientAllergies)
+    console.log('First ingredient allergies (parsed):', JSON.parse(recipe.ingredients?.[0]?.ingredientAllergies || '[]'))
+
+    return NextResponse.json({ success: true, recipe })
   } catch (error) {
     console.error(`Error fetching recipe ${context.params.id}:`, error)
     return NextResponse.json(

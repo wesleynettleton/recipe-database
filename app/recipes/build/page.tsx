@@ -24,7 +24,7 @@ interface RecipeIngredient {
   notes?: string
   price: number
   cost: number
-  allergies: any[]
+  allergies: { name: string; status: 'has' | 'may' }[]
   pricePerUnit: number
   baseWeight?: number
   baseUnit?: string
@@ -142,6 +142,8 @@ function BuildRecipePageComponent() {
   }
 
   const selectIngredient = (ingredient: IngredientWithAllergies) => {
+    // Parse allergies immediately when selecting an ingredient
+    const parsedAllergies = parseAllergies(ingredient.allergies)
     setIngredientSearch(ingredient.name)
     setShowDropdown(false)
     programmaticChangeRef.current = true
@@ -157,6 +159,9 @@ function BuildRecipePageComponent() {
       : selected.price
     const cost = qty * pricePerUnit
 
+    // Parse allergies when adding the ingredient
+    const parsedAllergies = parseAllergies(selected.allergies)
+
     const newIngredient: RecipeIngredient = {
       originalProductCode: selected.productCode,
       productCode: selected.productCode,
@@ -166,7 +171,7 @@ function BuildRecipePageComponent() {
       notes,
       price: selected.price,
       cost,
-      allergies: parseAllergies(selected.allergies),
+      allergies: parsedAllergies,
       pricePerUnit,
       baseWeight: selected.weight,
       baseUnit: selected.unit,
@@ -188,17 +193,127 @@ function BuildRecipePageComponent() {
   const totalCost = selectedIngredients.reduce((sum, ing) => sum + ing.cost, 0)
   const costPerServing = servings > 0 ? totalCost / servings : 0
 
-  // Create a simple, unique list of all confirmed allergens from the selected ingredients.
-  const declaredAllergies = new Set<string>()
-  selectedIngredients.forEach(ing => {
-    const ingredientAllergies = parseAllergies(ing.allergies)
-    ingredientAllergies.forEach(allergy => {
-      // We only show confirmed allergens ('has') to keep the display clear.
-      if (allergy.status === 'has' && allergy.name) {
-        declaredAllergies.add(allergy.name)
+  const parseAllergies = (allergies: any): { name: string; status: 'has' | 'may' }[] => {
+    if (!allergies) return []
+    
+    // Handle JSON string from database
+    if (typeof allergies === 'string') {
+      try {
+        const parsed = JSON.parse(allergies)
+        if (Array.isArray(parsed)) {
+          return parsed.map(a => ({
+            name: a.allergy,
+            status: a.status as 'has' | 'may'
+          }))
+        }
+      } catch {
+        // If not JSON, try to parse as string format "allergy:status"
+        return allergies.split(',').map(a => {
+          const [name, status] = a.split(':')
+          return { 
+            name: name.trim(), 
+            status: (status?.trim() || 'has') as 'has' | 'may' 
+          }
+        })
       }
+    }
+    
+    // Handle array format
+    if (Array.isArray(allergies)) {
+      return allergies.map(a => {
+        if (typeof a === 'string') {
+          const [name, status] = a.split(':')
+          return { 
+            name: name.trim(), 
+            status: (status?.trim() || 'has') as 'has' | 'may' 
+          }
+        }
+        if (typeof a === 'object' && a.allergy) {
+          return { 
+            name: a.allergy, 
+            status: (a.status || 'has') as 'has' | 'may' 
+          }
+        }
+        return null
+      }).filter((a): a is { name: string; status: 'has' | 'may' } => 
+        a !== null && typeof a.name === 'string' && (a.status === 'has' || a.status === 'may')
+      )
+    }
+    
+    return []
+  }
+
+  const renderIngredientList = () => (
+    <ul className="divide-y divide-gray-200 mb-4">
+      {selectedIngredients.map((ing, index) => (
+        <li key={index} className="py-2 flex justify-between items-start">
+          <div>
+            <p className="font-semibold text-gray-800">{ing.name}</p>
+            <p className="text-sm text-gray-600">{ing.quantity} {ing.unit}</p>
+            {ing.notes && <p className="text-xs text-gray-500 italic">"{ing.notes}"</p>}
+            {ing.allergies.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1">
+                {ing.allergies.map((allergy, allergyIndex) => (
+                  <span
+                    key={allergyIndex}
+                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                      allergy.status === 'has' 
+                        ? 'bg-red-100 text-red-800' 
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}
+                  >
+                    {allergy.status === 'has' ? 'Contains ' : 'May contain '}{allergy.name}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="text-right">
+            <p className="text-sm font-medium text-gray-900">£{ing.cost.toFixed(2)}</p>
+            <button onClick={() => removeIngredient(index)} className="text-xs text-red-500 hover:underline">Remove</button>
+          </div>
+        </li>
+      ))}
+    </ul>
+  )
+
+  const renderAllergySummary = () => {
+    const uniqueAllergies = new Map<string, 'has' | 'may'>()
+    
+    // Collect unique allergies, preferring 'has' over 'may'
+    selectedIngredients.forEach(ing => {
+      ing.allergies.forEach(allergy => {
+        const existing = uniqueAllergies.get(allergy.name)
+        if (!existing || (existing === 'may' && allergy.status === 'has')) {
+          uniqueAllergies.set(allergy.name, allergy.status)
+        }
+      })
     })
-  })
+
+    return (
+      <div className="border-t border-gray-200 pt-4 mb-4">
+        <h3 className="text-md font-medium text-gray-800 mb-2">Recipe Allergy Summary</h3>
+        <div className="flex flex-wrap gap-2">
+          {uniqueAllergies.size > 0 ? (
+            Array.from(uniqueAllergies.entries()).map(([name, status]) => (
+              <span 
+                key={name} 
+                className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                  status === 'has' 
+                    ? 'bg-red-100 text-red-800' 
+                    : 'bg-yellow-100 text-yellow-800'
+                }`}
+              >
+                {status === 'has' ? 'Contains ' : 'May contain '}{name}
+              </span>
+            ))
+          ) : (
+            <p className="text-sm text-gray-500">No allergens declared in this recipe.</p>
+          )}
+        </div>
+      </div>
+    )
+  }
 
   const saveRecipe = async () => {
     if (!recipeName || selectedIngredients.length === 0) {
@@ -210,7 +325,9 @@ function BuildRecipePageComponent() {
     setSaveMessage('')
 
     const ingredientsForApi = selectedIngredients.map(ing => ({
-      originalProductCode: ing.originalProductCode,
+      recipeId: 0, // This will be set by the server
+      productCode: ing.productCode, // Make sure to include the product code
+      originalProductCode: ing.originalProductCode, // Ensure this is included
       quantity: ing.quantity,
       unit: ing.unit,
       notes: ing.notes,
@@ -228,6 +345,9 @@ function BuildRecipePageComponent() {
       costPerServing,
     }
 
+    // Debug log to verify payload
+    console.log('Saving recipe with payload:', payload)
+
     try {
       const url = '/api/recipes'
       const method = 'POST'
@@ -243,7 +363,7 @@ function BuildRecipePageComponent() {
       if (response.ok) {
         setSaveMessage(`Recipe saved successfully! Redirecting...`)
         setTimeout(() => {
-          router.push(`/recipes/${result.recipe.id}`)
+          router.push(`/recipes/${result.recipeId}`)
         }, 1500)
       } else {
         setSaveMessage(result.error || `Failed to save recipe.`)
@@ -254,36 +374,6 @@ function BuildRecipePageComponent() {
     } finally {
       setIsSaving(false)
     }
-  }
-
-  const parseAllergies = (allergies: any): { name: string; status: 'has' | 'may' }[] => {
-    if (!allergies) return []
-    if (typeof allergies === 'string') {
-      try {
-        const parsed = JSON.parse(allergies)
-        // If parsing succeeds, it's likely a JSON string of our objects, so re-run with the parsed version
-        if (Array.isArray(parsed)) {
-            return parseAllergies(parsed)
-        }
-      } catch {
-        // If it fails to parse, treat it as a simple comma-separated string, e.g., "Gluten,Soya"
-        return allergies.split(',').map(name => ({ name: name.trim(), status: 'has' }))
-      }
-    }
-    if (Array.isArray(allergies)) {
-      return allergies.map(a => {
-        if (typeof a === 'string') {
-          // Handles simple strings from the initial search result, e.g., ["Gluten", "Soya"]
-          return { name: a, status: 'has' }
-        }
-        if (typeof a === 'object' && a.name && a.status) {
-          // Handles the internal format, e.g., [{ name: 'Gluten', status: 'has' }]
-          return a
-        }
-        return null
-      }).filter(a => a && a.name) as { name: string; status: 'has' | 'may' }[]
-    }
-    return []
   }
 
   return (
@@ -408,21 +498,7 @@ function BuildRecipePageComponent() {
               
               {/* Ingredients List */}
               <h3 className="text-md font-medium text-gray-800 mb-2">Ingredients ({selectedIngredients.length})</h3>
-              <ul className="divide-y divide-gray-200 mb-4">
-                {selectedIngredients.map((ing, index) => (
-                  <li key={index} className="py-2 flex justify-between items-start">
-                    <div>
-                      <p className="font-semibold text-gray-800">{ing.name}</p>
-                      <p className="text-sm text-gray-600">{ing.quantity} {ing.unit}</p>
-                      {ing.notes && <p className="text-xs text-gray-500 italic">"{ing.notes}"</p>}
-                    </div>
-                    <div className="text-right">
-                       <p className="text-sm font-medium text-gray-900">£{ing.cost.toFixed(2)}</p>
-                       <button onClick={() => removeIngredient(index)} className="text-xs text-red-500 hover:underline">Remove</button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              {renderIngredientList()}
 
               {/* Cost Summary */}
               <div className="border-t border-gray-200 pt-4 mb-4">
@@ -437,20 +513,7 @@ function BuildRecipePageComponent() {
               </div>
 
               {/* Allergy Summary */}
-              <div className="border-t border-gray-200 pt-4 mb-4">
-                 <h3 className="text-md font-medium text-gray-800 mb-2">Allergy Information</h3>
-                 <div className="flex flex-wrap gap-2">
-                   {declaredAllergies.size > 0 ? (
-                     Array.from(declaredAllergies).map(name => (
-                       <span key={name} className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                         {name}
-                       </span>
-                     ))
-                   ) : (
-                     <p className="text-sm text-gray-500">No allergens declared.</p>
-                   )}
-                 </div>
-              </div>
+              {renderAllergySummary()}
 
               {/* Save Button */}
               <div className="border-t border-gray-200 pt-4">

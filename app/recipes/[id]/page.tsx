@@ -13,6 +13,8 @@ interface Recipe {
   notes: string | null
   photo?: string
   createdAt: string
+  totalCost: number | null
+  costPerServing: number | null
   ingredients: RecipeIngredient[]
   allergies: string[]
 }
@@ -24,9 +26,19 @@ interface RecipeIngredient {
   unit?: string
   notes?: string
   cost: number
+  ingredientName: string
+  ingredientSupplier: string
+  ingredientPrice: number
+  ingredientWeight: number
+  ingredientUnit: string
+  ingredientAllergies: string
   ingredient: {
+    productCode: string
     name: string
+    supplier: string
     price: number
+    weight: number
+    unit: string
     allergies: string[]
   }
 }
@@ -57,6 +69,8 @@ export default function RecipeDetailPage() {
       }
       
       const data = await response.json()
+      console.log('Recipe data from API:', data.recipe)
+      console.log('First ingredient allergies:', data.recipe.ingredients[0]?.ingredientAllergies)
       setRecipe(data.recipe)
     } catch (error) {
       console.error('Error fetching recipe:', error)
@@ -128,33 +142,35 @@ export default function RecipeDetailPage() {
     })
   }
 
-  const parseAllergies = (allergiesArray: string[]) => {
-    return allergiesArray.map(allergyString => {
-      const [name, status] = allergyString.split(':')
-      return { name, status: status as 'has' | 'may' }
-    })
+  const parseAllergies = (allergiesString: string) => {
+    let allergies: { name: string; status: 'has' }[] = [];
+    try {
+      const parsed = JSON.parse(allergiesString);
+      if (Array.isArray(parsed)) {
+        allergies = parsed.map((a: string | { allergy: string; status: string }) => {
+          if (typeof a === 'string') {
+            // Handle 'allergy:status' format
+            const [name, status] = a.split(':');
+            return status === 'has' ? { name, status: 'has' } : null;
+          } else if (typeof a === 'object' && a.allergy && a.status === 'has') {
+            return { name: a.allergy, status: 'has' };
+          }
+          return null;
+        }).filter(Boolean) as { name: string; status: 'has' }[];
+      }
+    } catch (e) {
+      // fallback: return empty array
+      allergies = [];
+    }
+    return allergies;
   }
 
-  const getAllergyBadgeStyle = (status: 'has' | 'may') => {
-    switch (status) {
-      case 'has':
-        return 'bg-red-100 text-red-800'
-      case 'may':
-        return 'bg-yellow-100 text-yellow-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
-    }
+  const getAllergyBadgeStyle = (status: 'has') => {
+    return 'bg-red-100 text-red-800';
   }
 
-  const getStatusPrefix = (status: 'has' | 'may') => {
-    switch (status) {
-      case 'has':
-        return 'Contains '
-      case 'may':
-        return 'May contain '
-      default:
-        return ''
-    }
+  const getStatusPrefix = (status: 'has') => {
+    return 'Contains ';
   }
 
   if (loading) {
@@ -253,77 +269,86 @@ export default function RecipeDetailPage() {
               )}
             </div>
 
-            {/* Ingredients */}
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Ingredients</h3>
+            {/* Ingredients List */}
+            <div className="bg-white shadow rounded-lg p-6 mb-6">
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Ingredients</h2>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Product Code
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/2">
                         Ingredient
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Quantity
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Allergies
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Notes
+                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Cost
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {recipe.ingredients.map((ingredient, index) => {
-                      if (!ingredient || !ingredient.ingredient) return null;
-                      
-                      const presentAllergies = ingredient.ingredient.allergies
-                        ? parseAllergies(ingredient.ingredient.allergies).filter(
-                            (allergy) => allergy.status === 'has' || allergy.status === 'may'
-                          )
-                        : [];
-
+                      const allergies = parseAllergies(ingredient.ingredientAllergies || '[]')
                       return (
-                        <tr key={index} className="border-b border-gray-200 hover:bg-gray-50">
-                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800">
-                            {ingredient.originalProductCode}
+                        <tr key={index}>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">{ingredient.originalProductCode}</div>
                           </td>
-                          <td className="px-4 py-3 text-sm text-gray-800 break-words">
-                            <span className="font-semibold">{ingredient.ingredient.name}</span>
-                          </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
-                            {ingredient.quantity} {ingredient.unit}
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex flex-wrap gap-1">
-                              {presentAllergies.length > 0 ? (
-                                presentAllergies.map((allergy, allergyIndex) => (
-                                  <span
-                                    key={allergyIndex}
-                                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getAllergyBadgeStyle(
-                                      allergy.status
-                                    )}`}
-                                  >
-                                    {getStatusPrefix(allergy.status)}
-                                    {allergy.name}
-                                  </span>
-                                ))
-                              ) : (
-                                <span className="text-xs text-gray-500">None</span>
+                          <td className="px-4 py-4">
+                            <div>
+                              <p className="font-medium text-gray-900">{ingredient.ingredientName}</p>
+                              {ingredient.notes && (
+                                <p className="text-sm text-gray-500 italic mt-1">{ingredient.notes}</p>
+                              )}
+                              {allergies.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-2">
+                                  {allergies.map((allergy, allergyIndex) => (
+                                    <span
+                                      key={allergyIndex}
+                                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getAllergyBadgeStyle(allergy.status)}`}
+                                    >
+                                      {getStatusPrefix(allergy.status)}{allergy.name}
+                                    </span>
+                                  ))}
+                                </div>
                               )}
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-sm text-gray-900 break-words">
-                            {ingredient.notes || '-'}
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">
+                              <span className="font-medium">{ingredient.quantity}</span>
+                              <span className="text-gray-500 ml-1">{ingredient.unit}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-right">
+                            <div className="text-sm font-medium text-gray-900">£{ingredient.cost.toFixed(2)}</div>
                           </td>
                         </tr>
-                      );
+                      )
                     })}
                   </tbody>
+                  <tfoot className="bg-gray-50">
+                    <tr>
+                      <td colSpan={3} className="px-4 py-4 text-right text-sm font-medium text-gray-900">
+                        Total Cost:
+                      </td>
+                      <td className="px-4 py-4 text-right text-sm font-bold text-gray-900">
+                        £{recipe.totalCost?.toFixed(2) || '0.00'}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td colSpan={3} className="px-4 py-4 text-right text-sm font-medium text-gray-900">
+                        Cost per Serving:
+                      </td>
+                      <td className="px-4 py-4 text-right text-sm font-bold text-gray-900">
+                        £{recipe.costPerServing?.toFixed(2) || '0.00'}
+                      </td>
+                    </tr>
+                  </tfoot>
                 </table>
               </div>
             </div>

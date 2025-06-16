@@ -42,6 +42,27 @@ export default function MenusPage() {
     window.location.href = `/api/menus/${weekStartDate}/export-allergies?includeCode=false`;
   };
 
+  const handleDeleteMenu = async (weekStartDate: string, menuName: string) => {
+    if (!confirm(`Are you sure you want to delete the menu for week starting ${formatDisplayDate(weekStartDate)} (${menuName})? This action cannot be undone.`)) {
+      return;
+    }
+    try {
+      setIsLoading(true);
+      const response = await fetch(`/api/menus/${weekStartDate}`, { method: 'DELETE' });
+      const data = await response.json();
+      if (data.success) {
+        setMenus(prev => prev.filter(menu => menu.week_start_date !== weekStartDate));
+      } else {
+        alert(data.error || 'Failed to delete menu.');
+      }
+    } catch (err) {
+      alert('An unexpected error occurred while deleting the menu.');
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const formatDisplayDate = (dateString: string) => {
     const date = new Date(dateString);
     const day = String(date.getDate()).padStart(2, '0');
@@ -134,6 +155,15 @@ export default function MenusPage() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                         </svg>
                         Export (No Codes)
+                      </button>
+                      <button
+                        onClick={() => handleDeleteMenu(menu.week_start_date, menu.name)}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                      >
+                        <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Delete
                       </button>
                     </div>
                   </div>

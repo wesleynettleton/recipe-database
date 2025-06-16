@@ -8,10 +8,10 @@ export async function POST(request: NextRequest) {
 
     const result = await db.saveMenu(name, date, weeklyMenu)
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       message: 'Menu saved successfully',
-      ...result
+      menu: result
     })
 
   } catch (error) {

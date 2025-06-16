@@ -417,7 +417,7 @@ export class DatabaseConnection {
     );
   }
 
-  async getRecipeWithIngredients(id: number): Promise<Recipe | null> {
+  async getRecipeWithIngredients(id: number): Promise<RecipeWithIngredients | null> {
     const recipeStmt = this.db.prepare('SELECT * FROM recipes WHERE id = ?');
     const recipe = recipeStmt.get(id) as Recipe | undefined;
 
@@ -443,7 +443,7 @@ export class DatabaseConnection {
     const recipeIngredients = recipeIngredientsStmt.all(id) as any[];
 
     // Recalculate cost for each ingredient based on its snapshot, not live data
-    const combinedIngredients = recipeIngredients.map(ing => {
+    const combinedIngredients = recipeIngredients.map((ing) => {
       let cost = 0;
       if (ing.ingredientWeight > 0) {
         const pricePerBaseUnit = ing.ingredientPrice / ing.ingredientWeight;
@@ -451,38 +451,63 @@ export class DatabaseConnection {
       } else {
         cost = ing.ingredientPrice * ing.quantity; // Priced per item
       }
+
+      // Parse allergies from the stored JSON string
+      let allergies: string[] = [];
+      try {
+        if (ing.ingredientAllergies) {
+          const parsedAllergies = JSON.parse(ing.ingredientAllergies);
+          // The allergies are stored as "allergy:status" strings, so we can use them directly
+          allergies = Array.isArray(parsedAllergies) ? parsedAllergies : [];
+        }
+      } catch (error) {
+        console.error('Error parsing allergies for ingredient:', ing.ingredientName, error);
+      }
         
       return {
         ...ing,
         cost: isNaN(cost) ? 0 : cost, // Ensure cost is a number
-        ingredientSnapshot: {
+        ingredient: {
           productCode: ing.originalProductCode,
           name: ing.ingredientName,
           supplier: ing.ingredientSupplier,
           price: ing.ingredientPrice,
           weight: ing.ingredientWeight,
           unit: ing.ingredientUnit,
-          allergies: ing.ingredientAllergies,
+          allergies: allergies // These are already in the correct "allergy:status" format
         }
       };
     });
 
-    recipe.ingredients = combinedIngredients;
+    const recipeWithIngredients: RecipeWithIngredients = {
+      ...recipe,
+      ingredients: combinedIngredients
+    };
     
     // Final check for totalCost and costPerServing from the recipe table
     if (recipe.totalCost === null || recipe.costPerServing === null) {
         this.recalculateRecipeCost(id);
         const updatedRecipe = recipeStmt.get(id) as Recipe;
-        return updatedRecipe;
+        return {
+          ...updatedRecipe,
+          ingredients: combinedIngredients
+        };
     }
 
-    return recipe;
+    return recipeWithIngredients;
   }
   
   async getAllRecipes(): Promise<Recipe[]> {
-    const stmt = this.db.prepare('SELECT id, name, code, servings, totalCost, costPerServing, createdAt FROM recipes ORDER BY name');
-    const recipes = stmt.all() as Recipe[];
-    return recipes;
+    console.log('getAllRecipes called')
+    try {
+      const stmt = this.db.prepare('SELECT id, name, code, servings, totalCost, costPerServing, createdAt FROM recipes ORDER BY name')
+      const recipes = stmt.all() as Recipe[]
+      console.log('getAllRecipes found:', recipes.length, 'recipes')
+      return recipes
+    } catch (error) {
+      console.error('Error in getAllRecipes:', error)
+      throw error
+    }
   }
 
   async searchRecipes(query: string): Promise<Recipe[]> {
@@ -539,7 +564,7 @@ export class DatabaseConnection {
       for (const ingredient of ingredients) {
         await this.addRecipeIngredient({
           recipeId: recipeId,
-          productCode: ingredient.productCode,
+          originalProductCode: ingredient.originalProductCode || ingredient.productCode,
           quantity: ingredient.quantity,
           unit: ingredient.unit,
           notes: ingredient.notes
@@ -834,6 +859,17 @@ export class DatabaseConnection {
         }
     } catch (e) {
         console.error("Error during 'ensureCompositeUniqueConstraintOnMenus':", e);
+    }
+  }
+
+  async deleteMenuByDate(date: string): Promise<boolean> {
+    try {
+      const stmt = this.db.prepare('DELETE FROM menus WHERE week_start_date = ?');
+      const result = stmt.run(date);
+      return result.changes > 0;
+    } catch (error) {
+      console.error(`Failed to delete menu for date ${date}:`, error);
+      return false;
     }
   }
 }
