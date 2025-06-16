@@ -158,7 +158,7 @@ function BuildRecipePageComponent() {
     const cost = qty * pricePerUnit
 
     const newIngredient: RecipeIngredient = {
-      originalProductCode: selected.productCode, // For new ingredients, original and current are the same
+      originalProductCode: selected.productCode,
       productCode: selected.productCode,
       name: selected.name,
       quantity: qty,
@@ -166,7 +166,7 @@ function BuildRecipePageComponent() {
       notes,
       price: selected.price,
       cost,
-      allergies: selected.allergies.map(a => ({ name: a, status: 'has' })), // Standardize format
+      allergies: parseAllergies(selected.allergies),
       pricePerUnit,
       baseWeight: selected.weight,
       baseUnit: selected.unit,
