@@ -188,6 +188,18 @@ function BuildRecipePageComponent() {
   const totalCost = selectedIngredients.reduce((sum, ing) => sum + ing.cost, 0)
   const costPerServing = servings > 0 ? totalCost / servings : 0
 
+  // Create a simple, unique list of all confirmed allergens from the selected ingredients.
+  const declaredAllergies = new Set<string>()
+  selectedIngredients.forEach(ing => {
+    const ingredientAllergies = parseAllergies(ing.allergies)
+    ingredientAllergies.forEach(allergy => {
+      // We only show confirmed allergens ('has') to keep the display clear.
+      if (allergy.status === 'has' && allergy.name) {
+        declaredAllergies.add(allergy.name)
+      }
+    })
+  })
+
   const saveRecipe = async () => {
     if (!recipeName || selectedIngredients.length === 0) {
       setSaveMessage('Please enter a recipe name and add at least one ingredient.')
@@ -269,27 +281,9 @@ function BuildRecipePageComponent() {
           return a
         }
         return null
-      }).filter(Boolean) as { name: string; status: 'has' | 'may' }[]
+      }).filter(a => a && a.name) as { name: string; status: 'has' | 'may' }[]
     }
     return []
-  }
-
-  const combinedAllergies = selectedIngredients.reduce((acc, ing) => {
-    const ingredientAllergies = parseAllergies(ing.allergies)
-    ingredientAllergies.forEach(({ name, status }) => {
-      if (!acc[name] || (acc[name] === 'may' && status === 'has')) {
-        acc[name] = status
-      }
-    })
-    return acc
-  }, {} as Record<string, 'has' | 'may'>)
-
-  const getAllergyBadgeStyle = (status: 'has' | 'may') => {
-    return status === 'has' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
-  }
-
-  const getStatusPrefix = (status: 'has' | 'may') => {
-    return status === 'has' ? 'Contains ' : 'May contain '
   }
 
   return (
@@ -446,10 +440,10 @@ function BuildRecipePageComponent() {
               <div className="border-t border-gray-200 pt-4 mb-4">
                  <h3 className="text-md font-medium text-gray-800 mb-2">Allergy Information</h3>
                  <div className="flex flex-wrap gap-2">
-                   {Object.entries(combinedAllergies).length > 0 ? (
-                     Object.entries(combinedAllergies).map(([name, status]) => (
-                       <span key={name} className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getAllergyBadgeStyle(status)}`}>
-                         {getStatusPrefix(status)}{name}
+                   {declaredAllergies.size > 0 ? (
+                     Array.from(declaredAllergies).map(name => (
+                       <span key={name} className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                         {name}
                        </span>
                      ))
                    ) : (
