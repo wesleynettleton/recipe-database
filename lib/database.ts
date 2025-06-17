@@ -526,6 +526,12 @@ export class DatabaseConnection {
     const result = await this.query('SELECT * FROM menus ORDER BY week_start_date DESC');
     return result.rows;
   }
+
+  // Deletes a recipe by ID and returns true if a row was deleted
+  async deleteRecipe(recipeId: number): Promise<boolean> {
+    const result = await this.query('DELETE FROM recipes WHERE id = $1', [recipeId]);
+    return (result.rowCount ?? 0) > 0;
+  }
 }
 
 let dbInstance: DatabaseConnection | null = null;
