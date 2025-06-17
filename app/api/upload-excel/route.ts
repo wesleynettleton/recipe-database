@@ -63,9 +63,31 @@ export async function POST(request: NextRequest) {
 
     console.log('Converting files to buffers...');
     
-    // Convert File to Buffer
-    const ingredientsBuffer = Buffer.from(await ingredientsFile.arrayBuffer());
-    const allergiesBuffer = Buffer.from(await allergiesFile.arrayBuffer());
+    // Convert File to Buffer with error handling
+    let ingredientsBuffer: Buffer;
+    let allergiesBuffer: Buffer;
+    
+    try {
+      ingredientsBuffer = Buffer.from(await ingredientsFile.arrayBuffer());
+      console.log('Ingredients buffer created successfully, size:', ingredientsBuffer.length);
+    } catch (error) {
+      console.error('Error creating ingredients buffer:', error);
+      return NextResponse.json({
+        success: false,
+        message: 'Failed to read ingredients file'
+      }, { status: 400 });
+    }
+    
+    try {
+      allergiesBuffer = Buffer.from(await allergiesFile.arrayBuffer());
+      console.log('Allergies buffer created successfully, size:', allergiesBuffer.length);
+    } catch (error) {
+      console.error('Error creating allergies buffer:', error);
+      return NextResponse.json({
+        success: false,
+        message: 'Failed to read allergies file'
+      }, { status: 400 });
+    }
     
     console.log('Buffer sizes:', {
       ingredients: ingredientsBuffer.length,
@@ -90,6 +112,10 @@ export async function POST(request: NextRequest) {
       }
     } catch (error) {
       console.error('Error reading ingredients file headers:', error);
+      return NextResponse.json({
+        success: false,
+        message: 'Failed to read ingredients Excel file structure'
+      }, { status: 400 });
     }
 
     console.log('=== DEBUGGING ALLERGIES FILE HEADERS ===');
@@ -108,12 +134,27 @@ export async function POST(request: NextRequest) {
       }
     } catch (error) {
       console.error('Error reading allergies file headers:', error);
+      return NextResponse.json({
+        success: false,
+        message: 'Failed to read allergies Excel file structure'
+      }, { status: 400 });
     }
 
     console.log('Parsing Excel files...');
     
-    // Parse Excel files
-    const parseResult = parseExcelFiles(ingredientsBuffer, allergiesBuffer);
+    // Parse Excel files with detailed error handling
+    let parseResult;
+    try {
+      parseResult = parseExcelFiles(ingredientsBuffer, allergiesBuffer);
+      console.log('Excel parsing completed successfully');
+    } catch (error) {
+      console.error('Error during Excel parsing:', error);
+      return NextResponse.json({
+        success: false,
+        message: 'Failed to parse Excel files',
+        details: error instanceof Error ? error.message : 'Unknown parsing error'
+      }, { status: 400 });
+    }
     
     console.log('Parse result:', {
       ingredientsCount: parseResult.ingredients.length,
@@ -130,6 +171,15 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
+    // Validate parsed data
+    if (parseResult.ingredients.length === 0) {
+      console.log('No ingredients found in file');
+      return NextResponse.json({
+        success: false,
+        message: 'No valid ingredients found in the Excel file'
+      }, { status: 400 });
+    }
+
     console.log('Storing in database...');
     
     // Store in database with progress logging (smaller batches for hobby plan)
@@ -143,7 +193,16 @@ export async function POST(request: NextRequest) {
       for (let i = 0; i < parseResult.ingredients.length; i += batchSize) {
         const batch = parseResult.ingredients.slice(i, i + batchSize);
         console.log(`Processing batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(parseResult.ingredients.length/batchSize)}`);
-        await db.insertIngredients(batch);
+        try {
+          await db.insertIngredients(batch);
+        } catch (error) {
+          console.error(`Error inserting batch ${Math.floor(i/batchSize) + 1}:`, error);
+          return NextResponse.json({
+            success: false,
+            message: 'Failed to insert ingredients into database',
+            details: error instanceof Error ? error.message : 'Database insertion error'
+          }, { status: 500 });
+        }
       }
       console.log('Ingredients inserted successfully');
     }
@@ -156,7 +215,16 @@ export async function POST(request: NextRequest) {
       for (let i = 0; i < parseResult.allergies.length; i += batchSize) {
         const batch = parseResult.allergies.slice(i, i + batchSize);
         console.log(`Processing allergy batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(parseResult.allergies.length/batchSize)}`);
-        await db.insertAllergies(batch);
+        try {
+          await db.insertAllergies(batch);
+        } catch (error) {
+          console.error(`Error inserting allergy batch ${Math.floor(i/batchSize) + 1}:`, error);
+          return NextResponse.json({
+            success: false,
+            message: 'Failed to insert allergies into database',
+            details: error instanceof Error ? error.message : 'Database insertion error'
+          }, { status: 500 });
+        }
       }
       console.log('Allergies inserted successfully');
     }

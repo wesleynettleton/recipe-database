@@ -11,12 +11,30 @@ export class DatabaseConnection {
       throw new Error('DATABASE_URL environment variable is not set');
     }
 
-    this.pool = new Pool({
-      connectionString,
-      ssl: {
-        rejectUnauthorized: false // Required for Neon
+    // Validate connection string format
+    try {
+      const url = new URL(connectionString);
+      if (!url.protocol || !url.hostname || !url.pathname) {
+        throw new Error('Invalid DATABASE_URL format');
       }
-    });
+      console.log('Database URL validation passed');
+    } catch (error) {
+      console.error('Database URL validation failed:', error);
+      throw new Error(`Invalid DATABASE_URL format: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+
+    try {
+      this.pool = new Pool({
+        connectionString,
+        ssl: {
+          rejectUnauthorized: false // Required for Neon
+        }
+      });
+      console.log('Database pool created successfully');
+    } catch (error) {
+      console.error('Failed to create database pool:', error);
+      throw new Error(`Database connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   // Helper method to run queries
