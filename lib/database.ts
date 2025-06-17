@@ -229,29 +229,22 @@ export class DatabaseConnection {
         ri.quantity,
         ri.unit,
         ri.notes,
-        ri.originalproductcode,
-        ri.ingredientname,
-        ri.ingredientsupplier,
-        ri.ingredientprice,
-        ri.ingredientweight,
-        ri.ingredientunit,
-        ri.ingredientallergies
+        ri.originalproductcode AS "originalProductCode",
+        ri.ingredientname AS "ingredientName",
+        ri.ingredientsupplier AS "ingredientSupplier",
+        ri.ingredientprice AS "ingredientPrice",
+        ri.ingredientweight AS "ingredientWeight",
+        ri.ingredientunit AS "ingredientUnit",
+        ri.ingredientallergies AS "ingredientAllergies"
       FROM recipe_ingredients ri
       WHERE ri.recipeId = $1
     `, [id]);
 
-    // Calculate cost for each ingredient
+    // Calculate cost for each ingredient (using camelCase)
     const ingredientsWithCost = ingredientsResult.rows.map(ingredient => {
       const quantity = parseFloat(String(ingredient.quantity));
-      const price = parseFloat(String(ingredient.ingredientprice));
+      const price = parseFloat(String(ingredient.ingredientPrice));
       const cost = quantity * price;
-      console.log('Cost calculation debug:', {
-        originalQuantity: ingredient.quantity,
-        originalPrice: ingredient.ingredientprice,
-        parsedQuantity: quantity,
-        parsedPrice: price,
-        calculatedCost: cost
-      });
       return {
         ...ingredient,
         cost: cost || 0
