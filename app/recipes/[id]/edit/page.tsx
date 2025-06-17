@@ -502,7 +502,7 @@ export default function EditRecipePage() {
                       >
                         <div className="font-medium text-gray-900">{ingredient.name}</div>
                         <div className="text-sm text-gray-500">
-                          {ingredient.supplier} - £{ingredient.price.toFixed(2)} per {ingredient.weight}{ingredient.unit}
+                          {ingredient.supplier} - £{(typeof ingredient.price === 'number' ? ingredient.price : parseFloat(String(ingredient.price)) || 0).toFixed(2)} per {ingredient.weight}{ingredient.unit}
                         </div>
                       </div>
                     ))}

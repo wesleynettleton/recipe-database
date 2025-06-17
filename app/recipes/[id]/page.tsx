@@ -325,7 +325,7 @@ export default function RecipeDetailPage() {
                             </div>
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap text-right">
-                            <div className="text-sm font-medium text-gray-900">£{ingredient.cost.toFixed(2)}</div>
+                            <div className="text-sm font-medium text-gray-900">£{(typeof ingredient.cost === 'number' ? ingredient.cost : parseFloat(String(ingredient.cost)) || 0).toFixed(2)}</div>
                           </td>
                         </tr>
                       )

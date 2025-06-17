@@ -297,7 +297,7 @@ export default function IngredientsPage() {
                             {ingredient.unit || 'N/A'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            £{ingredient.price.toFixed(2)}
+                            £{(typeof ingredient.price === 'number' ? ingredient.price : parseFloat(String(ingredient.price)) || 0).toFixed(2)}
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-900">
                             {ingredient.allergies.length > 0 ? (
