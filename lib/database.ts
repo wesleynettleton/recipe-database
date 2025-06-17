@@ -520,6 +520,12 @@ export class DatabaseConnection {
     );
     return result.rows;
   }
+
+  // Returns all menus, ordered by week_start_date descending
+  async getAllMenus(): Promise<any[]> {
+    const result = await this.query('SELECT * FROM menus ORDER BY week_start_date DESC');
+    return result.rows;
+  }
 }
 
 let dbInstance: DatabaseConnection | null = null;
