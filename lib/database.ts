@@ -532,6 +532,20 @@ export class DatabaseConnection {
     const result = await this.query('DELETE FROM recipes WHERE id = $1', [recipeId]);
     return (result.rowCount ?? 0) > 0;
   }
+
+  // Updates a recipe by ID with the provided fields. Returns true if a row was updated.
+  async updateRecipe(recipeId: number, updates: Partial<Recipe>): Promise<boolean> {
+    const fields = Object.keys(updates);
+    if (fields.length === 0) return false;
+
+    const setClause = fields.map((field, idx) => `${field} = $${idx + 2}`).join(', ');
+    const values = fields.map(field => (updates as any)[field]);
+    const result = await this.query(
+      `UPDATE recipes SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
+      [recipeId, ...values]
+    );
+    return (result.rowCount ?? 0) > 0;
+  }
 }
 
 let dbInstance: DatabaseConnection | null = null;
