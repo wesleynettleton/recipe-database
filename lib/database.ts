@@ -37,14 +37,14 @@ export class DatabaseConnection {
 
   // Get ingredient by product code
   async getIngredientByProductCode(productCode: string): Promise<IngredientWithAllergies | null> {
-    const ingredientResult = await this.query('SELECT * FROM ingredients WHERE productCode = $1', [productCode]);
+    const ingredientResult = await this.query('SELECT * FROM ingredients WHERE productcode = $1', [productCode]);
     const ingredient = ingredientResult.rows[0];
 
     if (!ingredient) {
       return null;
     }
 
-    const allergiesResult = await this.query('SELECT allergy, status FROM allergies WHERE productCode = $1', [productCode]);
+    const allergiesResult = await this.query('SELECT allergy, status FROM allergies WHERE productcode = $1', [productCode]);
     const allergies = allergiesResult.rows.map(a => `${a.allergy}:${a.status}`);
 
     return {
@@ -70,9 +70,9 @@ export class DatabaseConnection {
         // Defensive: ensure price is a number
         const price = typeof ing.price === 'number' ? ing.price : parseFloat(String(ing.price));
         await client.query(`
-          INSERT INTO ingredients (productCode, name, supplier, weight, unit, price)
+          INSERT INTO ingredients (productcode, name, supplier, weight, unit, price)
           VALUES ($1, $2, $3, $4, $5, $6)
-          ON CONFLICT(productCode) DO UPDATE SET
+          ON CONFLICT(productcode) DO UPDATE SET
             name = EXCLUDED.name,
             supplier = EXCLUDED.supplier,
             weight = EXCLUDED.weight,
@@ -107,13 +107,13 @@ export class DatabaseConnection {
 
       for (const allergy of allergies) {
         // Check if the product exists
-        const productExists = await this.query('SELECT id FROM ingredients WHERE productCode = $1', [allergy.productCode]);
+        const productExists = await this.query('SELECT id FROM ingredients WHERE productcode = $1', [allergy.productCode]);
         
         if (productExists.rows.length > 0) {
           await client.query(`
-            INSERT INTO allergies (productCode, allergy, status)
+            INSERT INTO allergies (productcode, allergy, status)
             VALUES ($1, $2, $3)
-            ON CONFLICT(productCode, allergy) DO UPDATE SET
+            ON CONFLICT(productcode, allergy) DO UPDATE SET
               status = EXCLUDED.status,
               updated_at = CURRENT_TIMESTAMP
           `, [allergy.productCode, allergy.allergy, allergy.status]);
@@ -496,7 +496,7 @@ export class DatabaseConnection {
     const ingredients = ingredientsResult.rows;
 
     // Get all allergies for all ingredients
-    const allergiesResult = await this.query('SELECT productCode, allergy, status FROM allergies');
+    const allergiesResult = await this.query('SELECT productcode, allergy, status FROM allergies');
     const allergiesMap = new Map<string, string[]>();
     for (const row of allergiesResult.rows) {
       if (!allergiesMap.has(row.productcode)) {
