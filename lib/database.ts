@@ -240,9 +240,15 @@ export class DatabaseConnection {
       WHERE ri.recipeId = $1
     `, [id]);
 
+    // Calculate cost for each ingredient
+    const ingredientsWithCost = ingredientsResult.rows.map(ingredient => ({
+      ...ingredient,
+      cost: (parseFloat(String(ingredient.quantity)) * parseFloat(String(ingredient.ingredientPrice))) || 0
+    }));
+
     return {
       ...recipe,
-      ingredients: ingredientsResult.rows
+      ingredients: ingredientsWithCost
     };
   }
 
