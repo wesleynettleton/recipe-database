@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server'
 import { getDatabase } from '../../../../lib/database'
 import { RecipeWithIngredients } from '../../../../lib/types'
