@@ -568,6 +568,20 @@ export class DatabaseConnection {
       client.release();
     }
   }
+
+  // Search recipes by name, code, or instructions (case-insensitive, partial match)
+  async searchRecipes(query: string, limit: number = 20): Promise<any[]> {
+    const result = await this.query(
+      `SELECT * FROM recipes
+       WHERE LOWER(name) LIKE $1
+          OR LOWER(code) LIKE $1
+          OR LOWER(instructions) LIKE $1
+       ORDER BY name
+       LIMIT $2`,
+      [`%${query.toLowerCase()}%`, limit]
+    );
+    return result.rows;
+  }
 }
 
 let dbInstance: DatabaseConnection | null = null;
