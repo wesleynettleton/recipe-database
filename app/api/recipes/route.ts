@@ -33,6 +33,11 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    console.log('POST /api/recipes called');
+    
+    const body = await request.json();
+    console.log('Request body:', body);
+    
     const { 
       recipeName, 
       recipeCode, 
@@ -43,17 +48,31 @@ export async function POST(request: Request) {
       selectedIngredients, 
       totalCost, 
       costPerServing 
-    } = await request.json()
+    } = body;
+
+    console.log('Extracted data:', {
+      recipeName,
+      recipeCode,
+      servings,
+      instructions: instructions ? 'present' : 'missing',
+      recipeNotes: recipeNotes ? 'present' : 'missing',
+      photo: photo ? 'present' : 'missing',
+      selectedIngredients: selectedIngredients?.length || 0,
+      totalCost,
+      costPerServing
+    });
 
     // Validate required fields
-    if (!recipeName || !servings || selectedIngredients.length === 0) {
+    if (!recipeName || !servings || !selectedIngredients || selectedIngredients.length === 0) {
+      console.log('Validation failed:', { recipeName, servings, ingredientsCount: selectedIngredients?.length });
       return NextResponse.json(
         { error: 'Recipe name, servings, and at least one ingredient are required' },
         { status: 400 }
       )
     }
 
-    const database = getDatabase()
+    console.log('Validation passed, creating recipe...');
+    const database = getDatabase();
 
     // Create the recipe using the existing database method
     const recipeData = {
@@ -66,23 +85,28 @@ export async function POST(request: Request) {
       instructions: instructions || undefined,
       notes: recipeNotes || undefined,
       photo: photo || undefined,
-      totalCost,
-      costPerServing
+      totalCost: totalCost || 0,
+      costPerServing: costPerServing || 0
     }
 
-    const recipeId = await database.createRecipe(recipeData)
+    console.log('Creating recipe with data:', recipeData);
+    const recipeId = await database.createRecipe(recipeData);
+    console.log('Recipe created with ID:', recipeId);
 
     // Add all ingredients to the recipe
+    console.log('Adding ingredients to recipe...');
     for (const ingredient of selectedIngredients) {
+      console.log('Adding ingredient:', ingredient);
       await database.addRecipeIngredient({
         recipeId,
         originalProductCode: ingredient.originalProductCode,
         quantity: ingredient.quantity,
         unit: ingredient.unit || null,
         notes: ingredient.notes || null
-      })
+      });
     }
 
+    console.log('Recipe saved successfully');
     return NextResponse.json({
       success: true,
       message: 'Recipe saved successfully',
@@ -90,9 +114,10 @@ export async function POST(request: Request) {
     })
 
   } catch (error) {
-    console.error('Error saving recipe:', error)
+    console.error('Error saving recipe:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     return NextResponse.json(
-      { error: 'Failed to save recipe' },
+      { error: 'Failed to save recipe', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }

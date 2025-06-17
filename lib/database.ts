@@ -536,6 +536,30 @@ export class DatabaseConnection {
       'SELECT * FROM ingredients WHERE LOWER(name) LIKE $1 ORDER BY name LIMIT $2',
       [`%${query.toLowerCase()}%`, limit]
     );
+    
+    // Get allergies for the found ingredients
+    if (result.rows.length > 0) {
+      const productCodes = result.rows.map(ing => ing.productcode);
+      const allergiesResult = await this.query(
+        'SELECT productcode, allergy, status FROM allergies WHERE productcode = ANY($1)',
+        [productCodes]
+      );
+      
+      const allergiesMap = new Map<string, string[]>();
+      for (const row of allergiesResult.rows) {
+        if (!allergiesMap.has(row.productcode)) {
+          allergiesMap.set(row.productcode, []);
+        }
+        allergiesMap.get(row.productcode)!.push(`${row.allergy}:${row.status}`);
+      }
+
+      // Attach allergies to each ingredient
+      return result.rows.map(ingredient => ({
+        ...ingredient,
+        allergies: allergiesMap.get(ingredient.productcode) || [],
+      }));
+    }
+    
     return result.rows;
   }
 
