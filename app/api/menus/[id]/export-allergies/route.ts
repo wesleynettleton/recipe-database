@@ -14,7 +14,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
     }
 
     const db = getDatabase();
-    const menu = db.getMenuByDate(menuDate);
+    const menu = await db.getMenuByDate(menuDate);
     console.log('--- EXPORT ALLERGY FORM ---');
     console.log('Menu Date:', menuDate);
     console.log('Fetched Menu:', JSON.stringify(menu, null, 2));
