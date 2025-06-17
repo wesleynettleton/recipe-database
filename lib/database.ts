@@ -546,6 +546,28 @@ export class DatabaseConnection {
     );
     return (result.rowCount ?? 0) > 0;
   }
+
+  // Replaces all ingredients for a recipe with the provided list. Returns true if successful.
+  async updateRecipeIngredients(recipeId: number, ingredients: any[]): Promise<boolean> {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      // Delete existing ingredients for the recipe
+      await client.query('DELETE FROM recipe_ingredients WHERE recipeId = $1', [recipeId]);
+      // Insert new ingredients
+      for (const ing of ingredients) {
+        await this.addRecipeIngredient({ ...ing, recipeId });
+      }
+      await client.query('COMMIT');
+      return true;
+    } catch (e) {
+      await client.query('ROLLBACK');
+      console.error('Failed to update recipe ingredients:', e);
+      return false;
+    } finally {
+      client.release();
+    }
+  }
 }
 
 let dbInstance: DatabaseConnection | null = null;
