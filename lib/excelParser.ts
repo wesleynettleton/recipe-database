@@ -200,7 +200,12 @@ export function parseIngredientsExcel(buffer: Buffer): {
 } {
   // Try Holdsworth format first
   const result = parseHoldsworthPricesExcel(buffer);
-  return { ingredients: result.ingredients, errors: result.errors };
+  // Defensive: ensure all prices are numbers
+  const cleanedIngredients = result.ingredients.map(ing => ({
+    ...ing,
+    price: typeof ing.price === 'number' ? ing.price : parseFloat(String(ing.price))
+  }));
+  return { ingredients: cleanedIngredients, errors: result.errors };
 }
 
 export function parseAllergiesExcel(buffer: Buffer): { 

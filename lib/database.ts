@@ -67,7 +67,8 @@ export class DatabaseConnection {
           skipped++;
           continue;
         }
-
+        // Defensive: ensure price is a number
+        const price = typeof ing.price === 'number' ? ing.price : parseFloat(String(ing.price));
         await client.query(`
           INSERT INTO ingredients (productCode, name, supplier, weight, unit, price)
           VALUES ($1, $2, $3, $4, $5, $6)
@@ -78,8 +79,7 @@ export class DatabaseConnection {
             unit = EXCLUDED.unit,
             price = EXCLUDED.price,
             updated_at = CURRENT_TIMESTAMP
-        `, [ing.productCode, ing.name, ing.supplier, ing.weight, ing.unit, ing.price]);
-
+        `, [ing.productCode, ing.name, ing.supplier, ing.weight, ing.unit, price]);
         productCodesToUpdate.push({ productCode: ing.productCode });
       }
 
