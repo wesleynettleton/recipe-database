@@ -489,6 +489,28 @@ export class DatabaseConnection {
     const result = await this.query('SELECT COUNT(*) AS count FROM recipes');
     return result.rows[0]?.count || 0;
   }
+
+  // Returns all ingredients with their allergies as an array of strings
+  async getAllIngredientsWithAllergies(): Promise<any[]> {
+    const ingredientsResult = await this.query('SELECT * FROM ingredients ORDER BY name');
+    const ingredients = ingredientsResult.rows;
+
+    // Get all allergies for all ingredients
+    const allergiesResult = await this.query('SELECT productCode, allergy, status FROM allergies');
+    const allergiesMap = new Map<string, string[]>();
+    for (const row of allergiesResult.rows) {
+      if (!allergiesMap.has(row.productcode)) {
+        allergiesMap.set(row.productcode, []);
+      }
+      allergiesMap.get(row.productcode)!.push(`${row.allergy}:${row.status}`);
+    }
+
+    // Attach allergies to each ingredient
+    return ingredients.map(ingredient => ({
+      ...ingredient,
+      allergies: allergiesMap.get(ingredient.productcode) || [],
+    }));
+  }
 }
 
 let dbInstance: DatabaseConnection | null = null;
