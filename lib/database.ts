@@ -229,22 +229,34 @@ export class DatabaseConnection {
         ri.quantity,
         ri.unit,
         ri.notes,
-        ri.originalProductCode,
-        ri.ingredientName,
-        ri.ingredientSupplier,
-        ri.ingredientPrice,
-        ri.ingredientWeight,
-        ri.ingredientUnit,
-        ri.ingredientAllergies
+        ri.originalproductcode,
+        ri.ingredientname,
+        ri.ingredientsupplier,
+        ri.ingredientprice,
+        ri.ingredientweight,
+        ri.ingredientunit,
+        ri.ingredientallergies
       FROM recipe_ingredients ri
       WHERE ri.recipeId = $1
     `, [id]);
 
     // Calculate cost for each ingredient
-    const ingredientsWithCost = ingredientsResult.rows.map(ingredient => ({
-      ...ingredient,
-      cost: (parseFloat(String(ingredient.quantity)) * parseFloat(String(ingredient.ingredientPrice))) || 0
-    }));
+    const ingredientsWithCost = ingredientsResult.rows.map(ingredient => {
+      const quantity = parseFloat(String(ingredient.quantity));
+      const price = parseFloat(String(ingredient.ingredientprice));
+      const cost = quantity * price;
+      console.log('Cost calculation debug:', {
+        originalQuantity: ingredient.quantity,
+        originalPrice: ingredient.ingredientprice,
+        parsedQuantity: quantity,
+        parsedPrice: price,
+        calculatedCost: cost
+      });
+      return {
+        ...ingredient,
+        cost: cost || 0
+      };
+    });
 
     return {
       ...recipe,
