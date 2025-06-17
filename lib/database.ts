@@ -511,6 +511,15 @@ export class DatabaseConnection {
       allergies: allergiesMap.get(ingredient.productcode) || [],
     }));
   }
+
+  // Search ingredients by name (case-insensitive, partial match), with optional limit
+  async searchIngredients(query: string, limit: number = 10): Promise<any[]> {
+    const result = await this.query(
+      'SELECT * FROM ingredients WHERE LOWER(name) LIKE $1 ORDER BY name LIMIT $2',
+      [`%${query.toLowerCase()}%`, limit]
+    );
+    return result.rows;
+  }
 }
 
 let dbInstance: DatabaseConnection | null = null;
