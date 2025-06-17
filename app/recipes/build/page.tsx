@@ -352,20 +352,28 @@ function BuildRecipePageComponent() {
       const url = '/api/recipes'
       const method = 'POST'
 
+      console.log('Making API request to:', url)
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
 
+      console.log('Response status:', response.status)
+      console.log('Response ok:', response.ok)
+      
       const result = await response.json()
+      console.log('Response result:', result)
 
       if (response.ok) {
+        console.log('Recipe saved successfully, recipeId:', result.recipeId)
         setSaveMessage(`Recipe saved successfully! Redirecting...`)
         setTimeout(() => {
+          console.log('Redirecting to recipe:', result.recipeId)
           router.push(`/recipes/${result.recipeId}`)
         }, 1500)
       } else {
+        console.error('API returned error:', result.error)
         setSaveMessage(result.error || `Failed to save recipe.`)
       }
     } catch (error) {
