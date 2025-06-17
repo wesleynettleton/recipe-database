@@ -5,9 +5,6 @@ import * as XLSX from 'xlsx';
 
 export const dynamic = 'force-dynamic';
 
-// Increase timeout for this route
-export const maxDuration = 300; // 5 minutes
-
 export async function POST(request: NextRequest) {
   try {
     console.log('Starting Excel upload process...');
@@ -38,12 +35,12 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Check file sizes to prevent timeout
-    const maxSize = 10 * 1024 * 1024; // 10MB
+    // Check file sizes to prevent timeout (reduced for hobby plan)
+    const maxSize = 5 * 1024 * 1024; // 5MB (reduced from 10MB)
     if (ingredientsFile.size > maxSize || allergiesFile.size > maxSize) {
       return NextResponse.json({
         success: false,
-        message: 'File size too large. Please use files smaller than 10MB each.'
+        message: 'File size too large. Please use files smaller than 5MB each for faster processing.'
       }, { status: 400 });
     }
 
@@ -135,14 +132,14 @@ export async function POST(request: NextRequest) {
 
     console.log('Storing in database...');
     
-    // Store in database with progress logging
+    // Store in database with progress logging (smaller batches for hobby plan)
     const db = getDatabase();
     
     if (parseResult.ingredients.length > 0) {
       console.log(`Inserting ${parseResult.ingredients.length} ingredients...`);
       
-      // Process in batches to avoid timeout
-      const batchSize = 100;
+      // Process in smaller batches to work within 60s limit
+      const batchSize = 50; // Reduced from 100
       for (let i = 0; i < parseResult.ingredients.length; i += batchSize) {
         const batch = parseResult.ingredients.slice(i, i + batchSize);
         console.log(`Processing batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(parseResult.ingredients.length/batchSize)}`);
@@ -154,8 +151,8 @@ export async function POST(request: NextRequest) {
     if (parseResult.allergies.length > 0) {
       console.log(`Inserting ${parseResult.allergies.length} allergies...`);
       
-      // Process in batches to avoid timeout
-      const batchSize = 100;
+      // Process in smaller batches to work within 60s limit
+      const batchSize = 50; // Reduced from 100
       for (let i = 0; i < parseResult.allergies.length; i += batchSize) {
         const batch = parseResult.allergies.slice(i, i + batchSize);
         console.log(`Processing allergy batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(parseResult.allergies.length/batchSize)}`);
