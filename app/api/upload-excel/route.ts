@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { parseExcelFiles } from '../../../lib/excelParser';
 import { getDatabase } from '../../../lib/database';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
