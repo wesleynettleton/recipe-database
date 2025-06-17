@@ -471,6 +471,24 @@ export class DatabaseConnection {
     const result = await this.query('SELECT COUNT(DISTINCT allergy) AS count FROM allergies');
     return result.rows[0]?.count || 0;
   }
+
+  // Returns the number of ingredients in the ingredients table
+  async getIngredientsCount(): Promise<number> {
+    const result = await this.query('SELECT COUNT(*) AS count FROM ingredients');
+    return result.rows[0]?.count || 0;
+  }
+
+  // Returns the number of menus in the menus table
+  async getMenusCount(): Promise<number> {
+    const result = await this.query('SELECT COUNT(*) AS count FROM menus');
+    return result.rows[0]?.count || 0;
+  }
+
+  // Returns the number of recipes in the recipes table
+  async getRecipesCount(): Promise<number> {
+    const result = await this.query('SELECT COUNT(*) AS count FROM recipes');
+    return result.rows[0]?.count || 0;
+  }
 }
 
 let dbInstance: DatabaseConnection | null = null;

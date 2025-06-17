@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   try {
     const db = getDatabase();
-    const count = db.getMenusCount();
+    const count = await db.getMenusCount();
     return NextResponse.json({ count });
   } catch (error) {
     console.error('Error fetching menu count:', error);
