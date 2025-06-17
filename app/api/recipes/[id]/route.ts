@@ -29,6 +29,10 @@ export async function GET(
     console.log('First ingredient:', recipe.ingredients?.[0])
     console.log('First ingredient allergies (raw):', recipe.ingredients?.[0]?.ingredientAllergies)
     console.log('First ingredient allergies (parsed):', JSON.parse(recipe.ingredients?.[0]?.ingredientAllergies || '[]'))
+    console.log('Number of ingredients:', recipe.ingredients?.length || 0)
+    console.log('First ingredient cost:', recipe.ingredients?.[0]?.cost)
+    console.log('First ingredient quantity:', recipe.ingredients?.[0]?.quantity)
+    console.log('First ingredient price:', recipe.ingredients?.[0]?.ingredientPrice)
 
     return NextResponse.json({ success: true, recipe })
   } catch (error) {
