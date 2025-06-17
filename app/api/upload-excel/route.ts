@@ -5,6 +5,9 @@ import * as XLSX from 'xlsx';
 
 export const dynamic = 'force-dynamic';
 
+// Increase timeout for this route
+export const maxDuration = 300; // 5 minutes
+
 export async function POST(request: NextRequest) {
   try {
     console.log('Starting Excel upload process...');
@@ -32,6 +35,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: false,
         message: 'Both ingredients and allergies Excel files are required'
+      }, { status: 400 });
+    }
+
+    // Check file sizes to prevent timeout
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (ingredientsFile.size > maxSize || allergiesFile.size > maxSize) {
+      return NextResponse.json({
+        success: false,
+        message: 'File size too large. Please use files smaller than 10MB each.'
       }, { status: 400 });
     }
 
@@ -63,7 +75,7 @@ export async function POST(request: NextRequest) {
       allergies: allergiesBuffer.length
     });
 
-    // Debug: Check headers manually
+    // Debug: Check headers manually (simplified to reduce processing time)
     console.log('=== DEBUGGING INGREDIENTS FILE HEADERS ===');
     try {
       const workbook = XLSX.read(ingredientsBuffer, { type: 'buffer' });
@@ -123,18 +135,32 @@ export async function POST(request: NextRequest) {
 
     console.log('Storing in database...');
     
-    // Store in database
+    // Store in database with progress logging
     const db = getDatabase();
     
     if (parseResult.ingredients.length > 0) {
       console.log(`Inserting ${parseResult.ingredients.length} ingredients...`);
-      await db.insertIngredients(parseResult.ingredients);
+      
+      // Process in batches to avoid timeout
+      const batchSize = 100;
+      for (let i = 0; i < parseResult.ingredients.length; i += batchSize) {
+        const batch = parseResult.ingredients.slice(i, i + batchSize);
+        console.log(`Processing batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(parseResult.ingredients.length/batchSize)}`);
+        await db.insertIngredients(batch);
+      }
       console.log('Ingredients inserted successfully');
     }
     
     if (parseResult.allergies.length > 0) {
       console.log(`Inserting ${parseResult.allergies.length} allergies...`);
-      await db.insertAllergies(parseResult.allergies);
+      
+      // Process in batches to avoid timeout
+      const batchSize = 100;
+      for (let i = 0; i < parseResult.allergies.length; i += batchSize) {
+        const batch = parseResult.allergies.slice(i, i + batchSize);
+        console.log(`Processing allergy batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(parseResult.allergies.length/batchSize)}`);
+        await db.insertAllergies(batch);
+      }
       console.log('Allergies inserted successfully');
     }
 
