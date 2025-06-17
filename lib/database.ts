@@ -465,6 +465,12 @@ export class DatabaseConnection {
     const result = await this.query('DELETE FROM menus WHERE week_start_date = $1', [menuDate]);
     return (result.rowCount ?? 0) > 0;
   }
+
+  // Returns the number of unique allergy types in the allergies table
+  async getAllergyTypesCount(): Promise<number> {
+    const result = await this.query('SELECT COUNT(DISTINCT allergy) AS count FROM allergies');
+    return result.rows[0]?.count || 0;
+  }
 }
 
 let dbInstance: DatabaseConnection | null = null;

@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   try {
     const db = getDatabase();
-    const count = db.getAllergyTypesCount();
+    const count = await db.getAllergyTypesCount();
     return NextResponse.json({ count });
   } catch (error) {
     console.error('Error fetching allergy types count:', error);
