@@ -31,13 +31,27 @@ export function parseHoldsworthPricesExcel(buffer: Buffer): {
     const headers = jsonData[0] as string[];
     console.log('Headers found:', headers);
 
-    // Find column indices
+    // Find column indices with more flexible matching
     const codeIndex = headers.findIndex(h => h && h.toString().toLowerCase().includes('code'));
-    const nameIndex = headers.findIndex(h => h && h.toString().toLowerCase().includes('product name'));
+    const nameIndex = headers.findIndex(h => h && (
+      h.toString().toLowerCase().includes('product name') ||
+      h.toString().toLowerCase().includes('name') ||
+      h.toString().toLowerCase().includes('description') ||
+      h.toString().toLowerCase().includes('product')
+    ));
     const supplierIndex = headers.findIndex(h => h && h.toString().toLowerCase().includes('supplier'));
     const weightIndex = headers.findIndex(h => h && h.toString().toLowerCase().includes('weight'));
     const unitIndex = headers.findIndex(h => h && h.toString().toLowerCase().includes('unit'));
     const priceIndex = headers.findIndex(h => h && h.toString().toLowerCase().includes('price'));
+
+    console.log('Column indices found:', {
+      code: codeIndex,
+      name: nameIndex,
+      supplier: supplierIndex,
+      weight: weightIndex,
+      unit: unitIndex,
+      price: priceIndex
+    });
 
     if (codeIndex === -1 || nameIndex === -1 || priceIndex === -1) {
       errors.push(`Missing required columns. Expected: Code, Product Name, Price. Found: ${headers.join(', ')}`);
