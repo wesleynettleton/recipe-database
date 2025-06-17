@@ -9,6 +9,10 @@ export async function POST(request: NextRequest) {
   try {
     console.log('Starting Excel upload process...');
     
+    // Log the request URL and headers for debugging
+    console.log('Request URL:', request.url);
+    console.log('Request headers:', Object.fromEntries(request.headers.entries()));
+    
     const formData = await request.formData();
     console.log('FormData received, checking files...');
     
@@ -180,6 +184,34 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
+    // Validate individual ingredient data for pattern issues
+    console.log('=== VALIDATING INGREDIENT DATA ===');
+    for (let i = 0; i < Math.min(5, parseResult.ingredients.length); i++) {
+      const ing = parseResult.ingredients[i];
+      console.log(`Ingredient ${i + 1}:`, {
+        productCode: ing.productCode,
+        name: ing.name,
+        supplier: ing.supplier,
+        weight: ing.weight,
+        unit: ing.unit,
+        price: ing.price,
+        priceType: typeof ing.price
+      });
+      
+      // Check for potential pattern issues
+      if (ing.productCode && typeof ing.productCode === 'string') {
+        if (ing.productCode.includes(' ') || ing.productCode.includes('\n') || ing.productCode.includes('\t')) {
+          console.warn(`Product code ${i + 1} contains whitespace: "${ing.productCode}"`);
+        }
+      }
+      
+      if (ing.name && typeof ing.name === 'string') {
+        if (ing.name.length > 255) {
+          console.warn(`Name ${i + 1} is too long: ${ing.name.length} characters`);
+        }
+      }
+    }
+
     console.log('Storing in database...');
     
     // Store in database with progress logging (smaller batches for hobby plan)
@@ -241,6 +273,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Upload error:', error);
     console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    
+    // Check if it's a pattern matching error
+    if (error instanceof Error && error.message.includes('pattern')) {
+      console.error('Pattern matching error detected:', error.message);
+    }
     
     return NextResponse.json({
       success: false,
