@@ -304,7 +304,16 @@ export class DatabaseConnection {
       updatedAt: recipe.updated_at,
       totalCost: totalCost,
       costPerServing: costPerServing,
-      ingredients: ingredientsWithCost
+      ingredients: ingredientsWithCost.map(ing => ({
+        ...ing,
+        originalProductCode: ing.originalProductCode,
+        ingredientName: ing.ingredientName,
+        ingredientSupplier: ing.ingredientSupplier,
+        ingredientPrice: ing.ingredientPrice,
+        ingredientWeight: ing.ingredientWeight,
+        ingredientUnit: ing.ingredientUnit,
+        ingredientAllergies: ing.ingredientAllergies,
+      }))
     };
 
     console.log('Final recipe data being returned:', {
@@ -385,6 +394,7 @@ export class DatabaseConnection {
     const menuRows = await this.query('SELECT * FROM menus WHERE week_start_date = $1', [date]);
     if (menuRows.rows.length === 0) return null;
 
+    // Map database keys (snake_case) to frontend keys (camelCase)
     const menu: any = {
       name: menuRows.rows[0].name,
       date: menuRows.rows[0].week_start_date,
@@ -606,6 +616,7 @@ export class DatabaseConnection {
     // Attach allergies to each ingredient
     return ingredients.map(ingredient => ({
       ...ingredient,
+      productCode: ingredient.productcode, // Map to camelCase
       allergies: allergiesMap.get(ingredient.productcode) || [],
     }));
   }

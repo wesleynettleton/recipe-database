@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const database = getDatabase();
+    // This DB method now returns camelCase keys, so no extra mapping is needed here.
     const ingredients = await database.getAllIngredientsWithAllergies();
     
     return NextResponse.json(ingredients);
