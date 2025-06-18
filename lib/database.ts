@@ -651,6 +651,31 @@ export class DatabaseConnection {
     );
     return result.rows;
   }
+
+  // Clear all recipes and recipe ingredients
+  async clearAllRecipes(): Promise<void> {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      
+      // Clear recipe ingredients first (due to foreign key constraint)
+      await client.query('DELETE FROM recipe_ingredients');
+      
+      // Clear recipes
+      await client.query('DELETE FROM recipes');
+      
+      // Reset sequences
+      await client.query('ALTER SEQUENCE recipes_id_seq RESTART WITH 1');
+      await client.query('ALTER SEQUENCE recipe_ingredients_id_seq RESTART WITH 1');
+      
+      await client.query('COMMIT');
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
+  }
 }
 
 let dbInstance: DatabaseConnection | null = null;
