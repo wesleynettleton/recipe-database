@@ -32,20 +32,15 @@ export async function GET(request: NextRequest) {
     // Generate HTML content for the recipe
     const htmlContent = generatePDFHTML(recipe)
     
-    // Convert HTML to PDF using OpenPuppeteer
-    const pdfBuffer = await convertHTMLToPDF(htmlContent)
+    // Return HTML that can be converted to PDF by the browser
+    const filename = `recipe-${recipe.name.replace(/[^a-zA-Z0-9]/g, '_')}-${new Date().toISOString().split('T')[0]}.html`
     
-    console.log('PDF generated successfully')
-    
-    // Return PDF response
-    const filename = `recipe-${recipe.name.replace(/[^a-zA-Z0-9]/g, '_')}-${new Date().toISOString().split('T')[0]}.pdf`
-    
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(htmlContent, {
       status: 200,
       headers: {
-        'Content-Type': 'application/pdf',
+        'Content-Type': 'text/html',
         'Content-Disposition': `attachment; filename="${filename}"`,
-        'Content-Length': pdfBuffer.length.toString(),
+        'Content-Length': htmlContent.length.toString(),
       },
     })
 
@@ -55,41 +50,6 @@ export async function GET(request: NextRequest) {
       error: 'Failed to generate PDF export',
       details: error instanceof Error ? error.message : String(error)
     }, { status: 500 })
-  }
-}
-
-async function convertHTMLToPDF(htmlContent: string): Promise<Buffer> {
-  try {
-    // Use OpenPuppeteer API to convert HTML to PDF
-    const response = await fetch('https://openpuppeteer.com/api/pdf', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        html: htmlContent,
-        options: {
-          format: 'A4',
-          printBackground: true,
-          margin: {
-            top: '20mm',
-            right: '15mm',
-            bottom: '20mm',
-            left: '15mm'
-          }
-        }
-      })
-    })
-
-    if (!response.ok) {
-      throw new Error(`OpenPuppeteer API error: ${response.status} ${response.statusText}`)
-    }
-
-    const pdfBuffer = await response.arrayBuffer()
-    return Buffer.from(pdfBuffer)
-  } catch (error) {
-    console.error('Error converting HTML to PDF:', error)
-    throw new Error('Failed to convert HTML to PDF')
   }
 }
 
@@ -211,9 +171,26 @@ function generatePDFHTML(recipe: RecipeWithIngredients): string {
             .header { page-break-after: avoid; }
             .section { page-break-inside: avoid; }
         }
+        .print-instructions {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196f3;
+        }
+        @media print {
+            .print-instructions { display: none; }
+        }
     </style>
 </head>
 <body>
+    <div class="print-instructions">
+        <strong>To save as PDF:</strong><br>
+        1. Press Ctrl+P (or Cmd+P on Mac)<br>
+        2. Select "Save as PDF" as destination<br>
+        3. Click Save
+    </div>
+
     <div class="header">
         <div class="recipe-title">${recipe.name}</div>
         <div class="recipe-info">
