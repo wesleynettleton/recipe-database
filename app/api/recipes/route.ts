@@ -39,32 +39,32 @@ export async function POST(request: Request) {
     console.log('Request body:', body);
     
     const { 
-      recipeName, 
-      recipeCode, 
+      name, 
+      code, 
       servings, 
       instructions,
-      recipeNotes, 
+      notes, 
       photo,
-      selectedIngredients, 
+      ingredients, 
       totalCost, 
       costPerServing 
     } = body;
 
     console.log('Extracted data:', {
-      recipeName,
-      recipeCode,
+      name,
+      code,
       servings,
       instructions: instructions ? 'present' : 'missing',
-      recipeNotes: recipeNotes ? 'present' : 'missing',
+      notes: notes ? 'present' : 'missing',
       photo: photo ? 'present' : 'missing',
-      selectedIngredients: selectedIngredients?.length || 0,
+      ingredients: ingredients?.length || 0,
       totalCost,
       costPerServing
     });
 
     // Validate required fields
-    if (!recipeName || !servings || !selectedIngredients || selectedIngredients.length === 0) {
-      console.log('Validation failed:', { recipeName, servings, ingredientsCount: selectedIngredients?.length });
+    if (!name || !servings || !ingredients || ingredients.length === 0) {
+      console.log('Validation failed:', { name, servings, ingredientsCount: ingredients?.length });
       return NextResponse.json(
         { error: 'Recipe name, servings, and at least one ingredient are required' },
         { status: 400 }
@@ -76,14 +76,14 @@ export async function POST(request: Request) {
 
     // Create the recipe using the existing database method
     const recipeData = {
-      name: recipeName,
-      code: recipeCode || undefined,
+      name,
+      code: code || undefined,
       description: undefined, // We removed description field, keeping undefined for compatibility
       servings,
       prepTime: undefined, // We removed prep time, keeping undefined for compatibility
       cookTime: undefined, // We removed cook time, keeping undefined for compatibility
       instructions: instructions || undefined,
-      notes: recipeNotes || undefined,
+      notes: notes || undefined,
       photo: photo || undefined,
       totalCost: totalCost || 0,
       costPerServing: costPerServing || 0
@@ -95,7 +95,7 @@ export async function POST(request: Request) {
 
     // Add all ingredients to the recipe
     console.log('Adding ingredients to recipe...');
-    for (const ingredient of selectedIngredients) {
+    for (const ingredient of ingredients) {
       console.log('Adding ingredient:', ingredient);
       console.log('Ingredient originalProductCode:', ingredient.originalProductCode);
       console.log('Ingredient productCode:', ingredient.productCode);

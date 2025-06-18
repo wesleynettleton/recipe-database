@@ -261,10 +261,10 @@ export default function EditRecipePage() {
 
     const payload = {
       name: recipeName,
-      recipeCode,
+      code: recipeCode,
       servings,
       instructions,
-      recipeNotes,
+      notes: recipeNotes,
       photo,
       ingredients: ingredientsForApi,
       totalCost,

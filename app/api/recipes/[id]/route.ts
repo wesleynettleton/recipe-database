@@ -110,7 +110,7 @@ export async function PUT(
       )
     }
 
-    const { ingredients, ...recipeUpdates } = await request.json()
+    const { ingredients, name, code, servings, instructions, notes, photo, totalCost, costPerServing } = await request.json()
     
     const database = getDatabase()
     
@@ -124,22 +124,27 @@ export async function PUT(
     }
 
     // Calculate total cost if ingredients are provided
-    let totalCost = 0
-    let costPerServing = 0
+    let totalCostCalculated = 0
+    let costPerServingCalculated = 0
     if (ingredients && ingredients.length > 0) {
-      totalCost = ingredients.reduce((sum: number, ing: any) => sum + (ing.cost || 0), 0)
-      costPerServing = recipeUpdates.servings > 0 ? totalCost / recipeUpdates.servings : 0
+      totalCostCalculated = ingredients.reduce((sum: number, ing: any) => sum + (ing.cost || 0), 0)
+      costPerServingCalculated = servings > 0 ? totalCostCalculated / servings : 0
     }
 
-    // Add calculated costs to recipe updates
-    const finalRecipeUpdates = {
-      ...recipeUpdates,
-      totalCost,
-      costPerServing
+    // Prepare DB update object
+    const recipeUpdates = {
+      name,
+      code,
+      servings,
+      instructions,
+      notes,
+      photo,
+      totalcost: totalCostCalculated,
+      costperserving: costPerServingCalculated
     }
 
     // Update recipe basic info
-    const recipeSuccess = await database.updateRecipe(recipeId, finalRecipeUpdates)
+    const recipeSuccess = await database.updateRecipe(recipeId, recipeUpdates)
 
     if (!recipeSuccess) {
       return NextResponse.json(
@@ -162,10 +167,22 @@ export async function PUT(
 
     // Return the updated recipe
     const updatedRecipe = await database.getRecipeWithIngredients(recipeId)
+    if (!updatedRecipe) {
+      return NextResponse.json(
+        { error: 'Failed to fetch updated recipe' },
+        { status: 500 }
+      )
+    }
+    const camelRecipe = {
+      ...updatedRecipe,
+      // totalCost and costPerServing are already camelCase in the returned object
+      notes: updatedRecipe.notes,
+      // ...other fields as needed
+    }
     return NextResponse.json({ 
       success: true, 
       message: 'Recipe updated successfully',
-      recipe: updatedRecipe
+      recipe: camelRecipe
     })
 
   } catch (error) {
