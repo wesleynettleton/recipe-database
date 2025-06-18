@@ -156,10 +156,20 @@ function BuildRecipePageComponent() {
     console.log('Adding ingredient - selected:', selected)
     console.log('Selected productCode:', selected.productcode)
     console.log('Selected name:', selected.name)
+    console.log('Selected price (raw):', selected.price, 'type:', typeof selected.price)
+    console.log('Selected weight (raw):', selected.weight, 'type:', typeof selected.weight)
 
     const qty = parseFloat(quantity)
     const price = parseFloat(String(selected.price))
     const weight = parseFloat(String(selected.weight))
+    
+    console.log('Parsed values:', {
+      qty,
+      price,
+      weight,
+      priceType: typeof price,
+      weightType: typeof weight
+    })
     
     const pricePerUnit = (weight && weight > 0)
       ? price / weight

@@ -479,10 +479,10 @@ export class DatabaseConnection {
   }
 
   // Recalculate recipe cost
-  private async recalculateRecipeCost(recipeId: number) {
+  async recalculateRecipeCost(recipeId: number) {
     const result = await this.query(`
       SELECT 
-        SUM(quantity * ingredientPrice) as totalCost,
+        SUM(quantity * (ingredientPrice / NULLIF(ingredientWeight, 0))) as totalCost,
         (SELECT servings FROM recipes WHERE id = $1) as servings
       FROM recipe_ingredients
       WHERE recipeId = $1
