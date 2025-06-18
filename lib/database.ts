@@ -253,7 +253,14 @@ export class DatabaseConnection {
     const ingredientsWithCost = ingredientsResult.rows.map(ingredient => {
       const quantity = parseFloat(String(ingredient.quantity));
       const price = parseFloat(String(ingredient.ingredientPrice));
-      const cost = quantity * price;
+      const weight = parseFloat(String(ingredient.ingredientWeight));
+      
+      // Calculate price per unit (e.g., price per gram)
+      const pricePerUnit = (weight && weight > 0) ? price / weight : price;
+      
+      // Calculate cost for the quantity used
+      const cost = quantity * pricePerUnit;
+      
       return {
         ...ingredient,
         cost: cost || 0
