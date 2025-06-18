@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 
 interface IngredientWithAllergies {
   id: number
-  productCode: string
+  productcode: string
   name: string
   supplier?: string
   weight?: number
@@ -154,7 +154,7 @@ function BuildRecipePageComponent() {
     if (!selected || !quantity) return
 
     console.log('Adding ingredient - selected:', selected)
-    console.log('Selected productCode:', selected.productCode)
+    console.log('Selected productCode:', selected.productcode)
     console.log('Selected name:', selected.name)
 
     const qty = parseFloat(quantity)
@@ -167,8 +167,8 @@ function BuildRecipePageComponent() {
     const parsedAllergies = parseAllergies(selected.allergies)
 
     const newIngredient: RecipeIngredient = {
-      originalProductCode: selected.productCode,
-      productCode: selected.productCode,
+      originalProductCode: selected.productcode,
+      productCode: selected.productcode,
       name: selected.name,
       quantity: qty,
       unit: unit || selected.unit,
@@ -493,7 +493,7 @@ function BuildRecipePageComponent() {
                   <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-60 overflow-auto">
                     {searchResults.map(ing => (
                       <li key={ing.id} onClick={() => selectIngredient(ing)} className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-black">
-                        {ing.name} ({ing.productCode})
+                        {ing.name} ({ing.productcode})
                       </li>
                     ))}
                   </ul>
