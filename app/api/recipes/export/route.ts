@@ -29,19 +29,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Recipe not found' }, { status: 404 })
     }
 
-    // Generate PDF HTML content
+    // Generate HTML content for the recipe
     const htmlContent = generatePDFHTML(recipe)
     
-    // For now, return HTML that can be converted to PDF by the browser
-    // This is a workaround for serverless PDF generation issues
-    const filename = `recipe-${recipe.name.replace(/[^a-zA-Z0-9]/g, '_')}-${new Date().toISOString().split('T')[0]}.html`
+    // Convert HTML to PDF using OpenPuppeteer
+    const pdfBuffer = await convertHTMLToPDF(htmlContent)
     
-    return new NextResponse(htmlContent, {
+    console.log('PDF generated successfully')
+    
+    // Return PDF response
+    const filename = `recipe-${recipe.name.replace(/[^a-zA-Z0-9]/g, '_')}-${new Date().toISOString().split('T')[0]}.pdf`
+    
+    return new NextResponse(pdfBuffer, {
       status: 200,
       headers: {
-        'Content-Type': 'text/html',
+        'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${filename}"`,
-        'Content-Length': htmlContent.length.toString(),
+        'Content-Length': pdfBuffer.length.toString(),
       },
     })
 
@@ -51,6 +55,41 @@ export async function GET(request: NextRequest) {
       error: 'Failed to generate PDF export',
       details: error instanceof Error ? error.message : String(error)
     }, { status: 500 })
+  }
+}
+
+async function convertHTMLToPDF(htmlContent: string): Promise<Buffer> {
+  try {
+    // Use OpenPuppeteer API to convert HTML to PDF
+    const response = await fetch('https://openpuppeteer.com/api/pdf', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        html: htmlContent,
+        options: {
+          format: 'A4',
+          printBackground: true,
+          margin: {
+            top: '20mm',
+            right: '15mm',
+            bottom: '20mm',
+            left: '15mm'
+          }
+        }
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error(`OpenPuppeteer API error: ${response.status} ${response.statusText}`)
+    }
+
+    const pdfBuffer = await response.arrayBuffer()
+    return Buffer.from(pdfBuffer)
+  } catch (error) {
+    console.error('Error converting HTML to PDF:', error)
+    throw new Error('Failed to convert HTML to PDF')
   }
 }
 
