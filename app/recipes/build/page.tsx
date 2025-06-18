@@ -352,7 +352,6 @@ function BuildRecipePageComponent() {
   }
 
   const saveRecipe = async () => {
-    console.log('Validating save...', { recipeName, servings, selectedIngredientsLength: selectedIngredients.length });
     if (!recipeName || !servings || servings <= 0 || selectedIngredients.length === 0) {
       setSaveMessage('Recipe name, servings, and at least one ingredient are required.')
       return
