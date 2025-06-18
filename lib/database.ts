@@ -149,14 +149,24 @@ export class DatabaseConnection {
 
   // Get all recipes
   async getAllRecipes(): Promise<Recipe[]> {
-    const result = await this.query('SELECT id, name, code, servings, totalCost, costPerServing, created_at as createdAt FROM recipes ORDER BY name');
-    return result.rows;
+    const result = await this.query('SELECT id, name, code, servings, totalcost, costperserving, created_at FROM recipes ORDER BY name');
+    
+    // Map the results to camelCase
+    return result.rows.map(row => ({
+      id: row.id,
+      name: row.name,
+      code: row.code,
+      servings: row.servings,
+      totalCost: row.totalcost,
+      costPerServing: row.costperserving,
+      createdAt: row.created_at
+    }));
   }
 
   // Create recipe
   async createRecipe(recipe: Omit<Recipe, 'id' | 'createdAt' | 'updatedAt'>): Promise<number> {
     const result = await this.query(`
-      INSERT INTO recipes (name, code, description, servings, prepTime, cookTime, instructions, notes, photo, totalCost, costPerServing)
+      INSERT INTO recipes (name, code, description, servings, preptime, cooktime, instructions, notes, photo, totalcost, costperserving)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING id
     `, [
@@ -272,7 +282,15 @@ export class DatabaseConnection {
     });
 
     const result = {
-      ...recipe,
+      id: recipe.id,
+      name: recipe.name,
+      code: recipe.code,
+      servings: recipe.servings,
+      instructions: recipe.instructions,
+      notes: recipe.notes,
+      photo: recipe.photo,
+      createdAt: recipe.created_at,
+      updatedAt: recipe.updated_at,
       totalCost: recipe.totalcost,
       costPerServing: recipe.costperserving,
       ingredients: ingredientsWithCost
@@ -413,84 +431,71 @@ export class DatabaseConnection {
   private async syncRecipeIngredientSnapshots(productCodesToUpdate: { productCode: string }[]) {
     if (productCodesToUpdate.length === 0) return;
 
-    const client = await this.pool.connect();
-    try {
-      await client.query('BEGIN');
+    console.log('Syncing recipe ingredient snapshots for product codes:', productCodesToUpdate.map(p => p.productCode));
 
-      // Get latest ingredient data
-      const ingredientsResult = await client.query(
-        'SELECT productCode, name, supplier, price, weight, unit FROM ingredients WHERE productCode = ANY($1)',
-        [productCodesToUpdate.map(p => p.productCode)]
-      );
-      
-      const ingredientsMap = new Map(ingredientsResult.rows.map(i => [i.productCode, i]));
+    // Get latest ingredient data
+    const ingredientsResult = await this.query(
+      'SELECT productcode, name, supplier, price, weight, unit FROM ingredients WHERE productcode = ANY($1)',
+      [productCodesToUpdate.map(p => p.productCode)]
+    );
+    const ingredientsMap = new Map(ingredientsResult.rows.map(i => [i.productcode, i]));
 
-      // Get latest allergies
-      const allergiesResult = await client.query(
-        'SELECT productCode, allergy, status FROM allergies WHERE productCode = ANY($1)',
-        [productCodesToUpdate.map(p => p.productCode)]
-      );
-
-      const ingredientAllergiesMap = new Map<string, string[]>();
-      for (const allergy of allergiesResult.rows) {
-        if (!ingredientAllergiesMap.has(allergy.productCode)) {
-          ingredientAllergiesMap.set(allergy.productCode, []);
-        }
-        ingredientAllergiesMap.get(allergy.productCode)!.push(`${allergy.allergy}:${allergy.status}`);
+    // Get latest allergy data
+    const allergiesResult = await this.query(
+      'SELECT productcode, allergy, status FROM allergies WHERE productcode = ANY($1)',
+      [productCodesToUpdate.map(p => p.productCode)]
+    );
+    const ingredientAllergiesMap = new Map<string, string[]>();
+    for (const allergy of allergiesResult.rows) {
+      if (!ingredientAllergiesMap.has(allergy.productcode)) {
+        ingredientAllergiesMap.set(allergy.productcode, []);
       }
+      ingredientAllergiesMap.get(allergy.productcode)!.push(`${allergy.allergy}:${allergy.status}`);
+    }
 
-      // Get recipe ingredients to update
-      const recipeIngredientsResult = await client.query(
-        'SELECT id, originalProductCode FROM recipe_ingredients WHERE originalProductCode = ANY($1)',
-        [productCodesToUpdate.map(p => p.productCode)]
-      );
+    // Update recipe ingredients that use these product codes
+    const recipeIngredientsResult = await this.query(
+      'SELECT id, originalproductcode FROM recipe_ingredients WHERE originalproductcode = ANY($1)',
+      [productCodesToUpdate.map(p => p.productCode)]
+    );
 
-      // Update recipe ingredients
-      for (const recIng of recipeIngredientsResult.rows) {
-        const latestIngredient = ingredientsMap.get(recIng.originalProductCode);
-        const latestAllergies = ingredientAllergiesMap.get(recIng.originalProductCode) || [];
+    for (const recIng of recipeIngredientsResult.rows) {
+      const latestIngredient = ingredientsMap.get(recIng.originalproductcode);
+      const latestAllergies = ingredientAllergiesMap.get(recIng.originalproductcode) || [];
 
-        if (latestIngredient) {
-          await client.query(`
-            UPDATE recipe_ingredients
-            SET 
-              ingredientName = $1,
-              ingredientSupplier = $2,
-              ingredientPrice = $3,
-              ingredientWeight = $4,
-              ingredientUnit = $5,
-              ingredientAllergies = $6,
-              updated_at = CURRENT_TIMESTAMP
-            WHERE id = $7
-          `, [
-            latestIngredient.name,
-            latestIngredient.supplier,
-            latestIngredient.price,
-            latestIngredient.weight,
-            latestIngredient.unit,
-            JSON.stringify(latestAllergies),
-            recIng.id
-          ]);
-        }
+      if (latestIngredient) {
+        await this.query(`
+          UPDATE recipe_ingredients
+          SET 
+            ingredientName = $1,
+            ingredientSupplier = $2,
+            ingredientPrice = $3,
+            ingredientWeight = $4,
+            ingredientUnit = $5,
+            ingredientAllergies = $6,
+            updated_at = CURRENT_TIMESTAMP
+          WHERE id = $7
+        `, [
+          latestIngredient.name,
+          latestIngredient.supplier,
+          latestIngredient.price,
+          latestIngredient.weight,
+          latestIngredient.unit,
+          JSON.stringify(latestAllergies),
+          recIng.id
+        ]);
       }
+    }
 
-      // Get affected recipe IDs
-      const recipeIdsResult = await client.query(
-        'SELECT DISTINCT recipeId FROM recipe_ingredients WHERE id = ANY($1)',
-        [recipeIngredientsResult.rows.map(ri => ri.id)]
-      );
+    // Get affected recipe IDs
+    const recipeIdsResult = await this.query(
+      'SELECT DISTINCT recipeId FROM recipe_ingredients WHERE id = ANY($1)',
+      [recipeIngredientsResult.rows.map(ri => ri.id)]
+    );
 
-      // Recalculate costs for affected recipes
-      for (const { recipeId } of recipeIdsResult.rows) {
-        await this.recalculateRecipeCost(recipeId);
-      }
-
-      await client.query('COMMIT');
-    } catch (e) {
-      await client.query('ROLLBACK');
-      throw e;
-    } finally {
-      client.release();
+    // Recalculate costs for affected recipes
+    for (const { recipeId } of recipeIdsResult.rows) {
+      await this.recalculateRecipeCost(recipeId);
     }
   }
 
@@ -528,7 +533,7 @@ export class DatabaseConnection {
 
     await this.query(`
       UPDATE recipes
-      SET totalCost = $1, costPerServing = $2, updated_at = CURRENT_TIMESTAMP
+      SET totalcost = $1, costperserving = $2, updated_at = CURRENT_TIMESTAMP
       WHERE id = $3
     `, [totalCost || 0, costPerServing, recipeId]);
 
@@ -644,7 +649,21 @@ export class DatabaseConnection {
     const fields = Object.keys(updates);
     if (fields.length === 0) return false;
 
-    const setClause = fields.map((field, idx) => `${field} = $${idx + 2}`).join(', ');
+    // Map camelCase field names to database column names
+    const fieldMapping: { [key: string]: string } = {
+      totalCost: 'totalcost',
+      costPerServing: 'costperserving',
+      prepTime: 'preptime',
+      cookTime: 'cooktime',
+      createdAt: 'created_at',
+      updatedAt: 'updated_at'
+    };
+
+    const setClause = fields.map((field, idx) => {
+      const dbField = fieldMapping[field] || field;
+      return `${dbField} = $${idx + 2}`;
+    }).join(', ');
+    
     const values = fields.map(field => (updates as any)[field]);
     const result = await this.query(
       `UPDATE recipes SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = $1`,

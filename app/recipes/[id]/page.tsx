@@ -71,6 +71,9 @@ export default function RecipeDetailPage() {
       const data = await response.json()
       console.log('Recipe data from API:', data.recipe)
       console.log('First ingredient allergies:', data.recipe.ingredients[0]?.ingredientAllergies)
+      console.log('Recipe totalCost field:', data.recipe.totalCost)
+      console.log('Recipe costPerServing field:', data.recipe.costPerServing)
+      console.log('All recipe fields:', Object.keys(data.recipe))
       setRecipe(data.recipe)
     } catch (error) {
       console.error('Error fetching recipe:', error)
