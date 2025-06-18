@@ -214,19 +214,29 @@ export default function EditRecipePage() {
   }
 
   const addIngredient = () => {
-    if (!quantity || !unit || !selectedIngredient) return
+    if (!selectedIngredient) {
+      alert('Please select an ingredient from the dropdown list first.');
+      return;
+    }
+    if (!quantity) {
+      alert('Please enter a quantity for the ingredient.');
+      return;
+    }
 
-    const quantityNum = parseFloat(quantity)
-    if (isNaN(quantityNum) || quantityNum <= 0) return
+    const quantityNum = parseFloat(quantity);
+    if (isNaN(quantityNum) || quantityNum <= 0) {
+      alert('Please enter a valid positive number for the quantity.');
+      return;
+    }
 
-    const cost = (selectedIngredient.price / selectedIngredient.weight) * quantityNum
+    const cost = (selectedIngredient.price / selectedIngredient.weight) * quantityNum;
 
     const newIngredient: RecipeIngredient = {
       id: 0, // This will be set by the server
       productCode: selectedIngredient.productCode,
       originalProductCode: selectedIngredient.productCode,
       quantity: quantityNum,
-      unit,
+      unit: unit || selectedIngredient.unit, // Use entered unit, or default to ingredient's base unit
       notes: notes || undefined,
       cost,
       ingredientName: selectedIngredient.name,
@@ -236,15 +246,17 @@ export default function EditRecipePage() {
       ingredientUnit: selectedIngredient.unit,
       ingredientAllergies: JSON.stringify(selectedIngredient.allergies),
       ingredient: selectedIngredient
-    }
+    };
 
-    setSelectedIngredients(prev => [...prev, newIngredient])
-    setIngredientSearch('')
-    setSelectedIngredient(null)
-    setQuantity('')
-    setUnit('')
-    setNotes('')
-    setShowDropdown(false)
+    setSelectedIngredients(prev => [...prev, newIngredient]);
+    
+    // Clear inputs after adding
+    setIngredientSearch('');
+    setSelectedIngredient(null);
+    setQuantity('');
+    setUnit('');
+    setNotes('');
+    setShowDropdown(false);
   }
 
   const removeIngredient = (index: number) => {
