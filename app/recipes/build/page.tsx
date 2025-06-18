@@ -352,8 +352,9 @@ function BuildRecipePageComponent() {
   }
 
   const saveRecipe = async () => {
-    if (!recipeName || selectedIngredients.length === 0) {
-      setSaveMessage('Please enter a recipe name and add at least one ingredient.')
+    console.log('Validating save...', { recipeName, servings, selectedIngredientsLength: selectedIngredients.length });
+    if (!recipeName || !servings || servings <= 0 || selectedIngredients.length === 0) {
+      setSaveMessage('Recipe name, servings, and at least one ingredient are required.')
       return
     }
 
@@ -584,7 +585,7 @@ function BuildRecipePageComponent() {
               <div className="border-t border-gray-200 pt-4">
                 <button
                   onClick={saveRecipe}
-                  disabled={isSaving || !recipeName || selectedIngredients.length === 0}
+                  disabled={isSaving || !recipeName || !servings || servings <= 0 || selectedIngredients.length === 0}
                   className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-md hover:bg-blue-700 disabled:bg-blue-300 transition duration-300"
                 >
                   {isSaving ? 'Saving...' : 'Save Recipe'}
