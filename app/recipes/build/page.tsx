@@ -92,6 +92,14 @@ function BuildRecipePageComponent() {
     return () => clearTimeout(searchTimeoutRef.current)
   }, [ingredientSearch])
 
+  // Function to format price
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-GB', {
+      style: 'currency',
+      currency: 'GBP',
+    }).format(price);
+  };
+
   // Close ingredient search dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -511,13 +519,21 @@ function BuildRecipePageComponent() {
                   className="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
                 />
                 {showDropdown && searchResults.length > 0 && (
-                  <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-60 overflow-auto">
-                    {searchResults.map(ing => (
-                      <li key={ing.id} onClick={() => selectIngredient(ing)} className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-black">
-                        {ing.name} ({ing.productcode})
-                      </li>
+                  <div
+                    ref={dropdownRef}
+                    className="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg max-h-60 overflow-auto"
+                  >
+                    {searchResults.map((ingredient) => (
+                      <div
+                        key={ingredient.productcode}
+                        onClick={() => selectIngredient(ingredient)}
+                        className="cursor-pointer hover:bg-gray-100 p-2 flex justify-between"
+                      >
+                        <span>{ingredient.name}</span>
+                        <span className="text-gray-500">{formatPrice(ingredient.price)}</span>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 )}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
