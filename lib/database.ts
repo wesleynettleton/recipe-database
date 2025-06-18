@@ -565,7 +565,23 @@ export class DatabaseConnection {
   async getMenuByDate(menuDate: string): Promise<any | null> {
     const result = await this.query('SELECT * FROM menus WHERE week_start_date = $1', [menuDate]);
     if (result.rows.length === 0) return null;
-    return result.rows;
+    
+    const row = result.rows[0];
+    
+    // Map snake_case to camelCase and parse the JSON fields
+    return {
+      id: row.id,
+      name: row.name,
+      weekStartDate: row.week_start_date,
+      monday: row.monday ? JSON.parse(row.monday) : null,
+      tuesday: row.tuesday ? JSON.parse(row.tuesday) : null,
+      wednesday: row.wednesday ? JSON.parse(row.wednesday) : null,
+      thursday: row.thursday ? JSON.parse(row.thursday) : null,
+      friday: row.friday ? JSON.parse(row.friday) : null,
+      dailyOptions: row.daily_options ? JSON.parse(row.daily_options) : null,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    };
   }
 
   // Delete menu by week_start_date (for API compatibility)

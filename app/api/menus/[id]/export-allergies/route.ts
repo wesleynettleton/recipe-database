@@ -139,14 +139,15 @@ export async function GET(request: Request, { params }: { params: { id: string }
     // Process recipes for each day of the week
     const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
     for (const day of days) {
-        if (dayRowMapping[day] && menu.weeklyMenu[day]) {
+        const dayData = menu[day as keyof typeof menu];
+        if (dayRowMapping[day] && dayData) {
             let currentRow = dayRowMapping[day] + 1; // Start writing on the row below the day header
             const recipesForDay = [
-                menu.weeklyMenu[day].lunchOption1,
-                menu.weeklyMenu[day].lunchOption2,
-                menu.weeklyMenu[day].lunchOption3,
-                menu.weeklyMenu[day].servedWith123,
-                menu.weeklyMenu[day].dessertOptionD,
+                dayData.lunchOption1,
+                dayData.lunchOption2,
+                dayData.lunchOption3,
+                dayData.servedWith123,
+                dayData.dessertOptionD,
             ].filter(Boolean);
 
             for(const recipe of recipesForDay) {
@@ -157,13 +158,13 @@ export async function GET(request: Request, { params }: { params: { id: string }
     }
 
     // Process recipes for the "Daily Options" section
-    if (dayRowMapping.dailyOptions && menu.weeklyMenu.dailyOptions) {
+    if (dayRowMapping.dailyOptions && menu.dailyOptions) {
         let currentRow = dayRowMapping.dailyOptions + 1; // Start below the "Daily Options" header
         const dailyRecipes = [
-            menu.weeklyMenu.dailyOptions.option1,
-            menu.weeklyMenu.dailyOptions.option2,
-            menu.weeklyMenu.dailyOptions.option3,
-            menu.weeklyMenu.dailyOptions.option4,
+            menu.dailyOptions.option1,
+            menu.dailyOptions.option2,
+            menu.dailyOptions.option3,
+            menu.dailyOptions.option4,
         ].filter(Boolean);
         
         for(const recipe of dailyRecipes) {
