@@ -133,6 +133,11 @@ export default function EditRecipePage() {
 
   // Handle ingredient search
   useEffect(() => {
+    if (programmaticChangeRef.current) {
+      programmaticChangeRef.current = false;
+      return;
+    }
+
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current)
     }
@@ -501,6 +506,7 @@ export default function EditRecipePage() {
                         key={ingredient.productCode}
                         className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                         onClick={() => {
+                          programmaticChangeRef.current = true;
                           setIngredientSearch(ingredient.name)
                           setSelectedIngredient(ingredient)
                           setShowDropdown(false)
