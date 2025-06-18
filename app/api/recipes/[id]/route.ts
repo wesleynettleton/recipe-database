@@ -33,6 +33,11 @@ export async function GET(
     console.log('First ingredient cost:', recipe.ingredients?.[0]?.cost)
     console.log('First ingredient quantity:', recipe.ingredients?.[0]?.quantity)
     console.log('First ingredient price:', recipe.ingredients?.[0]?.ingredientPrice)
+    console.log('Recipe totalCost (raw):', recipe.totalCost)
+    console.log('Recipe totalCost (type):', typeof recipe.totalCost)
+    console.log('Recipe costPerServing (raw):', recipe.costPerServing)
+    console.log('Recipe costPerServing (type):', typeof recipe.costPerServing)
+    console.log('All recipe fields:', Object.keys(recipe))
 
     return NextResponse.json({ success: true, recipe })
   } catch (error) {

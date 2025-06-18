@@ -281,6 +281,17 @@ export class DatabaseConnection {
       };
     });
 
+    // Calculate total cost and cost per serving
+    const totalCost = ingredientsWithCost.reduce((sum, ingredient) => sum + (ingredient.cost || 0), 0);
+    const costPerServing = recipe.servings > 0 ? totalCost / recipe.servings : 0;
+
+    console.log('Calculated costs:', {
+      totalCost,
+      costPerServing,
+      servings: recipe.servings,
+      ingredientsCount: ingredientsWithCost.length
+    });
+
     const result = {
       id: recipe.id,
       name: recipe.name,
@@ -291,8 +302,8 @@ export class DatabaseConnection {
       photo: recipe.photo,
       createdAt: recipe.created_at,
       updatedAt: recipe.updated_at,
-      totalCost: recipe.totalcost,
-      costPerServing: recipe.costperserving,
+      totalCost: totalCost,
+      costPerServing: costPerServing,
       ingredients: ingredientsWithCost
     };
 
