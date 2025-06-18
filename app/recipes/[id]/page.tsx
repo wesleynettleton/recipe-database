@@ -325,7 +325,12 @@ export default function RecipeDetailPage() {
                             </div>
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap text-right">
-                            <div className="text-sm font-medium text-gray-900">£{(typeof ingredient.cost === 'number' ? ingredient.cost : parseFloat(String(ingredient.cost)) || 0).toFixed(2)}</div>
+                            <div className="text-sm font-medium text-gray-900">
+                              £{(() => {
+                                const cost = typeof ingredient.cost === 'number' ? ingredient.cost : parseFloat(String(ingredient.cost));
+                                return isNaN(cost) ? 0 : cost;
+                              })().toFixed(2)}
+                            </div>
                           </td>
                         </tr>
                       )
@@ -337,7 +342,10 @@ export default function RecipeDetailPage() {
                         Total Cost:
                       </td>
                       <td className="px-4 py-4 text-right text-sm font-bold text-gray-900">
-                        £{recipe.totalCost?.toFixed(2) || '0.00'}
+                        £{(() => {
+                          const cost = typeof recipe.totalCost === 'number' ? recipe.totalCost : parseFloat(String(recipe.totalCost));
+                          return isNaN(cost) ? 0 : cost;
+                        })().toFixed(2)}
                       </td>
                     </tr>
                     <tr>
@@ -345,7 +353,10 @@ export default function RecipeDetailPage() {
                         Cost per Serving:
                       </td>
                       <td className="px-4 py-4 text-right text-sm font-bold text-gray-900">
-                        £{recipe.costPerServing?.toFixed(2) || '0.00'}
+                        £{(() => {
+                          const cost = typeof recipe.costPerServing === 'number' ? recipe.costPerServing : parseFloat(String(recipe.costPerServing));
+                          return isNaN(cost) ? 0 : cost;
+                        })().toFixed(2)}
                       </td>
                     </tr>
                   </tfoot>
