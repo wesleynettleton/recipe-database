@@ -1,3 +1,4 @@
+import React from 'react'
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
@@ -146,10 +147,8 @@ export default function EditRecipePage() {
         const response = await fetch(`/api/ingredients/search?q=${encodeURIComponent(ingredientSearch)}`)
         if (response.ok) {
           const data = await response.json()
-          if (data.success) {
-            setSearchResults(data.ingredients)
-            setShowDropdown(true)
-          }
+          setSearchResults(data.ingredients || [])
+          setShowDropdown((data.ingredients || []).length > 0)
         }
       } catch (error) {
         console.error('Error searching ingredients:', error)
@@ -261,13 +260,13 @@ export default function EditRecipePage() {
     }))
 
     const payload = {
-      recipeName,
+      name: recipeName,
       recipeCode,
       servings,
       instructions,
       recipeNotes,
       photo,
-      selectedIngredients: ingredientsForApi,
+      ingredients: ingredientsForApi,
       totalCost,
       costPerServing,
     }
