@@ -28,13 +28,21 @@ export async function DELETE(request: Request, context: { params: { id: string }
   try {
     const db = getDatabase();
     const menuDate = context.params.id;
+
+    console.log('[API DELETE /api/menus/[id]] Received request to delete menu with date:', menuDate);
+
     if (!menuDate) {
+      console.error('[API DELETE] Menu date is required but was not provided.');
       return NextResponse.json({ success: false, error: 'Menu date is required' }, { status: 400 });
     }
+
     const deleted = await db.deleteMenuByDate(menuDate);
+
     if (deleted) {
+      console.log(`[API DELETE] Successfully deleted menu for date: ${menuDate}`);
       return NextResponse.json({ success: true, message: 'Menu deleted successfully' });
     } else {
+      console.warn(`[API DELETE] Menu for date ${menuDate} not found or not deleted.`);
       return NextResponse.json({ success: false, error: 'Menu not found' }, { status: 404 });
     }
   } catch (error) {

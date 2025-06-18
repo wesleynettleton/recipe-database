@@ -5,7 +5,7 @@ import Link from 'next/link'
 
 interface MenuInfo {
   name: string;
-  week_start_date: string;
+  weekStartDate: string;
 }
 
 export default function MenusPage() {
@@ -51,7 +51,7 @@ export default function MenusPage() {
       const response = await fetch(`/api/menus/${weekStartDate}`, { method: 'DELETE' });
       const data = await response.json();
       if (data.success) {
-        setMenus(prev => prev.filter(menu => menu.week_start_date !== weekStartDate));
+        setMenus(prev => prev.filter(menu => menu.weekStartDate !== weekStartDate));
       } else {
         alert(data.error || 'Failed to delete menu.');
       }
@@ -122,9 +122,9 @@ export default function MenusPage() {
           <div className="bg-white shadow overflow-hidden sm:rounded-md">
             <ul role="list" className="divide-y divide-gray-200">
               {menus.map((menu) => (
-                <li key={menu.week_start_date}>
+                <li key={menu.weekStartDate}>
                   <div className="flex items-center justify-between">
-                    <Link href={`/menus/${menu.week_start_date}`} className="flex-grow">
+                    <Link href={`/menus/${menu.weekStartDate}`} className="flex-grow">
                       <div className="px-4 py-4 sm:px-6 flex items-center">
                         <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-blue-100 rounded-full">
                           <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,13 +133,13 @@ export default function MenusPage() {
                         </div>
                         <div className="ml-4">
                           <p className="text-lg font-medium text-gray-900 truncate">{menu.name || 'Unnamed Menu'}</p>
-                          <p className="text-sm text-gray-500">Week of {formatDisplayDate(menu.week_start_date)}</p>
+                          <p className="text-sm text-gray-500">Week of {formatDisplayDate(menu.weekStartDate)}</p>
                         </div>
                       </div>
                     </Link>
                     <div className="px-4 sm:px-6 flex-shrink-0 space-x-2">
                       <button
-                        onClick={() => handleExport(menu.week_start_date)}
+                        onClick={() => handleExport(menu.weekStartDate)}
                         className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                       >
                         <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -148,7 +148,7 @@ export default function MenusPage() {
                         Export
                       </button>
                       <button
-                        onClick={() => handleExportNoCode(menu.week_start_date)}
+                        onClick={() => handleExportNoCode(menu.weekStartDate)}
                         className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                       >
                         <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -157,7 +157,7 @@ export default function MenusPage() {
                         Export (No Codes)
                       </button>
                       <Link
-                        href={`/menus/build?date=${menu.week_start_date}`}
+                        href={`/menus/build?date=${menu.weekStartDate}`}
                         className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                       >
                         <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -166,7 +166,7 @@ export default function MenusPage() {
                         Edit
                       </Link>
                       <button
-                        onClick={() => handleDeleteMenu(menu.week_start_date, menu.name)}
+                        onClick={() => handleDeleteMenu(menu.weekStartDate, menu.name)}
                         className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                       >
                         <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
