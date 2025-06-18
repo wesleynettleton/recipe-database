@@ -77,6 +77,7 @@ export default function EditRecipePage() {
   const [quantity, setQuantity] = useState('')
   const [unit, setUnit] = useState('')
   const [notes, setNotes] = useState('')
+  const [selectedIngredient, setSelectedIngredient] = useState<IngredientWithAllergies | null>(null)
   
   // UI/Status state
   const [isLoading, setIsLoading] = useState(true)
@@ -202,10 +203,14 @@ export default function EditRecipePage() {
     setPhotoPreview('')
   }
 
-  const addIngredient = () => {
-    if (!quantity || !unit || searchResults.length === 0) return
+  const handleIngredientSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setIngredientSearch(e.target.value)
+    setSelectedIngredient(null)
+  }
 
-    const selectedIngredient = searchResults[0]
+  const addIngredient = () => {
+    if (!quantity || !unit || !selectedIngredient) return
+
     const quantityNum = parseFloat(quantity)
     if (isNaN(quantityNum) || quantityNum <= 0) return
 
@@ -230,6 +235,7 @@ export default function EditRecipePage() {
 
     setSelectedIngredients(prev => [...prev, newIngredient])
     setIngredientSearch('')
+    setSelectedIngredient(null)
     setQuantity('')
     setUnit('')
     setNotes('')
@@ -481,7 +487,7 @@ export default function EditRecipePage() {
                 <input
                   type="text"
                   value={ingredientSearch}
-                  onChange={e => setIngredientSearch(e.target.value)}
+                  onChange={handleIngredientSearchChange}
                   placeholder="Search for an ingredient..."
                   className="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
                 />
@@ -496,6 +502,7 @@ export default function EditRecipePage() {
                         className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                         onClick={() => {
                           setIngredientSearch(ingredient.name)
+                          setSelectedIngredient(ingredient)
                           setShowDropdown(false)
                         }}
                       >
