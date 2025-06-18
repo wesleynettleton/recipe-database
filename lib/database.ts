@@ -835,4 +835,6 @@ export function getDatabase(): DatabaseConnection {
     dbInstance = new DatabaseConnection();
   }
   return dbInstance;
-} 
+}
+
+// Force redeploy by adding a new comment 
