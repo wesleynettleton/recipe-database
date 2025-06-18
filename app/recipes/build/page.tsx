@@ -529,7 +529,7 @@ function BuildRecipePageComponent() {
                         onClick={() => selectIngredient(ingredient)}
                         className="cursor-pointer hover:bg-gray-100 p-2 flex justify-between"
                       >
-                        <span>{ingredient.name}</span>
+                        <span className="text-black">{ingredient.name}</span>
                         <span className="text-gray-500">{formatPrice(ingredient.price)}</span>
                       </div>
                     ))}
