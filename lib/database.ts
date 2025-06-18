@@ -177,7 +177,13 @@ export class DatabaseConnection {
 
   // Add recipe ingredient
   async addRecipeIngredient(recipeIngredient: any): Promise<void> {
+    console.log('addRecipeIngredient called with:', JSON.stringify(recipeIngredient, null, 2));
+    console.log('recipeIngredient.originalProductCode:', recipeIngredient.originalProductCode);
+    console.log('recipeIngredient.productCode:', recipeIngredient.productCode);
+    console.log('All keys in recipeIngredient:', Object.keys(recipeIngredient));
+    
     if (!recipeIngredient.originalProductCode) {
+      console.error('Missing originalProductCode. Full ingredient data:', recipeIngredient);
       throw new Error("Ingredient is missing a product code.");
     }
 
