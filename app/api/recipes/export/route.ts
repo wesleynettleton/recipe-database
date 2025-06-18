@@ -4,9 +4,7 @@ export const maxDuration = 60;
 import { NextRequest, NextResponse } from 'next/server'
 import { getDatabase } from '../../../../lib/database'
 import { RecipeWithIngredients } from '../../../../lib/types'
-import puppeteer, { type Browser } from 'puppeteer';
-import puppeteerCore, { type Browser as BrowserCore } from 'puppeteer-core';
-import chromium from '@sparticuz/chromium-min';
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
 
 export async function GET(request: NextRequest) {
   try {
@@ -33,11 +31,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Recipe not found' }, { status: 404 })
     }
 
-    // Generate HTML content for the recipe
-    const htmlContent = generatePDFHTML(recipe)
-    
-    // Convert HTML to PDF using Puppeteer
-    const pdfBuffer = await convertHTMLToPDF(htmlContent)
+    // Generate PDF using PDF-lib
+    const pdfBuffer = await generatePDF(recipe)
     
     console.log('PDF generated successfully')
     
@@ -62,234 +57,213 @@ export async function GET(request: NextRequest) {
   }
 }
 
-async function convertHTMLToPDF(htmlContent: string): Promise<Buffer> {
-  let browser: Browser | BrowserCore;
-  
+async function generatePDF(recipe: RecipeWithIngredients): Promise<Buffer> {
   try {
-    if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') {
-      console.log('Running in production mode with @sparticuz/chromium')
-      const executablePath = await chromium.executablePath('https://github.com/Sparticuz/chromium/releases/download/v131.0.1/chromium-v131.0.1-pack.tar')
-      browser = await puppeteerCore.launch({
-        executablePath,
-        args: chromium.args,
-        headless: chromium.headless,
-        defaultViewport: chromium.defaultViewport
-      });
-    } else {
-      console.log('Running in development mode with local Puppeteer')
-      browser = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-      });
-    }
-
-    const page = await browser.newPage();
+    console.log('Creating PDF document...')
     
-    // Set the HTML content directly
-    await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
-
-    const pdf = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: {
-        top: '20px',
-        right: '10px',
-        bottom: '10px',
-        left: '20px'
+    // Create a new PDF document
+    const pdfDoc = await PDFDocument.create()
+    
+    // Embed the standard font
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
+    const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+    
+    // Add a page
+    let page = pdfDoc.addPage([595.28, 841.89]) // A4 size
+    const { width, height } = page.getSize()
+    
+    // Set up margins and starting position
+    const margin = 50
+    let y = height - margin
+    
+    // Helper function to add text with word wrapping
+    const addWrappedText = (text: string, x: number, y: number, maxWidth: number, fontSize: number, font: any) => {
+      const words = text.split(' ')
+      let line = ''
+      let currentY = y
+      
+      for (const word of words) {
+        const testLine = line + word + ' '
+        const testWidth = font.widthOfTextAtSize(testLine, fontSize)
+        
+        if (testWidth > maxWidth && line !== '') {
+          page.drawText(line, { x, y: currentY, size: fontSize, font })
+          line = word + ' '
+          currentY -= fontSize + 2
+        } else {
+          line = testLine
+        }
       }
-    });
-
-    await browser.close();
+      
+      if (line) {
+        page.drawText(line, { x, y: currentY, size: fontSize, font })
+        currentY -= fontSize + 2
+      }
+      
+      return currentY
+    }
     
-    console.log('PDF generated successfully, size:', pdf.length, 'bytes')
-    return Buffer.from(pdf);
+    // Title
+    page.drawText(recipe.name, {
+      x: margin,
+      y,
+      size: 24,
+      font: boldFont,
+      color: rgb(0, 0, 0)
+    })
+    y -= 40
+    
+    // Recipe info
+    const infoText = [
+      `Recipe Code: ${recipe.code || 'N/A'}`,
+      `Servings: ${recipe.servings}`,
+      `Total Cost: £${recipe.totalCost?.toFixed(2) || '0.00'}`,
+      `Cost per Serving: £${recipe.costPerServing?.toFixed(2) || '0.00'}`
+    ]
+    
+    for (const info of infoText) {
+      page.drawText(info, {
+        x: margin,
+        y,
+        size: 12,
+        font,
+        color: rgb(0, 0, 0)
+      })
+      y -= 20
+    }
+    
+    y -= 20
+    
+    // Ingredients section
+    page.drawText('Ingredients', {
+      x: margin,
+      y,
+      size: 16,
+      font: boldFont,
+      color: rgb(0, 0, 0)
+    })
+    y -= 30
+    
+    // Ingredients table header
+    const colWidths = [80, 150, 80, 60, 100, 100]
+    const colX = margin
+    const headers = ['Code', 'Name', 'Quantity', 'Cost', 'Contains', 'May Contain']
+    
+    // Draw table headers
+    for (let i = 0; i < headers.length; i++) {
+      page.drawText(headers[i], {
+        x: colX + (i * colWidths[i]),
+        y,
+        size: 10,
+        font: boldFont,
+        color: rgb(0, 0, 0)
+      })
+    }
+    y -= 20
+    
+    // Draw ingredients
+    for (const ingredient of recipe.ingredients) {
+      const containsAllergens: string[] = []
+      const mayContainAllergens: string[] = []
+      
+      // Parse allergies
+      if (ingredient.ingredientAllergies) {
+        try {
+          const allergies = JSON.parse(ingredient.ingredientAllergies)
+          if (Array.isArray(allergies)) {
+            allergies.forEach((allergy: any) => {
+              const allergen = typeof allergy === 'string' ? allergy.split(':')[0] : allergy.allergy
+              const status = typeof allergy === 'string' ? allergy.split(':')[1] : allergy.status
+              
+              if (status === 'has') {
+                containsAllergens.push(allergen.charAt(0).toUpperCase() + allergen.slice(1))
+              } else if (status === 'may') {
+                mayContainAllergens.push(allergen.charAt(0).toUpperCase() + allergen.slice(1))
+              }
+            })
+          }
+        } catch (error) {
+          console.error('Error parsing allergies:', error)
+        }
+      }
+      
+      const rowData = [
+        ingredient.ingredient.productCode || 'N/A',
+        ingredient.ingredientName || 'N/A',
+        `${ingredient.quantity} ${ingredient.unit || 'unit'}`,
+        `£${(ingredient.cost || 0).toFixed(2)}`,
+        containsAllergens.join(', ') || 'None',
+        mayContainAllergens.join(', ') || 'None'
+      ]
+      
+      for (let i = 0; i < rowData.length; i++) {
+        page.drawText(rowData[i], {
+          x: colX + (i * colWidths[i]),
+          y,
+          size: 8,
+          font,
+          color: rgb(0, 0, 0)
+        })
+      }
+      y -= 15
+      
+      // Check if we need a new page
+      if (y < margin + 100) {
+        page = pdfDoc.addPage([595.28, 841.89])
+        y = height - margin
+      }
+    }
+    
+    y -= 30
+    
+    // Instructions section
+    if (recipe.instructions) {
+      page.drawText('Instructions', {
+        x: margin,
+        y,
+        size: 16,
+        font: boldFont,
+        color: rgb(0, 0, 0)
+      })
+      y -= 30
+      
+      y = addWrappedText(recipe.instructions, margin, y, width - (2 * margin), 12, font)
+      y -= 20
+    }
+    
+    // Notes section
+    if (recipe.notes) {
+      page.drawText('Notes', {
+        x: margin,
+        y,
+        size: 16,
+        font: boldFont,
+        color: rgb(0, 0, 0)
+      })
+      y -= 30
+      
+      y = addWrappedText(recipe.notes, margin, y, width - (2 * margin), 12, font)
+      y -= 20
+    }
+    
+    // Footer
+    const footerText = `Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}`
+    page.drawText(footerText, {
+      x: margin,
+      y: margin,
+      size: 10,
+      font,
+      color: rgb(0.5, 0.5, 0.5)
+    })
+    
+    // Save the PDF
+    const pdfBytes = await pdfDoc.save()
+    console.log('PDF generated successfully, size:', pdfBytes.length, 'bytes')
+    
+    return Buffer.from(pdfBytes)
     
   } catch (error) {
-    console.error('PDF generation error:', error);
-    throw new Error(`Failed to generate PDF: ${error instanceof Error ? error.message : String(error)}`);
+    console.error('PDF generation error:', error)
+    throw new Error(`Failed to generate PDF: ${error instanceof Error ? error.message : String(error)}`)
   }
-}
-
-function generatePDFHTML(recipe: RecipeWithIngredients): string {
-  const ingredientRows = (recipe.ingredients || []).map((ingredient: any) => {
-    const containsAllergens: string[] = []
-    const mayContainAllergens: string[] = []
-    
-    // Parse allergies from ingredientAllergies
-    if (ingredient.ingredientAllergies) {
-      try {
-        const allergies = JSON.parse(ingredient.ingredientAllergies)
-        if (Array.isArray(allergies)) {
-          allergies.forEach((allergy: any) => {
-            const allergen = typeof allergy === 'string' ? allergy.split(':')[0] : allergy.allergy
-            const status = typeof allergy === 'string' ? allergy.split(':')[1] : allergy.status
-            
-            if (status === 'has') {
-              containsAllergens.push(allergen.charAt(0).toUpperCase() + allergen.slice(1))
-            } else if (status === 'may') {
-              mayContainAllergens.push(allergen.charAt(0).toUpperCase() + allergen.slice(1))
-            }
-          })
-        }
-      } catch (error) {
-        console.error('Error parsing allergies:', error)
-      }
-    }
-
-    return `
-      <tr>
-        <td>${ingredient.originalProductCode}</td>
-        <td>${ingredient.ingredientName}</td>
-        <td>${ingredient.quantity} ${ingredient.unit || 'unit'}</td>
-        <td>£${(ingredient.cost || 0).toFixed(2)}</td>
-        <td>${containsAllergens.join(', ') || 'None'}</td>
-        <td>${mayContainAllergens.join(', ') || 'None'}</td>
-      </tr>
-    `
-  }).join('')
-
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>${recipe.name}</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            line-height: 1.6;
-        }
-        .header {
-            text-align: center;
-            border-bottom: 2px solid #333;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
-        }
-        .recipe-title {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        .recipe-info {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-        .info-item {
-            text-align: center;
-        }
-        .info-label {
-            font-weight: bold;
-            color: #666;
-        }
-        .info-value {
-            font-size: 18px;
-            margin-top: 5px;
-        }
-        .section {
-            margin-bottom: 30px;
-        }
-        .section-title {
-            font-size: 18px;
-            font-weight: bold;
-            border-bottom: 1px solid #ccc;
-            padding-bottom: 5px;
-            margin-bottom: 15px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f5f5f5;
-            font-weight: bold;
-        }
-        .instructions {
-            white-space: pre-wrap;
-            background-color: #f9f9f9;
-            padding: 15px;
-            border-radius: 5px;
-        }
-        .notes {
-            background-color: #fff3cd;
-            padding: 15px;
-            border-radius: 5px;
-            border-left: 4px solid #ffc107;
-        }
-        @media print {
-            body { margin: 0; }
-            .header { page-break-after: avoid; }
-            .section { page-break-inside: avoid; }
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <div class="recipe-title">${recipe.name}</div>
-        <div class="recipe-info">
-            <div class="info-item">
-                <div class="info-label">Recipe Code</div>
-                <div class="info-value">${recipe.code || 'N/A'}</div>
-            </div>
-            <div class="info-item">
-                <div class="info-label">Servings</div>
-                <div class="info-value">${recipe.servings}</div>
-            </div>
-            <div class="info-item">
-                <div class="info-label">Total Cost</div>
-                <div class="info-value">£${recipe.totalCost?.toFixed(2) || '0.00'}</div>
-            </div>
-            <div class="info-item">
-                <div class="info-label">Cost per Serving</div>
-                <div class="info-value">£${recipe.costPerServing?.toFixed(2) || '0.00'}</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="section">
-        <div class="section-title">Ingredients</div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Product Code</th>
-                    <th>Ingredient Name</th>
-                    <th>Quantity</th>
-                    <th>Cost</th>
-                    <th>Contains Allergens</th>
-                    <th>May Contain Allergens</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${ingredientRows}
-            </tbody>
-        </table>
-    </div>
-
-    <div class="section">
-        <div class="section-title">Instructions</div>
-        <div class="instructions">${recipe.instructions || 'No instructions provided'}</div>
-    </div>
-
-    ${recipe.notes ? `
-    <div class="section">
-        <div class="section-title">Notes</div>
-        <div class="notes">${recipe.notes}</div>
-    </div>
-    ` : ''}
-
-    <div style="margin-top: 40px; text-align: center; color: #666; font-size: 12px;">
-        Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}
-    </div>
-</body>
-</html>
-  `
-
-  return html
 } 
