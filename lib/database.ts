@@ -328,124 +328,140 @@ export class DatabaseConnection {
   }
 
   // Save menu
-  async saveMenu(name: string, date: string, weeklyMenu: any) {
-    const client = await this.pool.connect();
-    try {
-      await client.query('BEGIN');
+  async saveMenu(name: string, date: string, weeklyMenu: any): Promise<void> {
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+    const menuToSave: { [key: string]: any } = {
+      name,
+      week_start_date: date,
+    };
 
-      const dailyOptions = weeklyMenu.dailyOptions || {};
-      const dailyOption1 = dailyOptions.dailyOption1 ? dailyOptions.dailyOption1.id : null;
-      const dailyOption2 = dailyOptions.dailyOption2 ? dailyOptions.dailyOption2.id : null;
-      const dailyOption3 = dailyOptions.dailyOption3 ? dailyOptions.dailyOption3.id : null;
-      const dailyOption4 = dailyOptions.dailyOption4 ? dailyOptions.dailyOption4.id : null;
+    // Helper to get recipe ID or null
+    const getRecipeId = (recipe: any) => recipe?.id || null;
 
-      for (const day of ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']) {
-        const dayMenu = weeklyMenu[day];
-        if (dayMenu) {
-          await client.query(`
-            INSERT INTO menus (
-              name, week_start_date, day_of_week, 
-              lunch_option_1, lunch_option_2, lunch_option_3, served_with_123, 
-              dessert_option_d, daily_option_1, daily_option_2, daily_option_3, daily_option_4
-            )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-            ON CONFLICT(week_start_date, day_of_week) DO UPDATE SET
-              name = EXCLUDED.name,
-              lunch_option_1 = EXCLUDED.lunch_option_1,
-              lunch_option_2 = EXCLUDED.lunch_option_2,
-              lunch_option_3 = EXCLUDED.lunch_option_3,
-              served_with_123 = EXCLUDED.served_with_123,
-              dessert_option_d = EXCLUDED.dessert_option_d,
-              daily_option_1 = EXCLUDED.daily_option_1,
-              daily_option_2 = EXCLUDED.daily_option_2,
-              daily_option_3 = EXCLUDED.daily_option_3,
-              daily_option_4 = EXCLUDED.daily_option_4,
-              updated_at = CURRENT_TIMESTAMP
-          `, [
-            name,
-            date,
-            day,
-            dayMenu.lunchOption1?.id || null,
-            dayMenu.lunchOption2?.id || null,
-            dayMenu.lunchOption3?.id || null,
-            dayMenu.servedWith123?.id || null,
-            dayMenu.dessertOptionD?.id || null,
-            dailyOption1,
-            dailyOption2,
-            dailyOption3,
-            dailyOption4
-          ]);
-        }
+    // Structure the data for each day's JSONB column
+    for (const day of days) {
+      const dayMenu = weeklyMenu[day];
+      if (dayMenu) {
+        menuToSave[day] = {
+          lunchOption1: getRecipeId(dayMenu.lunchOption1),
+          lunchOption2: getRecipeId(dayMenu.lunchOption2),
+          lunchOption3: getRecipeId(dayMenu.lunchOption3),
+          servedWith123: getRecipeId(dayMenu.servedWith123),
+          dessertOptionD: getRecipeId(dayMenu.dessertOptionD),
+        };
+      } else {
+        menuToSave[day] = null;
       }
-
-      await client.query('COMMIT');
-    } catch (e) {
-      await client.query('ROLLBACK');
-      throw e;
-    } finally {
-      client.release();
     }
+
+    // Structure the data for the daily_options JSONB column
+    const dailyOptions = weeklyMenu.dailyOptions;
+    if (dailyOptions) {
+      menuToSave.daily_options = {
+        option1: getRecipeId(dailyOptions.option1),
+        option2: getRecipeId(dailyOptions.option2),
+        option3: getRecipeId(dailyOptions.option3),
+        option4: getRecipeId(dailyOptions.option4),
+      };
+    } else {
+      menuToSave.daily_options = null;
+    }
+
+    // Use INSERT ... ON CONFLICT DO UPDATE to handle both new and existing menus
+    await this.query(`
+      INSERT INTO menus (
+        name, week_start_date, 
+        monday, tuesday, wednesday, thursday, friday, daily_options
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8
+      )
+      ON CONFLICT (week_start_date) DO UPDATE SET
+        name = EXCLUDED.name,
+        monday = EXCLUDED.monday,
+        tuesday = EXCLUDED.tuesday,
+        wednesday = EXCLUDED.wednesday,
+        thursday = EXCLUDED.thursday,
+        friday = EXCLUDED.friday,
+        daily_options = EXCLUDED.daily_options,
+        updated_at = CURRENT_TIMESTAMP;
+    `, [
+      menuToSave.name,
+      menuToSave.week_start_date,
+      JSON.stringify(menuToSave.monday),
+      JSON.stringify(menuToSave.tuesday),
+      JSON.stringify(menuToSave.wednesday),
+      JSON.stringify(menuToSave.thursday),
+      JSON.stringify(menuToSave.friday),
+      JSON.stringify(menuToSave.daily_options),
+    ]);
   }
 
   // Get menu for week
   async getMenuForWeek(date: string | null) {
     if (!date) return null;
 
-    const menuRows = await this.query('SELECT * FROM menus WHERE week_start_date = $1', [date]);
-    if (menuRows.rows.length === 0) return null;
+    const result = await this.query('SELECT * FROM menus WHERE week_start_date = $1', [date]);
+    if (result.rows.length === 0) return null;
 
-    // Map database keys (snake_case) to frontend keys (camelCase)
-    const menu: any = {
-      name: menuRows.rows[0].name,
-      weekStartDate: menuRows.rows[0].week_start_date,
-      weeklyMenu: {
-        monday: {},
-        tuesday: {},
-        wednesday: {},
-        thursday: {},
-        friday: {},
-        dailyOptions: {},
-      }
+    const row = result.rows[0];
+
+    // Helper to fetch recipe details
+    const getRecipeDetails = async (id: number | null): Promise<Recipe | null> => {
+        if (!id) return null;
+        const recipeResult = await this.query('SELECT id, name, code FROM recipes WHERE id = $1', [id]);
+        return recipeResult.rows[0] || null;
+    };
+    
+    // Helper to process a day's menu from JSON
+    const processDay = async (dayData: any) => {
+        if (!dayData) return null;
+        return {
+            lunchOption1: await getRecipeDetails(dayData.lunchOption1),
+            lunchOption2: await getRecipeDetails(dayData.lunchOption2),
+            lunchOption3: await getRecipeDetails(dayData.lunchOption3),
+            servedWith123: await getRecipeDetails(dayData.servedWith123),
+            dessertOptionD: await getRecipeDetails(dayData.dessertOptionD),
+        };
     };
 
-    const dailyOptionsSet = new Set();
+    // Helper to process daily options from JSON
+    const processDailyOptions = async (optionsData: any) => {
+        if (!optionsData) return null;
+        return {
+            option1: await getRecipeDetails(optionsData.option1),
+            option2: await getRecipeDetails(optionsData.option2),
+            option3: await getRecipeDetails(optionsData.option3),
+            option4: await getRecipeDetails(optionsData.option4),
+        };
+    };
 
-    for (const row of menuRows.rows) {
-      const day = row.day_of_week.toLowerCase();
-      
-      const getRecipeDetails = async (id: number | null) => {
-        if (!id) return null;
-        const result = await this.query('SELECT id, name, code FROM recipes WHERE id = $1', [id]);
-        return result.rows[0];
-      };
-
-      menu.weeklyMenu[day] = {
-        lunchOption1: await getRecipeDetails(row.lunch_option_1),
-        lunchOption2: await getRecipeDetails(row.lunch_option_2),
-        lunchOption3: await getRecipeDetails(row.lunch_option_3),
-        servedWith123: await getRecipeDetails(row.served_with_123),
-        dessertOptionD: await getRecipeDetails(row.dessert_option_d),
-      };
-
-      if (!dailyOptionsSet.has(1)) {
-        menu.weeklyMenu.dailyOptions.dailyOption1 = await getRecipeDetails(row.daily_option_1);
-        dailyOptionsSet.add(1);
-      }
-      if (!dailyOptionsSet.has(2)) {
-        menu.weeklyMenu.dailyOptions.dailyOption2 = await getRecipeDetails(row.daily_option_2);
-        dailyOptionsSet.add(2);
-      }
-      if (!dailyOptionsSet.has(3)) {
-        menu.weeklyMenu.dailyOptions.dailyOption3 = await getRecipeDetails(row.daily_option_3);
-        dailyOptionsSet.add(3);
-      }
-      if (!dailyOptionsSet.has(4)) {
-        menu.weeklyMenu.dailyOptions.dailyOption4 = await getRecipeDetails(row.daily_option_4);
-        dailyOptionsSet.add(4);
-      }
-    }
-
-    return menu;
+    // Map snake_case to camelCase and expand the JSONB columns
+    const menu = {
+      id: row.id,
+      name: row.name,
+      weekStartDate: row.week_start_date,
+      monday: await processDay(row.monday),
+      tuesday: await processDay(row.tuesday),
+      wednesday: await processDay(row.wednesday),
+      thursday: await processDay(row.thursday),
+      friday: await processDay(row.friday),
+      dailyOptions: await processDailyOptions(row.daily_options),
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    };
+    
+    return {
+        name: menu.name,
+        weekStartDate: menu.weekStartDate,
+        weeklyMenu: {
+            monday: menu.monday,
+            tuesday: menu.tuesday,
+            wednesday: menu.wednesday,
+            thursday: menu.thursday,
+            friday: menu.friday,
+            dailyOptions: menu.dailyOptions
+        }
+    };
   }
 
   // Sync recipe ingredient snapshots
@@ -518,6 +534,8 @@ export class DatabaseConnection {
     for (const { recipeId } of recipeIdsResult.rows) {
       await this.recalculateRecipeCost(recipeId);
     }
+
+    console.log('Recipe cost updated in database');
   }
 
   // Recalculate recipe cost
@@ -567,18 +585,51 @@ export class DatabaseConnection {
     if (result.rows.length === 0) return null;
     
     const row = result.rows[0];
+
+    // Helper to fetch recipe details
+    const getRecipeDetails = async (id: number | null): Promise<Recipe | null> => {
+        if (!id) return null;
+        const recipeResult = await this.query('SELECT id, name, code FROM recipes WHERE id = $1', [id]);
+        return recipeResult.rows[0] || null;
+    };
     
-    // Map snake_case to camelCase and parse the JSON fields
+    // Helper to process a day's menu from JSON
+    const processDay = async (dayData: any) => {
+        if (!dayData) return null;
+        // The data in the DB is already parsed if it's JSONB, but if it's a string, parse it.
+        const data = typeof dayData === 'string' ? JSON.parse(dayData) : dayData;
+        return {
+            lunchOption1: await getRecipeDetails(data.lunchOption1),
+            lunchOption2: await getRecipeDetails(data.lunchOption2),
+            lunchOption3: await getRecipeDetails(data.lunchOption3),
+            servedWith123: await getRecipeDetails(data.servedWith123),
+            dessertOptionD: await getRecipeDetails(data.dessertOptionD),
+        };
+    };
+
+    // Helper to process daily options from JSON
+    const processDailyOptions = async (optionsData: any) => {
+        if (!optionsData) return null;
+        const data = typeof optionsData === 'string' ? JSON.parse(optionsData) : optionsData;
+        return {
+            option1: await getRecipeDetails(data.option1),
+            option2: await getRecipeDetails(data.option2),
+            option3: await getRecipeDetails(data.option3),
+            option4: await getRecipeDetails(data.option4),
+        };
+    };
+    
+    // Map snake_case to camelCase and expand the JSONB columns
     return {
       id: row.id,
       name: row.name,
       weekStartDate: row.week_start_date,
-      monday: row.monday ? JSON.parse(row.monday) : null,
-      tuesday: row.tuesday ? JSON.parse(row.tuesday) : null,
-      wednesday: row.wednesday ? JSON.parse(row.wednesday) : null,
-      thursday: row.thursday ? JSON.parse(row.thursday) : null,
-      friday: row.friday ? JSON.parse(row.friday) : null,
-      dailyOptions: row.daily_options ? JSON.parse(row.daily_options) : null,
+      monday: await processDay(row.monday),
+      tuesday: await processDay(row.tuesday),
+      wednesday: await processDay(row.wednesday),
+      thursday: await processDay(row.thursday),
+      friday: await processDay(row.friday),
+      dailyOptions: await processDailyOptions(row.daily_options),
       createdAt: row.created_at,
       updatedAt: row.updated_at
     };
@@ -672,14 +723,12 @@ export class DatabaseConnection {
 
   // Returns all menus, ordered by week_start_date descending
   async getAllMenus(): Promise<any[]> {
-    const result = await this.query('SELECT * FROM menus ORDER BY week_start_date DESC');
+    const result = await this.query('SELECT id, name, week_start_date FROM menus ORDER BY week_start_date DESC');
     // Map snake_case to camelCase
     return result.rows.map(row => ({
       id: row.id,
       name: row.name,
       weekStartDate: row.week_start_date,
-      dayOfWeek: row.day_of_week,
-      // Add other fields as needed
     }));
   }
 
