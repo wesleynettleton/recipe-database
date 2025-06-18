@@ -232,6 +232,10 @@ export class DatabaseConnection {
 
     if (!recipe) return null;
 
+    console.log('Recipe data from database (raw):', recipe);
+    console.log('Recipe totalCost field:', recipe.totalcost);
+    console.log('Recipe costPerServing field:', recipe.costperserving);
+
     const ingredientsResult = await this.query(`
       SELECT 
         ri.id,
@@ -267,10 +271,22 @@ export class DatabaseConnection {
       };
     });
 
-    return {
+    const result = {
       ...recipe,
+      totalCost: recipe.totalcost,
+      costPerServing: recipe.costperserving,
       ingredients: ingredientsWithCost
     };
+
+    console.log('Final recipe data being returned:', {
+      id: result.id,
+      name: result.name,
+      totalCost: result.totalCost,
+      costPerServing: result.costPerServing,
+      ingredientsCount: result.ingredients.length
+    });
+
+    return result;
   }
 
   // Save menu
@@ -480,6 +496,8 @@ export class DatabaseConnection {
 
   // Recalculate recipe cost
   async recalculateRecipeCost(recipeId: number) {
+    console.log('Recalculating cost for recipe ID:', recipeId);
+    
     const result = await this.query(`
       SELECT 
         SUM(quantity * (ingredientPrice / NULLIF(ingredientWeight, 0))) as totalCost,
@@ -491,11 +509,20 @@ export class DatabaseConnection {
     const { totalCost, servings } = result.rows[0];
     const costPerServing = servings ? totalCost / servings : 0;
 
+    console.log('Cost calculation results:', {
+      recipeId,
+      totalCost,
+      servings,
+      costPerServing
+    });
+
     await this.query(`
       UPDATE recipes
       SET totalCost = $1, costPerServing = $2, updated_at = CURRENT_TIMESTAMP
       WHERE id = $3
     `, [totalCost || 0, costPerServing, recipeId]);
+
+    console.log('Recipe cost updated in database');
   }
 
   // Get menu by week_start_date (for API compatibility)
