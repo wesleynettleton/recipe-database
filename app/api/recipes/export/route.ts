@@ -143,50 +143,65 @@ async function generatePDF(recipe: RecipeWithIngredients): Promise<Buffer> {
       color: rgb(0, 0, 0)
     })
     y -= 30
-    
-    // Ingredients table header
-    const colWidths = [80, 150, 80, 60, 100, 100]
-    const colX = margin
-    const headers = ['Code', 'Name', 'Quantity', 'Cost', 'Contains', 'May Contain']
-    
-    // Draw table headers
-    for (let i = 0; i < headers.length; i++) {
-      page.drawText(headers[i], {
-        x: colX + (i * colWidths[i]),
-        y,
+
+    // Table layout settings
+    const colTitles = ['Code', 'Name', 'Quantity', 'Cost', 'Contains', 'May Contain']
+    const colWidths = [60, 160, 80, 60, 100, 100]
+    const colX = [margin]
+    for (let i = 1; i < colWidths.length; i++) {
+      colX[i] = colX[i - 1] + colWidths[i - 1]
+    }
+    const rowHeight = 18
+    const headerBgColor = rgb(0.92, 0.92, 0.92)
+    const borderColor = rgb(0.7, 0.7, 0.7)
+
+    // Draw header background
+    page.drawRectangle({
+      x: margin,
+      y: y - 2,
+      width: colWidths.reduce((a, b) => a + b, 0),
+      height: rowHeight + 4,
+      color: headerBgColor,
+      borderColor,
+      borderWidth: 1
+    })
+
+    // Draw header text
+    for (let i = 0; i < colTitles.length; i++) {
+      page.drawText(colTitles[i], {
+        x: colX[i] + 4,
+        y: y + 4,
         size: 10,
         font: boldFont,
         color: rgb(0, 0, 0)
       })
     }
-    y -= 20
-    
-    // Draw ingredients
+    // Draw header bottom border
+    page.drawLine({
+      start: { x: margin, y: y },
+      end: { x: margin + colWidths.reduce((a, b) => a + b, 0), y: y },
+      thickness: 1,
+      color: borderColor
+    })
+    y -= rowHeight
+
+    // Draw ingredients rows
     for (const ingredient of recipe.ingredients) {
       const containsAllergens: string[] = []
       const mayContainAllergens: string[] = []
-      
-      // Parse allergies
       if (ingredient.ingredientAllergies) {
         try {
           const allergies = JSON.parse(ingredient.ingredientAllergies)
           if (Array.isArray(allergies)) {
-            allergies.forEach((allergy: any) => {
+            allergies.forEach((allergy) => {
               const allergen = typeof allergy === 'string' ? allergy.split(':')[0] : allergy.allergy
               const status = typeof allergy === 'string' ? allergy.split(':')[1] : allergy.status
-              
-              if (status === 'has') {
-                containsAllergens.push(allergen.charAt(0).toUpperCase() + allergen.slice(1))
-              } else if (status === 'may') {
-                mayContainAllergens.push(allergen.charAt(0).toUpperCase() + allergen.slice(1))
-              }
+              if (status === 'has') containsAllergens.push(allergen.charAt(0).toUpperCase() + allergen.slice(1))
+              else if (status === 'may') mayContainAllergens.push(allergen.charAt(0).toUpperCase() + allergen.slice(1))
             })
           }
-        } catch (error) {
-          console.error('Error parsing allergies:', error)
-        }
+        } catch {}
       }
-      
       const rowData = [
         ingredient.originalProductCode || 'N/A',
         ingredient.ingredientName || 'N/A',
@@ -195,19 +210,40 @@ async function generatePDF(recipe: RecipeWithIngredients): Promise<Buffer> {
         containsAllergens.join(', ') || 'None',
         mayContainAllergens.join(', ') || 'None'
       ]
-      
+      // Draw cell backgrounds (optional: comment out if not wanted)
+      // page.drawRectangle({
+      //   x: margin, y: y - 2, width: colWidths.reduce((a, b) => a + b, 0), height: rowHeight + 2, color: rgb(1,1,1)
+      // })
+      // Draw cell text
       for (let i = 0; i < rowData.length; i++) {
-        page.drawText(rowData[i], {
-          x: colX + (i * colWidths[i]),
-          y,
-          size: 8,
+        let cellText = String(rowData[i])
+        if (cellText.length > 28) cellText = cellText.slice(0, 25) + '...'
+        page.drawText(cellText, {
+          x: colX[i] + 4,
+          y: y + 4,
+          size: 9,
           font,
           color: rgb(0, 0, 0)
         })
       }
-      y -= 15
-      
-      // Check if we need a new page
+      // Draw row bottom border
+      page.drawLine({
+        start: { x: margin, y: y },
+        end: { x: margin + colWidths.reduce((a, b) => a + b, 0), y: y },
+        thickness: 0.5,
+        color: borderColor
+      })
+      // Draw column lines
+      for (let i = 1; i < colX.length; i++) {
+        page.drawLine({
+          start: { x: colX[i], y: y + rowHeight },
+          end: { x: colX[i], y: y },
+          thickness: 0.5,
+          color: borderColor
+        })
+      }
+      y -= rowHeight
+      // New page if needed
       if (y < margin + 100) {
         page = pdfDoc.addPage([595.28, 841.89])
         y = height - margin
