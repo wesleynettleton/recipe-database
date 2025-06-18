@@ -153,6 +153,10 @@ function BuildRecipePageComponent() {
     const selected = searchResults.find(ing => ing.name === ingredientSearch)
     if (!selected || !quantity) return
 
+    console.log('Adding ingredient - selected:', selected)
+    console.log('Selected productCode:', selected.productCode)
+    console.log('Selected name:', selected.name)
+
     const qty = parseFloat(quantity)
     const pricePerUnit = (selected.weight && selected.weight > 0)
       ? selected.price / selected.weight
@@ -176,6 +180,9 @@ function BuildRecipePageComponent() {
       baseWeight: selected.weight,
       baseUnit: selected.unit,
     }
+
+    console.log('New ingredient created:', newIngredient)
+    console.log('New ingredient originalProductCode:', newIngredient.originalProductCode)
 
     setSelectedIngredients([...selectedIngredients, newIngredient])
     
@@ -348,6 +355,17 @@ function BuildRecipePageComponent() {
     // Debug log to verify payload
     console.log('Saving recipe with payload:', payload)
     console.log('Selected ingredients before mapping:', selectedIngredients)
+    console.log('Selected ingredients details:')
+    selectedIngredients.forEach((ing, index) => {
+      console.log(`Ingredient ${index}:`, {
+        name: ing.name,
+        productCode: ing.productCode,
+        originalProductCode: ing.originalProductCode,
+        quantity: ing.quantity,
+        unit: ing.unit,
+        notes: ing.notes
+      })
+    })
     console.log('Ingredients for API:', ingredientsForApi)
 
     try {
