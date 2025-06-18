@@ -182,14 +182,17 @@ export class DatabaseConnection {
     console.log('recipeIngredient.productCode:', recipeIngredient.productCode);
     console.log('All keys in recipeIngredient:', Object.keys(recipeIngredient));
     
-    if (!recipeIngredient.originalProductCode) {
-      console.error('Missing originalProductCode. Full ingredient data:', recipeIngredient);
+    // Try to get the product code from either field
+    const productCode = recipeIngredient.originalProductCode || recipeIngredient.productCode;
+    
+    if (!productCode) {
+      console.error('Missing product code. Full ingredient data:', recipeIngredient);
       throw new Error("Ingredient is missing a product code.");
     }
 
-    const ingredient = await this.getIngredientByProductCode(recipeIngredient.originalProductCode);
+    const ingredient = await this.getIngredientByProductCode(productCode);
     if (!ingredient) {
-      throw new Error(`Ingredient with product code ${recipeIngredient.originalProductCode} not found.`);
+      throw new Error(`Ingredient with product code ${productCode} not found.`);
     }
 
     const snapshot = {
@@ -209,7 +212,7 @@ export class DatabaseConnection {
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
     `, [
       recipeIngredient.recipeId,
-      recipeIngredient.originalProductCode,
+      productCode, // Use the resolved product code
       recipeIngredient.quantity,
       recipeIngredient.unit,
       recipeIngredient.notes,
