@@ -158,10 +158,21 @@ function BuildRecipePageComponent() {
     console.log('Selected name:', selected.name)
 
     const qty = parseFloat(quantity)
-    const pricePerUnit = (selected.weight && selected.weight > 0)
-      ? selected.price / selected.weight
-      : selected.price
+    const price = parseFloat(String(selected.price))
+    const weight = parseFloat(String(selected.weight))
+    
+    const pricePerUnit = (weight && weight > 0)
+      ? price / weight
+      : price
     const cost = qty * pricePerUnit
+
+    console.log('Cost calculation debug:', {
+      qty,
+      price,
+      weight,
+      pricePerUnit,
+      cost
+    })
 
     // Parse allergies when adding the ingredient
     const parsedAllergies = parseAllergies(selected.allergies)
