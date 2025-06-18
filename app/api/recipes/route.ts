@@ -117,7 +117,9 @@ export async function POST(request: Request) {
 
     // Recalculate the recipe cost after adding all ingredients
     console.log('Recalculating recipe cost...');
+    console.log('Recipe ID for cost recalculation:', recipeId);
     await database.recalculateRecipeCost(recipeId);
+    console.log('Cost recalculation completed');
 
     console.log('Recipe saved successfully');
     return NextResponse.json({

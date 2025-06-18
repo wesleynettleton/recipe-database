@@ -498,6 +498,15 @@ export class DatabaseConnection {
   async recalculateRecipeCost(recipeId: number) {
     console.log('Recalculating cost for recipe ID:', recipeId);
     
+    // First, let's check what ingredients exist for this recipe
+    const ingredientsCheck = await this.query(`
+      SELECT quantity, ingredientPrice, ingredientWeight 
+      FROM recipe_ingredients 
+      WHERE recipeId = $1
+    `, [recipeId]);
+    
+    console.log('Ingredients found for cost calculation:', ingredientsCheck.rows);
+    
     const result = await this.query(`
       SELECT 
         SUM(quantity * (ingredientPrice / NULLIF(ingredientWeight, 0))) as totalCost,
@@ -513,7 +522,8 @@ export class DatabaseConnection {
       recipeId,
       totalCost,
       servings,
-      costPerServing
+      costPerServing,
+      rawResult: result.rows[0]
     });
 
     await this.query(`
