@@ -97,6 +97,15 @@ export async function POST(request: Request) {
     console.log('Adding ingredients to recipe...');
     for (const ingredient of selectedIngredients) {
       console.log('Adding ingredient:', ingredient);
+      console.log('Ingredient originalProductCode:', ingredient.originalProductCode);
+      console.log('Ingredient productCode:', ingredient.productCode);
+      console.log('Ingredient quantity:', ingredient.quantity);
+      
+      if (!ingredient.originalProductCode) {
+        console.error('Missing originalProductCode for ingredient:', ingredient);
+        throw new Error(`Ingredient is missing originalProductCode: ${JSON.stringify(ingredient)}`);
+      }
+      
       await database.addRecipeIngredient({
         recipeId,
         originalProductCode: ingredient.originalProductCode,
@@ -116,6 +125,11 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Error saving recipe:', error);
     console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      name: error instanceof Error ? error.name : 'Unknown',
+      cause: error instanceof Error ? error.cause : 'No cause'
+    });
     return NextResponse.json(
       { error: 'Failed to save recipe', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }

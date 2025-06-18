@@ -347,6 +347,8 @@ function BuildRecipePageComponent() {
 
     // Debug log to verify payload
     console.log('Saving recipe with payload:', payload)
+    console.log('Selected ingredients before mapping:', selectedIngredients)
+    console.log('Ingredients for API:', ingredientsForApi)
 
     try {
       const url = '/api/recipes'
