@@ -397,7 +397,7 @@ export class DatabaseConnection {
     // Map database keys (snake_case) to frontend keys (camelCase)
     const menu: any = {
       name: menuRows.rows[0].name,
-      date: menuRows.rows[0].week_start_date,
+      weekStartDate: menuRows.rows[0].week_start_date,
       weeklyMenu: {
         monday: {},
         tuesday: {},
@@ -657,7 +657,14 @@ export class DatabaseConnection {
   // Returns all menus, ordered by week_start_date descending
   async getAllMenus(): Promise<any[]> {
     const result = await this.query('SELECT * FROM menus ORDER BY week_start_date DESC');
-    return result.rows;
+    // Map snake_case to camelCase
+    return result.rows.map(row => ({
+      id: row.id,
+      name: row.name,
+      weekStartDate: row.week_start_date,
+      dayOfWeek: row.day_of_week,
+      // Add other fields as needed
+    }));
   }
 
   // Deletes a recipe by ID and returns true if a row was deleted
