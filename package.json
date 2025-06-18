@@ -11,6 +11,7 @@
   "dependencies": {
     "@react-pdf/renderer": "^4.3.0",
     "@sparticuz/chromium": "^137.0.1",
+    "@sparticuz/chromium-min": "^131.0.1",
     "@types/multer": "^1.4.11",
     "@types/node": "^20",
     "@types/pg": "^8.15.4",
@@ -24,7 +25,8 @@
     "next": "14.2.5",
     "pg": "^8.16.0",
     "postcss": "^8",
-    "puppeteer": "^24.10.1",
+    "puppeteer": "^23.10.4",
+    "puppeteer-core": "^23.10.4",
     "react": "^18",
     "react-dom": "^18",
     "sqlite3": "^5.1.6",

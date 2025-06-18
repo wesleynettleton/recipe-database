@@ -1,8 +1,12 @@
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getDatabase } from '../../../../lib/database'
 import { RecipeWithIngredients } from '../../../../lib/types'
+import puppeteer, { type Browser } from 'puppeteer';
+import puppeteerCore, { type Browser as BrowserCore } from 'puppeteer-core';
+import chromium from '@sparticuz/chromium-min';
 
 export async function GET(request: NextRequest) {
   try {
@@ -32,15 +36,20 @@ export async function GET(request: NextRequest) {
     // Generate HTML content for the recipe
     const htmlContent = generatePDFHTML(recipe)
     
-    // Return HTML that can be converted to PDF by the browser
-    const filename = `recipe-${recipe.name.replace(/[^a-zA-Z0-9]/g, '_')}-${new Date().toISOString().split('T')[0]}.html`
+    // Convert HTML to PDF using Puppeteer
+    const pdfBuffer = await convertHTMLToPDF(htmlContent)
     
-    return new NextResponse(htmlContent, {
+    console.log('PDF generated successfully')
+    
+    // Return PDF response
+    const filename = `recipe-${recipe.name.replace(/[^a-zA-Z0-9]/g, '_')}-${new Date().toISOString().split('T')[0]}.pdf`
+    
+    return new NextResponse(pdfBuffer, {
       status: 200,
       headers: {
-        'Content-Type': 'text/html',
+        'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${filename}"`,
-        'Content-Length': htmlContent.length.toString(),
+        'Content-Length': pdfBuffer.length.toString(),
       },
     })
 
@@ -50,6 +59,54 @@ export async function GET(request: NextRequest) {
       error: 'Failed to generate PDF export',
       details: error instanceof Error ? error.message : String(error)
     }, { status: 500 })
+  }
+}
+
+async function convertHTMLToPDF(htmlContent: string): Promise<Buffer> {
+  let browser: Browser | BrowserCore;
+  
+  try {
+    if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') {
+      console.log('Running in production mode with @sparticuz/chromium')
+      const executablePath = await chromium.executablePath('https://github.com/Sparticuz/chromium/releases/download/v131.0.1/chromium-v131.0.1-pack.tar')
+      browser = await puppeteerCore.launch({
+        executablePath,
+        args: chromium.args,
+        headless: chromium.headless,
+        defaultViewport: chromium.defaultViewport
+      });
+    } else {
+      console.log('Running in development mode with local Puppeteer')
+      browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      });
+    }
+
+    const page = await browser.newPage();
+    
+    // Set the HTML content directly
+    await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+
+    const pdf = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: {
+        top: '20px',
+        right: '10px',
+        bottom: '10px',
+        left: '20px'
+      }
+    });
+
+    await browser.close();
+    
+    console.log('PDF generated successfully, size:', pdf.length, 'bytes')
+    return Buffer.from(pdf);
+    
+  } catch (error) {
+    console.error('PDF generation error:', error);
+    throw new Error(`Failed to generate PDF: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -171,26 +228,9 @@ function generatePDFHTML(recipe: RecipeWithIngredients): string {
             .header { page-break-after: avoid; }
             .section { page-break-inside: avoid; }
         }
-        .print-instructions {
-            background-color: #e3f2fd;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            border-left: 4px solid #2196f3;
-        }
-        @media print {
-            .print-instructions { display: none; }
-        }
     </style>
 </head>
 <body>
-    <div class="print-instructions">
-        <strong>To save as PDF:</strong><br>
-        1. Press Ctrl+P (or Cmd+P on Mac)<br>
-        2. Select "Save as PDF" as destination<br>
-        3. Click Save
-    </div>
-
     <div class="header">
         <div class="recipe-title">${recipe.name}</div>
         <div class="recipe-info">

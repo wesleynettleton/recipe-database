@@ -106,41 +106,24 @@ export default function RecipeDetailPage() {
         throw new Error(errorMessage)
       }
 
-      // Get the HTML content
-      const htmlContent = await response.text()
+      // Create download link for PDF
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
       
-      // Create a new window with the HTML content
-      const newWindow = window.open('', '_blank')
-      if (newWindow) {
-        newWindow.document.write(htmlContent)
-        newWindow.document.close()
-        
-        // Show instructions for printing as PDF
-        setTimeout(() => {
-          newWindow.alert('To save as PDF:\n1. Press Ctrl+P (or Cmd+P on Mac)\n2. Select "Save as PDF" as destination\n3. Click Save')
-        }, 100)
-      } else {
-        // Fallback: create download link for HTML file
-        const blob = new Blob([htmlContent], { type: 'text/html' })
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        
-        // Get filename from response headers or create one
-        const contentDisposition = response.headers.get('content-disposition')
-        const filename = contentDisposition 
-          ? contentDisposition.split('filename=')[1]?.replace(/"/g, '') 
-          : `recipe-${recipe?.code || recipe?.name}-${new Date().toISOString().split('T')[0]}.html`
-        
-        console.log('Downloading file:', filename)
-        a.download = filename
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(url)
-        document.body.removeChild(a)
-        
-        alert('HTML file downloaded. Open it in your browser and use Ctrl+P to save as PDF.')
-      }
+      // Get filename from response headers or create one
+      const contentDisposition = response.headers.get('content-disposition')
+      const filename = contentDisposition 
+        ? contentDisposition.split('filename=')[1]?.replace(/"/g, '') 
+        : `recipe-${recipe?.code || recipe?.name}-${new Date().toISOString().split('T')[0]}.pdf`
+      
+      console.log('Downloading file:', filename)
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
       
       console.log('Export completed successfully')
     } catch (error) {
