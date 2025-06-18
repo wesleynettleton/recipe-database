@@ -47,6 +47,7 @@ export interface RecipeIngredient {
   id?: number;
   recipeId: number;
   productCode?: string;
+  originalProductCode?: string;
   quantity: number;
   unit?: string;
   notes?: string;
@@ -63,7 +64,6 @@ export interface RecipeIngredient {
 
 export interface RecipeWithIngredients extends Recipe {
   ingredients: (RecipeIngredient & {
-    ingredient: IngredientWithAllergies;
     cost: number;
   })[];
   allergies?: string[];

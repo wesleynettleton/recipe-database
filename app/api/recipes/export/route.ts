@@ -188,7 +188,7 @@ async function generatePDF(recipe: RecipeWithIngredients): Promise<Buffer> {
       }
       
       const rowData = [
-        ingredient.ingredient.productCode || 'N/A',
+        ingredient.originalProductCode || 'N/A',
         ingredient.ingredientName || 'N/A',
         `${ingredient.quantity} ${ingredient.unit || 'unit'}`,
         `£${(ingredient.cost || 0).toFixed(2)}`,
