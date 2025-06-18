@@ -13,7 +13,13 @@ export async function GET(request: NextRequest) {
     }
 
     const database = getDatabase();
-    const ingredients = await database.searchIngredients(searchTerm, parseInt(limit || '10'));
+    const ingredientsFromDb = await database.searchIngredients(searchTerm, parseInt(limit || '10'));
+
+    // Map database keys (snake_case) to frontend keys (camelCase)
+    const ingredients = ingredientsFromDb.map(ing => ({
+      ...ing,
+      productCode: ing.productcode,
+    }));
 
     return NextResponse.json({ ingredients });
   } catch (error) {
