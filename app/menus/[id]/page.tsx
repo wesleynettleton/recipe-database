@@ -18,14 +18,16 @@ interface DailyMenu {
   dessertOptionD: Recipe | null;
 }
 
-interface WeeklyMenu {
-  [key: string]: DailyMenu | any;
-}
-
 interface MenuData {
+  id: number;
   name: string;
-  date: string;
-  weeklyMenu: WeeklyMenu;
+  weekStartDate: string;
+  monday: DailyMenu | null;
+  tuesday: DailyMenu | null;
+  wednesday: DailyMenu | null;
+  thursday: DailyMenu | null;
+  friday: DailyMenu | null;
+  dailyOptions: { [key: string]: Recipe | null };
 }
 
 const DayCard = ({ day, menu }: { day: string; menu: DailyMenu | null }) => {
@@ -127,9 +129,9 @@ export default function MenuDetailPage() {
             </Link>
             <div className="text-center">
                 <h1 className="text-2xl font-bold text-gray-900">{menu.name}</h1>
-                <p className="text-lg text-gray-600">Week of {formatDisplayDate(menu.date)}</p>
+                <p className="text-lg text-gray-600">Week of {formatDisplayDate(menu.weekStartDate)}</p>
             </div>
-            <Link href={`/menus/build?date=${menu.date}`} className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md">
+            <Link href={`/menus/build?date=${menu.weekStartDate}`} className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md">
               Edit Menu
             </Link>
           </div>
@@ -139,18 +141,18 @@ export default function MenuDetailPage() {
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {days.map(day => (
-            <DayCard key={day} day={day} menu={menu.weeklyMenu[day]} />
+            <DayCard key={day} day={day} menu={menu[day as keyof MenuData] as DailyMenu | null} />
           ))}
         </div>
 
-        {menu.weeklyMenu.dailyOptions && (
+        {menu.dailyOptions && Object.values(menu.dailyOptions).some(r => r) && (
           <div className="mt-8 bg-white p-6 rounded-lg shadow">
             <h3 className="text-xl font-semibold text-gray-800">Daily Options</h3>
             <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
-              {Object.values(menu.weeklyMenu.dailyOptions).map((recipe, index) => (
+              {Object.values(menu.dailyOptions).map((recipe, index) => (
                 recipe ? (
-                  <Link key={(recipe as Recipe).id || index} href={`/recipes/${(recipe as Recipe).id}`} className="text-blue-600 hover:underline">
-                    {(recipe as Recipe).name} ({(recipe as Recipe).code})
+                  <Link key={recipe.id || index} href={`/recipes/${recipe.id}`} className="text-blue-600 hover:underline">
+                    {recipe.name} ({recipe.code})
                   </Link>
                 ) : null
               ))}
