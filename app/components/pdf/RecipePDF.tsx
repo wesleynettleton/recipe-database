@@ -179,7 +179,7 @@ const parseAllergies = (allergies: any) => {
 };
 
 const RecipePDF = ({ recipe }: { recipe: any }) => {
-  const allergySummary = recipe.ingredients.reduce((acc: Map<string, 'has' | 'may'>, ingredient) => {
+  const allergySummary = recipe.ingredients.reduce((acc: Map<string, 'has' | 'may'>, ingredient: any) => {
     const allergies = parseAllergies(ingredient.ingredientAllergies);
     allergies.forEach(allergy => {
       if (allergy && allergy.name) {
