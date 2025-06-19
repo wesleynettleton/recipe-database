@@ -149,7 +149,15 @@ export class DatabaseConnection {
 
   // Get all recipes
   async getAllRecipes(): Promise<Recipe[]> {
-    const result = await this.query('SELECT id, name, code, servings, totalcost, costperserving, created_at FROM recipes ORDER BY name');
+    const result = await this.query(`
+      SELECT 
+        r.id, r.name, r.code, r.servings, r.totalcost, r.costperserving, r.created_at,
+        m.name as "menuName", m.week_start_date as "weekStartDate"
+      FROM recipes r
+      LEFT JOIN menu_recipes mr ON r.id = mr.recipe_id
+      LEFT JOIN menus m ON mr.menu_id = m.id
+      ORDER BY r.name
+    `);
     
     // Map the results to camelCase
     return result.rows.map(row => ({
@@ -159,7 +167,9 @@ export class DatabaseConnection {
       servings: row.servings,
       totalCost: row.totalcost,
       costPerServing: row.costperserving,
-      createdAt: row.created_at
+      createdAt: row.created_at,
+      menuName: row.menuName,
+      weekStartDate: row.weekStartDate
     }));
   }
 
