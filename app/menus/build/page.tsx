@@ -257,7 +257,7 @@ function BuildMenuPageComponent() {
 
       if (result.success) {
         setSuccess(`Menu saved successfully!`)
-        router.push('/menus/build')
+        router.push('/menus')
       } else {
         setError(result.details || 'Failed to save menu.')
       }
