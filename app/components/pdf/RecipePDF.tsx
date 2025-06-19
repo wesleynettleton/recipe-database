@@ -90,22 +90,29 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
     ingredient: {
       flexDirection: 'row',
       justifyContent: 'space-between',
+      alignItems: 'center',
       marginBottom: 5,
       padding: 5,
       borderRadius: 3,
       backgroundColor: '#f9f9f9'
     },
+    ingredientSupplier: {
+      width: '25%',
+    },
     ingredientName: {
-      width: '40%',
+      width: '35%',
     },
     ingredientQty: {
-      width: '15%',
+      width: '10%',
       textAlign: 'right'
     },
     ingredientAllergy: {
-      width: '20%',
+      width: '25%',
       textAlign: 'left',
       paddingHorizontal: 5,
+    },
+    containsAllergy: {
+        color: '#ff0000'
     },
     instructions: {
       lineHeight: 1.5,
@@ -132,6 +139,12 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
     costLabel: {},
     costValue: {
       fontWeight: 'bold',
+    },
+    allergySection: {
+        position: 'absolute',
+        bottom: 60,
+        left: 30,
+        right: 30
     },
     allergySummary: {
       marginTop: 10,
@@ -228,25 +241,10 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
 
         {recipe.photo && <Image src={recipe.photo} style={styles.photo} />}
         
-        {allergySummary.size > 0 && (
-          <View style={styles.allergySummary}>
-            <Text style={styles.allergyTitle}>Allergy Information</Text>
-            <View style={styles.allergyList}>
-              {(Array.from(allergySummary.entries()) as [string, 'has' | 'may'][]).map(([name, status]) => (
-                <Text key={name} style={[
-                  styles.allergyTag,
-                  status === 'has' ? styles.containsTag : styles.mayContainTag
-                ]}>
-                  {status === 'has' ? 'Contains' : 'May Contain'} {name}
-                </Text>
-              ))}
-            </View>
-          </View>
-        )}
-
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Ingredients</Text>
-           <View style={styles.ingredient}>
+           <View style={[styles.ingredient, { backgroundColor: 'transparent', borderBottomWidth: 1, borderBottomColor: '#e0e0e0', paddingBottom: 5 }]}>
+              <Text style={[styles.ingredientSupplier, { fontWeight: 'bold' }]}>Supplier</Text>
               <Text style={[styles.ingredientName, { fontWeight: 'bold' }]}>Ingredient</Text>
               <Text style={[styles.ingredientQty, { fontWeight: 'bold' }]}>Quantity</Text>
               <Text style={[styles.ingredientAllergy, { fontWeight: 'bold' }]}>Contains</Text>
@@ -254,18 +252,19 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
            </View>
           <View style={styles.ingredientList}>
             {recipe.ingredients.map((ing: any, index: number) => {
-                const allergies = parseAllergies(ing.ingredientAllergies) || [];
-                const contains = allergies.filter(a => a && a.status === 'has').map(a => a ? a.name : '').join(', ');
-                const mayContain = allergies.filter(a => a && a.status === 'may').map(a => a ? a.name : '').join(', ');
+                const allergies = parseAllergies(ing.ingredientAllergies);
+                const contains = allergies.filter(a => a.status === 'has').map(a => a.name).join(', ');
+                const mayContain = allergies.filter(a => a.status === 'may').map(a => a.name).join(', ');
 
                 return (
                   <View key={index} style={styles.ingredient}>
+                    <Text style={styles.ingredientSupplier}>{ing.ingredientSupplier || 'N/A'}</Text>
                     <Text style={styles.ingredientName}>{ing.ingredientName}</Text>
-                    <Text style={styles.ingredientQty}>{`${ing.quantity} ${ing.unit || ''}`}</Text>
-                    <Text style={styles.ingredientAllergy}>{contains}</Text>
+                    <Text style={styles.ingredientQty}>{ing.quantity} {ing.unit}</Text>
+                    <Text style={[styles.ingredientAllergy, styles.containsAllergy]}>{contains}</Text>
                     <Text style={styles.ingredientAllergy}>{mayContain}</Text>
                   </View>
-                );
+                )
             })}
           </View>
         </View>
@@ -283,20 +282,27 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
             <Text style={styles.notes}>{recipe.notes}</Text>
           </View>
         )}
-
-        <View style={styles.costSummary}>
-            <View style={styles.costItem}>
-                <Text style={styles.costLabel}>Total Cost:</Text>
-                <Text style={styles.costValue}>£{Number(recipe.totalCost || 0).toFixed(2)}</Text>
-            </View>
-            <View style={styles.costItem}>
-                <Text style={styles.costLabel}>Cost Per Serving:</Text>
-                <Text style={styles.costValue}>£{Number(recipe.costPerServing || 0).toFixed(2)}</Text>
-            </View>
-        </View>
         
-        <Text style={styles.footer} fixed>
-            Generated on {new Date().toLocaleDateString('en-GB')}
+        {allergySummary.size > 0 && (
+          <View style={styles.allergySection}>
+              <View style={styles.allergySummary}>
+                <Text style={styles.allergyTitle}>Allergy Information</Text>
+                <View style={styles.allergyList}>
+                  {(Array.from(allergySummary.entries()) as [string, 'has' | 'may'][]).map(([name, status]) => (
+                    <Text key={name} style={[
+                      styles.allergyTag,
+                      status === 'has' ? styles.containsTag : styles.mayContainTag
+                    ]}>
+                      {status === 'has' ? 'Contains' : 'May Contain'} {name}
+                    </Text>
+                  ))}
+                </View>
+              </View>
+          </View>
+        )}
+
+        <Text style={styles.footer}>
+          Generated on {new Date().toLocaleDateString()}
         </Text>
       </Page>
     </Document>
