@@ -324,6 +324,42 @@ export default function RecipeDetailPage() {
               )}
             </div>
 
+            {/* Ingredients List */}
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Ingredients</h2>
+              <ul className="divide-y divide-gray-200">
+                {recipe.ingredients.map((ing, index) => {
+                  const ingredientAllergies = parseAllergies(ing.ingredientAllergies);
+                  return (
+                    <li key={index} className="py-3">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-normal text-gray-800">{ing.ingredientName}</p>
+                          {ing.notes && <p className="text-xs text-gray-500 italic">"{ing.notes}"</p>}
+                           {ingredientAllergies.length > 0 && (
+                            <div className="mt-1 flex flex-wrap gap-1">
+                              {ingredientAllergies.map(allergy => (
+                                <span
+                                  key={allergy.name}
+                                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getAllergyBadgeStyle(allergy.status)}`}
+                                >
+                                  {getStatusPrefix(allergy.status)}{allergy.name}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center space-x-4 text-right">
+                            <p className="text-sm font-normal text-black">{ing.quantity} {ing.unit}</p>
+                            <p className="text-sm font-medium text-gray-900">£{ing.cost.toFixed(2)}</p>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+
             {/* Instructions */}
             {recipe.instructions && (
               <div className="bg-white rounded-lg shadow-lg p-6">
@@ -351,42 +387,6 @@ export default function RecipeDetailPage() {
                   <p className="text-sm text-gray-500">No allergen information available for this recipe.</p>
                 )}
               </div>
-            </div>
-
-            {/* Ingredients List */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Ingredients</h2>
-              <ul className="divide-y divide-gray-200">
-                {recipe.ingredients.map((ing, index) => {
-                  const ingredientAllergies = parseAllergies(ing.ingredientAllergies);
-                  return (
-                    <li key={index} className="py-3">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-semibold text-gray-800">{ing.ingredientName}</p>
-                          {ing.notes && <p className="text-xs text-gray-500 italic">"{ing.notes}"</p>}
-                        </div>
-                        <div className="flex items-center space-x-4 text-right">
-                            <p className="text-sm font-bold text-black">{ing.quantity} {ing.unit}</p>
-                            <p className="text-sm font-medium text-gray-900">£{ing.cost.toFixed(2)}</p>
-                        </div>
-                      </div>
-                      {ingredientAllergies.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-1">
-                          {ingredientAllergies.map(allergy => (
-                            <span
-                              key={allergy.name}
-                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getAllergyBadgeStyle(allergy.status)}`}
-                            >
-                              {getStatusPrefix(allergy.status)}{allergy.name}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
             </div>
 
             {/* Notes */}
