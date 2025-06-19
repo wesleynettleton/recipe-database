@@ -338,7 +338,11 @@ export default function RecipeDetailPage() {
                           {ing.notes && <p className="text-xs text-gray-500 italic">"{ing.notes}"</p>}
                            {ingredientAllergies.length > 0 && (
                             <div className="mt-1 flex flex-wrap gap-1">
-                              {ingredientAllergies.map(allergy => (
+                              {ingredientAllergies.sort((a, b) => {
+                                if (a.status === 'has' && b.status === 'may') return -1;
+                                if (a.status === 'may' && b.status === 'has') return 1;
+                                return a.name.localeCompare(b.name);
+                              }).map(allergy => (
                                 <span
                                   key={allergy.name}
                                   className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getAllergyBadgeStyle(allergy.status)}`}
@@ -375,14 +379,21 @@ export default function RecipeDetailPage() {
               <h3 className="text-lg font-medium text-gray-900 mb-4">Allergy Summary</h3>
               <div className="flex flex-wrap gap-2">
                 {allergySummary && allergySummary.size > 0 ? (
-                  Array.from(allergySummary.entries()).map(([name, status]) => (
-                    <span
-                      key={name}
-                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getAllergyBadgeStyle(status)}`}
-                    >
-                      {getStatusPrefix(status)}{name}
-                    </span>
-                  ))
+                  Array.from(allergySummary.entries())
+                    .map(([name, status]) => ({ name, status }))
+                    .sort((a, b) => {
+                      if (a.status === 'has' && b.status === 'may') return -1;
+                      if (a.status === 'may' && b.status === 'has') return 1;
+                      return a.name.localeCompare(b.name);
+                    })
+                    .map(allergy => (
+                      <span
+                        key={allergy.name}
+                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getAllergyBadgeStyle(allergy.status)}`}
+                      >
+                        {getStatusPrefix(allergy.status)}{allergy.name}
+                      </span>
+                    ))
                 ) : (
                   <p className="text-sm text-gray-500">No allergen information available for this recipe.</p>
                 )}
