@@ -324,6 +324,16 @@ export default function RecipeDetailPage() {
               )}
             </div>
 
+            {/* Instructions */}
+            {recipe.instructions && (
+              <div className="bg-white rounded-lg shadow-lg p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-3">Instructions</h3>
+                <div className="prose max-w-none">
+                  <p className="text-gray-700 whitespace-pre-wrap">{recipe.instructions}</p>
+                </div>
+              </div>
+            )}
+
             {/* Allergy Summary */}
             <div className="bg-white p-6 rounded-lg shadow">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Allergy Summary</h3>
@@ -354,12 +364,11 @@ export default function RecipeDetailPage() {
                       <div className="flex justify-between items-start">
                         <div>
                           <p className="font-semibold text-gray-800">{ing.ingredientName}</p>
-                          <p className="text-sm text-gray-600">{ing.quantity} {ing.unit}</p>
                           {ing.notes && <p className="text-xs text-gray-500 italic">"{ing.notes}"</p>}
                         </div>
                         <div className="text-right">
+                            <p className="text-sm text-gray-500">{ing.quantity} {ing.unit}</p>
                             <p className="text-sm font-medium text-gray-900">£{ing.cost.toFixed(2)}</p>
-                            <p className="text-xs text-gray-500">{ing.ingredientWeight}{ing.ingredientUnit}</p>
                         </div>
                       </div>
                       {ingredientAllergies.length > 0 && (
@@ -379,16 +388,6 @@ export default function RecipeDetailPage() {
                 })}
               </ul>
             </div>
-
-            {/* Instructions */}
-            {recipe.instructions && (
-              <div className="bg-white rounded-lg shadow-lg p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-3">Instructions</h3>
-                <div className="prose max-w-none">
-                  <p className="text-gray-700 whitespace-pre-wrap">{recipe.instructions}</p>
-                </div>
-              </div>
-            )}
 
             {/* Notes */}
             {recipe.notes && (
