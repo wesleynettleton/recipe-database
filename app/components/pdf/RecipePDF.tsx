@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
   }
 });
 
-const parseAllergies = (allergies) => {
+const parseAllergies = (allergies: any) => {
     if (!allergies) return [];
     try {
         const parsed = typeof allergies === 'string' ? JSON.parse(allergies) : allergies;
