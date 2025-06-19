@@ -366,8 +366,8 @@ export default function RecipeDetailPage() {
                           <p className="font-semibold text-gray-800">{ing.ingredientName}</p>
                           {ing.notes && <p className="text-xs text-gray-500 italic">"{ing.notes}"</p>}
                         </div>
-                        <div className="text-right">
-                            <p className="text-sm text-gray-500">{ing.quantity} {ing.unit}</p>
+                        <div className="flex items-center space-x-4 text-right">
+                            <p className="text-sm font-bold text-black">{ing.quantity} {ing.unit}</p>
                             <p className="text-sm font-medium text-gray-900">£{ing.cost.toFixed(2)}</p>
                         </div>
                       </div>
