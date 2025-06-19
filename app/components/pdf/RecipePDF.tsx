@@ -1,4 +1,5 @@
 import React from 'react';
+import { fonts } from './fontHelper';
 
 interface RecipePDFProps {
   recipe: any;
@@ -24,24 +25,24 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
   // Register fonts
   Font.register({
     family: 'Oswald',
-    src: 'https://fonts.gstatic.com/s/oswald/v13/Y_TKV6o8WovbUd3m_X9aAA.ttf'
+    src: fonts.oswald.regular
   });
 
   Font.register({
       family: 'Lato',
-      src: 'https://fonts.gstatic.com/s/lato/v11/qIIYRU-oROkIk8vfvxw6QvesZW2xOQ-xsNqO47m55DA.ttf'
+      src: fonts.lato.regular
   });
 
   Font.register({
       family: 'Lato',
       fontStyle: 'italic',
-      src: 'https://fonts.gstatic.com/s/lato/v11/RYyZNoeFgb0l7W3Vu1aSWOvvDin1p8aA VwLSoaa4A.ttf'
+      src: fonts.lato.italic
   });
   
   Font.register({
       family: 'Lato',
       fontWeight: 'bold',
-      src: 'https://fonts.gstatic.com/s/lato/v11/qdgUG4U09HnJwhYI-uK18wLUuEpTyoUstqEm5AMlJo4.ttf'
+      src: fonts.lato.bold
   });
 
   const styles = StyleSheet.create({
