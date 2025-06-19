@@ -43,7 +43,7 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
     },
     recipeName: {
       fontSize: 28,
-      fontFamily: 'Times-Bold',
+      fontFamily: 'Helvetica-Bold',
       color: '#1a1a1a',
       marginBottom: 5,
     },
@@ -61,16 +61,9 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
     },
     sectionTitle: {
       fontSize: 18,
-      fontFamily: 'Times-Bold',
+      fontFamily: 'Helvetica-Bold',
       marginBottom: 15,
       color: '#1a1a1a',
-    },
-    twoColumn: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-    },
-    column: {
-      width: '48%',
     },
     ingredientList: {
       borderWidth: 1,
@@ -147,7 +140,7 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
     },
     allergyTitle: {
       fontSize: 14,
-      fontFamily: 'Times-Bold',
+      fontFamily: 'Helvetica-Bold',
       marginBottom: 8,
       color: '#d46b08',
     },
@@ -274,21 +267,19 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
             </View>
         </View>
 
-        <View style={styles.twoColumn}>
-            {recipe.instructions && (
-              <View style={[styles.section, styles.column]}>
-                <Text style={styles.sectionTitle}>Instructions</Text>
-                <Text style={styles.instructions}>{recipe.instructions}</Text>
-              </View>
-            )}
-            
-            {recipe.notes && (
-              <View style={[styles.section, styles.column]}>
-                <Text style={styles.sectionTitle}>Notes</Text>
-                <Text style={styles.notes}>{recipe.notes}</Text>
-              </View>
-            )}
-        </View>
+        {recipe.instructions && (
+            <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Instructions</Text>
+            <Text style={styles.instructions}>{recipe.instructions}</Text>
+            </View>
+        )}
+        
+        {recipe.notes && (
+            <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Notes</Text>
+            <Text style={styles.notes}>{recipe.notes}</Text>
+            </View>
+        )}
         
         {allergySummary.size > 0 && (
           <View style={styles.allergySection}>
