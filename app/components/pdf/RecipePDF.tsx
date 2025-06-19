@@ -111,7 +111,9 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
     },
     ingredientAllergy: {
       width: '25%',
-      textAlign: 'left',
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      alignItems: 'center',
       paddingHorizontal: 5,
     },
     containsAllergy: {
@@ -257,8 +259,8 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
           <View style={styles.ingredientList}>
             {recipe.ingredients.map((ing: any, index: number) => {
                 const allergies = parseAllergies(ing.ingredientAllergies);
-                const contains = allergies.filter(a => a.status === 'has').map(a => a.name).join(', ');
-                const mayContain = allergies.filter(a => a.status === 'may').map(a => a.name).join(', ');
+                const containsAllergies = allergies.filter(a => a.status === 'has');
+                const mayContainAllergies = allergies.filter(a => a.status === 'may');
 
                 return (
                   <View key={index} style={styles.ingredient}>
@@ -266,8 +268,12 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
                     <Text style={styles.ingredientProductCode}>{ing.originalProductCode}</Text>
                     <Text style={styles.ingredientName}>{ing.ingredientName}</Text>
                     <Text style={styles.ingredientQty}>{ing.quantity} {ing.unit}</Text>
-                    <Text style={[styles.ingredientAllergy, styles.containsAllergy]}>{contains}</Text>
-                    <Text style={styles.ingredientAllergy}>{mayContain}</Text>
+                    <View style={styles.ingredientAllergy}>
+                        {containsAllergies.map(a => <Text key={a.name} style={[styles.allergyTag, styles.containsTag]}>{a.name}</Text>)}
+                    </View>
+                    <View style={styles.ingredientAllergy}>
+                        {mayContainAllergies.map(a => <Text key={a.name} style={[styles.allergyTag, styles.mayContainTag]}>{a.name}</Text>)}
+                    </View>
                   </View>
                 )
             })}
