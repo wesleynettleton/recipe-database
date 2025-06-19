@@ -175,6 +175,11 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
       fontSize: 8,
       color: '#aaaaaa',
     },
+    confidentialityNotice: {
+        marginTop: 4,
+        fontSize: 7,
+        color: '#888888',
+    },
     photo: {
         width: '100%',
         height: 220,
@@ -299,9 +304,14 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
           </View>
         )}
 
-        <Text style={styles.footer}>
-          Generated on {new Date().toLocaleDateString()} with RecipeDB
-        </Text>
+        <View style={styles.footer}>
+            <Text>
+                Generated on {new Date().toLocaleDateString()} with RecipeDB
+            </Text>
+            <Text style={styles.confidentialityNotice}>
+                Private and confidential - not to be copied or reproduced
+            </Text>
+        </View>
       </Page>
     </Document>
   );
