@@ -1,5 +1,4 @@
 import React from 'react';
-import { fonts } from './fontHelper';
 
 interface RecipePDFProps {
   recipe: any;
@@ -22,33 +21,10 @@ interface Allergy {
 const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
   const { Page, Text, View, Document, StyleSheet, Font, Image } = components;
 
-  // Register fonts
-  Font.register({
-    family: 'Oswald',
-    src: fonts.oswald.regular
-  });
-
-  Font.register({
-      family: 'Lato',
-      src: fonts.lato.regular
-  });
-
-  Font.register({
-      family: 'Lato',
-      fontStyle: 'italic',
-      src: fonts.lato.italic
-  });
-  
-  Font.register({
-      family: 'Lato',
-      fontWeight: 'bold',
-      src: fonts.lato.bold
-  });
-
   const styles = StyleSheet.create({
     page: {
       padding: 40,
-      fontFamily: 'Lato',
+      fontFamily: 'Helvetica',
       fontSize: 10,
       color: '#333333',
       backgroundColor: '#ffffff'
@@ -67,7 +43,7 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
     },
     recipeName: {
       fontSize: 28,
-      fontFamily: 'Oswald',
+      fontFamily: 'Times-Bold',
       color: '#1a1a1a',
       marginBottom: 5,
     },
@@ -85,7 +61,7 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
     },
     sectionTitle: {
       fontSize: 18,
-      fontFamily: 'Oswald',
+      fontFamily: 'Times-Bold',
       marginBottom: 15,
       color: '#1a1a1a',
     },
@@ -137,7 +113,7 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
       minHeight: 15 // Ensure consistent row height
     },
     boldText: {
-        fontFamily: 'Lato',
+        fontFamily: 'Helvetica',
         fontWeight: 'bold'
     },
     instructions: {
@@ -145,7 +121,7 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
       fontSize: 10,
     },
     notes: {
-      fontFamily: 'Lato',
+      fontFamily: 'Helvetica',
       fontStyle: 'italic',
       fontSize: 10,
       color: '#555555',
@@ -171,7 +147,7 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
     },
     allergyTitle: {
       fontSize: 14,
-      fontFamily: 'Oswald',
+      fontFamily: 'Times-Bold',
       marginBottom: 8,
       color: '#d46b08',
     },
@@ -186,7 +162,7 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
       paddingHorizontal: 6,
       borderRadius: 4,
       fontSize: 8,
-      fontFamily: 'Lato',
+      fontFamily: 'Helvetica',
       fontWeight: 'bold'
     },
     containsTag: {
