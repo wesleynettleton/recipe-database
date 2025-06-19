@@ -587,10 +587,10 @@ export class DatabaseConnection {
     const row = result.rows[0];
 
     // Helper to fetch recipe details
-    const getRecipeDetails = async (id: number | null): Promise<Recipe | null> => {
+    const getRecipeDetails = async (id: number | null): Promise<RecipeWithIngredients | null> => {
         if (!id) return null;
-        const recipeResult = await this.query('SELECT id, name, code FROM recipes WHERE id = $1', [id]);
-        return recipeResult.rows[0] || null;
+        // Use getRecipeWithIngredients to get full details including allergies
+        return await this.getRecipeWithIngredients(id);
     };
     
     // Helper to process a day's menu from JSON

@@ -4,10 +4,20 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 
+interface Allergy {
+  name: string;
+  status: 'has' | 'may';
+}
+
+interface RecipeIngredient {
+  ingredientAllergies: string;
+}
+
 interface Recipe {
   id: number;
   name: string;
   code: string;
+  ingredients: RecipeIngredient[];
 }
 
 interface DailyMenu {
@@ -29,6 +39,83 @@ interface MenuData {
   friday: DailyMenu | null;
   dailyOptions: { [key: string]: Recipe | null };
 }
+
+const AllergySummaryCard = ({ menu }: { menu: MenuData }) => {
+  const uniqueAllergies = new Map<string, 'has' | 'may'>();
+
+  const processRecipe = (recipe: Recipe | null) => {
+    if (!recipe || !recipe.ingredients) return;
+
+    recipe.ingredients.forEach(ingredient => {
+      try {
+        const allergies: (string | { allergy: string, status: 'has' | 'may' })[] = 
+          typeof ingredient.ingredientAllergies === 'string' 
+            ? JSON.parse(ingredient.ingredientAllergies) 
+            : ingredient.ingredientAllergies;
+
+        if (Array.isArray(allergies)) {
+          allergies.forEach(a => {
+            let name = '';
+            let status: 'has' | 'may' = 'has';
+
+            if (typeof a === 'string') {
+              const parts = a.split(':');
+              name = parts[0]?.trim();
+              status = (parts[1]?.trim() as 'has' | 'may') || 'has';
+            } else if (typeof a === 'object' && a.allergy) {
+              name = a.allergy;
+              status = a.status || 'has';
+            }
+
+            if (name) {
+              const existingStatus = uniqueAllergies.get(name);
+              if (!existingStatus || (existingStatus === 'may' && status === 'has')) {
+                uniqueAllergies.set(name, status);
+              }
+            }
+          });
+        }
+      } catch (e) {
+        console.error('Failed to parse allergies from ingredient:', ingredient, e);
+      }
+    });
+  };
+
+  Object.values(menu).forEach(day => {
+    if (day && typeof day === 'object' && 'lunchOption1' in day) {
+      const dailyMenu = day as DailyMenu;
+      Object.values(dailyMenu).forEach(processRecipe);
+    }
+  });
+
+  if (menu.dailyOptions) {
+    Object.values(menu.dailyOptions).forEach(processRecipe);
+  }
+
+  if (uniqueAllergies.size === 0) {
+    return null; // Don't render the card if there are no allergies
+  }
+
+  return (
+    <div className="mt-8 bg-white p-6 rounded-lg shadow">
+      <h3 className="text-xl font-semibold text-gray-800 mb-4">Weekly Allergy Summary</h3>
+      <div className="flex flex-wrap gap-2">
+        {Array.from(uniqueAllergies.entries()).map(([name, status]) => (
+          <span
+            key={name}
+            className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+              status === 'has'
+                ? 'bg-red-100 text-red-800'
+                : 'bg-yellow-100 text-yellow-800'
+            }`}
+          >
+            {status === 'has' ? 'Contains ' : 'May contain '} {name}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const DayCard = ({ day, menu }: { day: string; menu: DailyMenu | null }) => {
   if (!menu) {
@@ -144,6 +231,8 @@ export default function MenuDetailPage() {
             <DayCard key={day} day={day} menu={menu[day as keyof MenuData] as DailyMenu | null} />
           ))}
         </div>
+
+        <AllergySummaryCard menu={menu} />
 
         {menu.dailyOptions && Object.values(menu.dailyOptions).some(r => r) && (
           <div className="mt-8 bg-white p-6 rounded-lg shadow">

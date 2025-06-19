@@ -483,58 +483,63 @@ function BuildRecipePageComponent() {
             </div>
 
             {/* Ingredient Adder */}
-            <div className="bg-white p-6 rounded-lg shadow" ref={dropdownRef}>
+            <div className="bg-white p-6 rounded-lg shadow">
               <h2 className="text-lg font-medium text-gray-900 mb-4">Add Ingredient</h2>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={ingredientSearch}
-                  onChange={e => setIngredientSearch(e.target.value)}
-                  placeholder="Search for an ingredient..."
-                  className="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
-                />
-                {showDropdown && searchResults.length > 0 && (
-                  <div
-                    ref={dropdownRef}
-                    className="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg max-h-60 overflow-auto"
-                  >
-                    {searchResults.map((ingredient) => (
-                      <div
-                        key={ingredient.productcode}
-                        onClick={() => selectIngredient(ingredient)}
-                        className="cursor-pointer hover:bg-gray-100 p-2 flex justify-between items-center"
-                      >
-                        <div>
-                          <span className="text-black">{ingredient.name}</span>
-                          {ingredient.weight && (
-                            <span className="text-sm text-gray-500 ml-2">
-                              ({ingredient.weight}{ingredient.unit || ''})
-                            </span>
-                          )}
+              <div className="space-y-4">
+                <div className="relative" ref={dropdownRef}>
+                  <label htmlFor="ingredient-search" className="block text-sm font-medium text-gray-700">
+                    Ingredient
+                  </label>
+                  <input
+                    type="text"
+                    id="ingredient-search"
+                    value={ingredientSearch}
+                    onChange={e => setIngredientSearch(e.target.value)}
+                    placeholder="Search for an ingredient..."
+                    className="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                  />
+                  {showDropdown && searchResults.length > 0 && (
+                    <div
+                      className="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg max-h-60 overflow-auto"
+                    >
+                      {searchResults.map((ingredient) => (
+                        <div
+                          key={ingredient.productcode}
+                          onClick={() => selectIngredient(ingredient)}
+                          className="cursor-pointer hover:bg-gray-100 p-2 flex justify-between items-center"
+                        >
+                          <div>
+                            <span className="text-black">{ingredient.name}</span>
+                            {ingredient.weight && (
+                              <span className="text-sm text-gray-500 ml-2">
+                                ({ingredient.weight}{ingredient.unit || ''})
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-gray-500">{formatPrice(ingredient.price)}</span>
                         </div>
-                        <span className="text-gray-500">{formatPrice(ingredient.price)}</span>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="md:col-span-1">
+                    <label className="block text-sm font-medium text-gray-700">Quantity</label>
+                    <input type="number" value={quantity} onChange={e => setQuantity(e.target.value)} className="mt-1 w-full border-gray-300 rounded-md shadow-sm text-black" />
                   </div>
-                )}
+                  <div className="md:col-span-1">
+                    <label className="block text-sm font-medium text-gray-700">Unit</label>
+                    <input type="text" value={unit} onChange={e => setUnit(e.target.value)} placeholder="(e.g., g, ml, pcs)" className="mt-1 w-full border-gray-300 rounded-md shadow-sm text-black" />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700">Notes</label>
+                    <input type="text" value={notes} onChange={e => setNotes(e.target.value)} placeholder="(e.g., finely chopped)" className="mt-1 w-full border-gray-300 rounded-md shadow-sm text-black" />
+                  </div>
+                </div>
+                <button onClick={addIngredient} className="mt-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                  + Add Ingredient
+                </button>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
-                <div className="md:col-span-1">
-                  <label className="block text-sm font-medium text-gray-700">Quantity</label>
-                  <input type="number" value={quantity} onChange={e => setQuantity(e.target.value)} className="w-full border-gray-300 rounded-md shadow-sm text-black" />
-                </div>
-                <div className="md:col-span-1">
-                  <label className="block text-sm font-medium text-gray-700">Unit</label>
-                  <input type="text" value={unit} onChange={e => setUnit(e.target.value)} placeholder="(e.g., g, ml, pcs)" className="w-full border-gray-300 rounded-md shadow-sm text-black" />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700">Notes</label>
-                  <input type="text" value={notes} onChange={e => setNotes(e.target.value)} placeholder="(e.g., finely chopped)" className="w-full border-gray-300 rounded-md shadow-sm text-black" />
-                </div>
-              </div>
-              <button onClick={addIngredient} className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
-                + Add Ingredient
-              </button>
             </div>
           </div>
 
