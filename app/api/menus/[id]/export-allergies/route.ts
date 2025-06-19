@@ -177,11 +177,15 @@ export async function GET(request: Request, { params }: { params: { id: string }
     const buffer = await workbook.outputAsync();
     console.log('--- EXPORT COMPLETE ---');
 
+    const sanitizedMenuName = menu.name.replace(/[\/\\?%*:|"<>]/g, '-');
+    const filenameSuffix = includeCode ? '(coded)' : '(No Codes)';
+    const filename = `Allergies-${sanitizedMenuName} ${filenameSuffix}.xlsx`;
+
     return new NextResponse(buffer, {
       status: 200,
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'Content-Disposition': `attachment; filename="Allergy_Form_Menu_${menu.name}_${menu.weekStartDate}.xlsx"`,
+        'Content-Disposition': `attachment; filename="${filename}"`,
       },
     });
 

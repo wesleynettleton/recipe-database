@@ -33,7 +33,10 @@ export async function GET(request: Request) {
     const passthrough = new PassThrough();
     pdfStream.pipe(passthrough);
     
-    const filename = `recipe-${recipe.code || recipe.name.replace(/ /g, '_')}.pdf`;
+    const sanitizedRecipeName = recipe.name.replace(/[\/\\?%*:|"<>]/g, '-');
+    const filename = recipe.code 
+      ? `${recipe.code} - ${sanitizedRecipeName}.pdf`
+      : `${sanitizedRecipeName}.pdf`;
     
     return new NextResponse(passthrough as any, {
         status: 200,
