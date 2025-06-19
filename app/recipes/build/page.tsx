@@ -352,17 +352,6 @@ function BuildRecipePageComponent() {
   }
 
   const saveRecipe = async () => {
-    console.log('--- Debugging Save ---');
-    console.log('Recipe Name:', `"${recipeName}"`, 'Type:', typeof recipeName);
-    console.log('Servings:', servings, 'Type:', typeof servings);
-    console.log('Ingredients Count:', selectedIngredients.length);
-    console.log('--- Validation Checks ---');
-    console.log('!recipeName ->', !recipeName);
-    console.log('!servings ->', !servings);
-    console.log('servings <= 0 ->', servings <= 0);
-    console.log('selectedIngredients.length === 0 ->', selectedIngredients.length === 0);
-    console.log('--- End Debugging ---');
-
     if (!recipeName || !servings || servings <= 0 || selectedIngredients.length === 0) {
       setSaveMessage('Recipe name, servings, and at least one ingredient are required.')
       return
@@ -372,68 +361,42 @@ function BuildRecipePageComponent() {
     setSaveMessage('')
 
     const ingredientsForApi = selectedIngredients.map(ing => ({
-      recipeId: 0, // This will be set by the server
-      productCode: ing.productCode, // Make sure to include the product code
-      originalProductCode: ing.originalProductCode, // Ensure this is included
+      productCode: ing.productCode,
       quantity: ing.quantity,
       unit: ing.unit,
       notes: ing.notes,
     }))
 
     const payload = {
-      recipeName,
-      recipeCode,
-      servings,
-      instructions,
-      recipeNotes,
-      photo,
-      selectedIngredients: ingredientsForApi,
-      totalCost,
-      costPerServing,
+      name: recipeName,
+      code: recipeCode,
+      servings: servings,
+      instructions: instructions,
+      notes: recipeNotes,
+      photo: photo,
+      ingredients: ingredientsForApi,
+      totalCost: totalCost,
+      costPerServing: costPerServing,
     }
-
-    // Debug log to verify payload
-    console.log('Saving recipe with payload:', payload)
-    console.log('Selected ingredients before mapping:', selectedIngredients)
-    console.log('Selected ingredients details:')
-    selectedIngredients.forEach((ing, index) => {
-      console.log(`Ingredient ${index}:`, {
-        name: ing.name,
-        productCode: ing.productCode,
-        originalProductCode: ing.originalProductCode,
-        quantity: ing.quantity,
-        unit: ing.unit,
-        notes: ing.notes
-      })
-    })
-    console.log('Ingredients for API:', ingredientsForApi)
 
     try {
       const url = '/api/recipes'
       const method = 'POST'
 
-      console.log('Making API request to:', url)
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
-
-      console.log('Response status:', response.status)
-      console.log('Response ok:', response.ok)
       
       const result = await response.json()
-      console.log('Response result:', result)
 
       if (response.ok) {
-        console.log('Recipe saved successfully, recipeId:', result.recipeId)
         setSaveMessage(`Recipe saved successfully! Redirecting...`)
         setTimeout(() => {
-          console.log('Redirecting to recipe:', result.recipeId)
           router.push(`/recipes/${result.recipeId}`)
         }, 1500)
       } else {
-        console.error('API returned error:', result.error)
         setSaveMessage(result.error || `Failed to save recipe.`)
       }
     } catch (error) {
