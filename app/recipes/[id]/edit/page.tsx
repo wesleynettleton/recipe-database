@@ -127,6 +127,16 @@ export default function EditRecipePage() {
     }
   }, [recipeId])
 
+  useEffect(() => {
+    if (recipe?.ingredients) {
+      const parsedIngredients = recipe.ingredients.map(ing => ({
+        ...ing,
+        allergies: parseAllergies(ing.ingredientAllergies)
+      }));
+      setSelectedIngredients(parsedIngredients as any);
+    }
+  }, [recipe]);
+
   // Calculate costs
   const totalCost = selectedIngredients.reduce((sum, ing) => sum + ing.cost, 0)
   const costPerServing = servings > 0 ? totalCost / servings : 0
@@ -364,6 +374,58 @@ export default function EditRecipePage() {
       ))}
     </ul>
   )
+
+  const parseAllergies = (allergies: any): { name: string; status: 'has' | 'may' }[] => {
+    if (!allergies) return []
+    
+    if (typeof allergies === 'string') {
+      try {
+        const parsed = JSON.parse(allergies);
+        if (Array.isArray(parsed)) {
+            // Handle cases where the string is a JSON array of strings like "allergy:status"
+            return parsed.map((a: string | { allergy: string, status: 'has' | 'may' }) => {
+                if (typeof a === 'string') {
+                    const [name, status] = a.split(':');
+                    return { 
+                        name: name.trim(), 
+                        status: (status?.trim() || 'has') as 'has' | 'may' 
+                    };
+                }
+                // Handle cases where it's already an object
+                if (typeof a === 'object' && a.allergy) {
+                    return {
+                        name: a.allergy,
+                        status: (a.status || 'has') as 'has' | 'may'
+                    }
+                }
+                return null;
+            }).filter(Boolean) as { name: string; status: 'has' | 'may' }[];
+        }
+      } catch {
+        // Fallback for non-JSON strings (though the DB should store JSON)
+        return allergies.split(',').map(a => {
+          const [name, status] = a.split(':');
+          return { name: name.trim(), status: (status?.trim() || 'has') as 'has' | 'may' };
+        });
+      }
+    }
+    
+    // Handle array format if it's not a string
+    if (Array.isArray(allergies)) {
+      return allergies.map(a => {
+        if (typeof a === 'string') {
+          const [name, status] = a.split(':');
+          return { name: name.trim(), status: (status?.trim() || 'has') as 'has' | 'may' };
+        }
+        if (typeof a === 'object' && a.allergy) {
+          return { name: a.allergy, status: (a.status || 'has') as 'has' | 'may' };
+        }
+        return null;
+      }).filter(Boolean) as { name: string; status: 'has' | 'may' }[];
+    }
+    
+    return []
+  }
 
   if (isLoading) {
     return (

@@ -50,6 +50,7 @@ function BuildRecipePageComponent() {
   const [quantity, setQuantity] = useState('')
   const [unit, setUnit] = useState('')
   const [notes, setNotes] = useState('')
+  const [selectedIngredient, setSelectedIngredient] = useState<IngredientWithAllergies | null>(null)
   
   // UI/Status state
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
@@ -149,77 +150,63 @@ function BuildRecipePageComponent() {
     if (fileInput) fileInput.value = ''
   }
 
-  const selectIngredient = (ingredient: IngredientWithAllergies) => {
-    // Parse allergies immediately when selecting an ingredient
-    const parsedAllergies = parseAllergies(ingredient.allergies)
-    setIngredientSearch(ingredient.name)
-    setShowDropdown(false)
-    programmaticChangeRef.current = true
+  const handleIngredientSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setIngredientSearch(e.target.value)
+    setSelectedIngredient(null)
   }
 
   const addIngredient = () => {
-    const selected = searchResults.find(ing => ing.name === ingredientSearch)
-    if (!selected || !quantity) return
-
-    console.log('Adding ingredient - selected:', selected)
-    console.log('Selected productCode:', selected.productcode)
-    console.log('Selected name:', selected.name)
-    console.log('Selected price (raw):', selected.price, 'type:', typeof selected.price)
-    console.log('Selected weight (raw):', selected.weight, 'type:', typeof selected.weight)
+    if (!selectedIngredient) {
+      alert('Please select an ingredient from the dropdown list first.');
+      return;
+    }
+    if (!quantity) {
+      alert('Please enter a quantity for the ingredient.');
+      return;
+    }
 
     const qty = parseFloat(quantity)
-    const price = parseFloat(String(selected.price))
-    const weight = parseFloat(String(selected.weight))
-    
-    console.log('Parsed values:', {
-      qty,
-      price,
-      weight,
-      priceType: typeof price,
-      weightType: typeof weight
-    })
+    if (isNaN(qty) || qty <= 0) {
+      alert('Please enter a valid positive number for the quantity.');
+      return;
+    }
+
+    const price = parseFloat(String(selectedIngredient.price))
+    const weight = parseFloat(String(selectedIngredient.weight))
     
     const pricePerUnit = (weight && weight > 0)
       ? price / weight
       : price
     const cost = qty * pricePerUnit
 
-    console.log('Cost calculation debug:', {
-      qty,
-      price,
-      weight,
-      pricePerUnit,
-      cost
-    })
-
     // Parse allergies when adding the ingredient
-    const parsedAllergies = parseAllergies(selected.allergies)
+    const parsedAllergies = parseAllergies(selectedIngredient.allergies)
 
     const newIngredient: RecipeIngredient = {
-      originalProductCode: selected.productcode,
-      productCode: selected.productcode,
-      name: selected.name,
+      originalProductCode: selectedIngredient.productcode,
+      productCode: selectedIngredient.productcode,
+      name: selectedIngredient.name,
       quantity: qty,
-      unit: unit || selected.unit,
+      unit: unit || selectedIngredient.unit,
       notes,
-      price: selected.price,
+      price: selectedIngredient.price,
       cost,
       allergies: parsedAllergies,
       pricePerUnit,
-      baseWeight: selected.weight,
-      baseUnit: selected.unit,
+      baseWeight: selectedIngredient.weight,
+      baseUnit: selectedIngredient.unit,
     }
-
-    console.log('New ingredient created:', newIngredient)
-    console.log('New ingredient originalProductCode:', newIngredient.originalProductCode)
 
     setSelectedIngredients([...selectedIngredients, newIngredient])
     
     // Clear form
+    programmaticChangeRef.current = true;
     setIngredientSearch('')
+    setSelectedIngredient(null)
     setQuantity('')
     setUnit('')
     setNotes('')
+    setShowDropdown(false)
   }
 
   const removeIngredient = (index: number) => {
@@ -484,62 +471,78 @@ function BuildRecipePageComponent() {
 
             {/* Ingredient Adder */}
             <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Add Ingredient</h2>
-              <div className="space-y-4">
-                <div className="relative" ref={dropdownRef}>
-                  <label htmlFor="ingredient-search" className="block text-sm font-medium text-gray-700">
-                    Ingredient
-                  </label>
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Add Ingredients</h2>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={ingredientSearch}
+                  onChange={handleIngredientSearchChange}
+                  placeholder="Search for an ingredient..."
+                  className="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                />
+                {showDropdown && searchResults.length > 0 && (
+                  <div
+                    ref={dropdownRef}
+                    className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-200 max-h-60 overflow-auto"
+                  >
+                    {searchResults.map((ingredient) => (
+                      <div
+                        key={ingredient.productcode}
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => {
+                          programmaticChangeRef.current = true;
+                          setIngredientSearch(ingredient.name)
+                          setSelectedIngredient(ingredient)
+                          setShowDropdown(false)
+                        }}
+                      >
+                        <div className="font-medium text-gray-900">{ingredient.name}</div>
+                        <div className="text-sm text-gray-500">
+                          {ingredient.supplier} - £{(typeof ingredient.price === 'number' ? ingredient.price : parseFloat(String(ingredient.price)) || 0).toFixed(2)} per {ingredient.weight}{ingredient.unit}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+                <div className="md:col-span-1">
+                  <label className="block text-sm font-medium text-gray-700">Quantity</label>
+                  <input
+                    type="number"
+                    value={quantity}
+                    onChange={e => setQuantity(e.target.value)}
+                    className="w-full border-gray-300 rounded-md shadow-sm text-black"
+                  />
+                </div>
+                <div className="md:col-span-1">
+                  <label className="block text-sm font-medium text-gray-700">Unit</label>
                   <input
                     type="text"
-                    id="ingredient-search"
-                    value={ingredientSearch}
-                    onChange={e => setIngredientSearch(e.target.value)}
-                    placeholder="Search for an ingredient..."
-                    className="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                    value={unit}
+                    onChange={e => setUnit(e.target.value)}
+                    placeholder="(e.g., g, ml, pcs)"
+                    className="w-full border-gray-300 rounded-md shadow-sm text-black"
                   />
-                  {showDropdown && searchResults.length > 0 && (
-                    <div
-                      className="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg max-h-60 overflow-auto"
-                    >
-                      {searchResults.map((ingredient) => (
-                        <div
-                          key={ingredient.productcode}
-                          onClick={() => selectIngredient(ingredient)}
-                          className="cursor-pointer hover:bg-gray-100 p-2 flex justify-between items-center"
-                        >
-                          <div>
-                            <span className="text-black">{ingredient.name}</span>
-                            {ingredient.weight && (
-                              <span className="text-sm text-gray-500 ml-2">
-                                ({ingredient.weight}{ingredient.unit || ''})
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-gray-500">{formatPrice(ingredient.price)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="md:col-span-1">
-                    <label className="block text-sm font-medium text-gray-700">Quantity</label>
-                    <input type="number" value={quantity} onChange={e => setQuantity(e.target.value)} className="mt-1 w-full border-gray-300 rounded-md shadow-sm text-black" />
-                  </div>
-                  <div className="md:col-span-1">
-                    <label className="block text-sm font-medium text-gray-700">Unit</label>
-                    <input type="text" value={unit} onChange={e => setUnit(e.target.value)} placeholder="(e.g., g, ml, pcs)" className="mt-1 w-full border-gray-300 rounded-md shadow-sm text-black" />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700">Notes</label>
-                    <input type="text" value={notes} onChange={e => setNotes(e.target.value)} placeholder="(e.g., finely chopped)" className="mt-1 w-full border-gray-300 rounded-md shadow-sm text-black" />
-                  </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700">Notes</label>
+                  <input
+                    type="text"
+                    value={notes}
+                    onChange={e => setNotes(e.target.value)}
+                    placeholder="(e.g., finely chopped)"
+                    className="w-full border-gray-300 rounded-md shadow-sm text-black"
+                  />
                 </div>
-                <button onClick={addIngredient} className="mt-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
-                  + Add Ingredient
-                </button>
               </div>
+              <button
+                onClick={addIngredient}
+                className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+              >
+                + Add Ingredient
+              </button>
             </div>
           </div>
 

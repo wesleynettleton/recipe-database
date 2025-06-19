@@ -31,7 +31,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
     const sheet = workbook.sheet("Allergens");
 
     // Format the date
-    const date = new Date(menu.date);
+    const date = new Date(menu.weekStartDate);
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
     const year = date.getFullYear();
@@ -181,7 +181,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
       status: 200,
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'Content-Disposition': `attachment; filename="Allergy_Form_Menu_${menu.name}_${menu.date}.xlsx"`,
+        'Content-Disposition': `attachment; filename="Allergy_Form_Menu_${menu.name}_${menu.weekStartDate}.xlsx"`,
       },
     });
 
