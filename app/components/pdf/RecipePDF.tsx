@@ -23,59 +23,70 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
 
   // Register fonts
   Font.register({
-    family: 'Helvetica',
-    fonts: [
-      { src: 'https://fonts.gstatic.com/s/oswald/v13/Y_TKV6o8WovbUd3m_X9aAA.ttf', fontWeight: 'normal' },
-      { src: 'https://fonts.gstatic.com/s/oswald/v13/bH7276GfdCjMjApa_dkG6w.ttf', fontWeight: 'bold' },
-    ],
+    family: 'Oswald',
+    src: 'https://fonts.gstatic.com/s/oswald/v13/Y_TKV6o8WovbUd3m_X9aAA.ttf'
   });
+
   Font.register({
-      family: 'Helvetica-Oblique',
-      src: 'https://fonts.gstatic.com/s/lato/v11/hccPIZHKhL4EMV4K_M7pgg.ttf',
-      fontStyle: 'italic'
+      family: 'Lato',
+      src: 'https://fonts.gstatic.com/s/lato/v11/qIIYRU-oROkIk8vfvxw6QvesZW2xOQ-xsNqO47m55DA.ttf'
+  });
+
+  Font.register({
+      family: 'Lato',
+      fontStyle: 'italic',
+      src: 'https://fonts.gstatic.com/s/lato/v11/RYyZNoeFgb0l7W3Vu1aSWOvvDin1p8aA VwLSoaa4A.ttf'
+  });
+  
+  Font.register({
+      family: 'Lato',
+      fontWeight: 'bold',
+      src: 'https://fonts.gstatic.com/s/lato/v11/qdgUG4U09HnJwhYI-uK18wLUuEpTyoUstqEm5AMlJo4.ttf'
   });
 
   const styles = StyleSheet.create({
     page: {
-      padding: 30,
-      fontFamily: 'Helvetica',
-      fontSize: 9,
-      color: '#333',
+      padding: 40,
+      fontFamily: 'Lato',
+      fontSize: 10,
+      color: '#333333',
+      backgroundColor: '#ffffff'
     },
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 20,
-      borderBottomWidth: 2,
-      borderBottomColor: '#f0f0f0',
-      paddingBottom: 10,
-    },
-    recipeName: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      color: '#1a1a1a',
-    },
-    recipeCode: {
-      fontSize: 12,
-      color: '#666',
-    },
-    servings: {
-      fontSize: 12,
-      color: '#666',
-      marginTop: 4,
-    },
-    section: {
-      marginBottom: 20,
-    },
-    sectionTitle: {
-      fontSize: 16,
-      fontWeight: 'bold',
-      marginBottom: 10,
-      color: '#2a2a2a',
+      alignItems: 'flex-start',
+      marginBottom: 25,
+      paddingBottom: 15,
       borderBottomWidth: 1,
       borderBottomColor: '#e0e0e0',
-      paddingBottom: 5,
+    },
+    headerInfo: {
+        flexDirection: 'column'
+    },
+    recipeName: {
+      fontSize: 28,
+      fontFamily: 'Oswald',
+      color: '#1a1a1a',
+      marginBottom: 5,
+    },
+    recipeCode: {
+      fontSize: 11,
+      color: '#666666',
+    },
+    servings: {
+      fontSize: 11,
+      color: '#666666',
+      marginTop: 2,
+    },
+    section: {
+      marginBottom: 25,
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontFamily: 'Oswald',
+      marginBottom: 15,
+      color: '#1a1a1a',
     },
     twoColumn: {
       flexDirection: 'row',
@@ -85,16 +96,23 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
       width: '48%',
     },
     ingredientList: {
-      marginBottom: 10,
+      borderWidth: 1,
+      borderColor: '#e0e0e0',
+      borderRadius: 4,
+      overflow: 'hidden'
     },
     ingredient: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: 5,
-      padding: 5,
-      borderRadius: 3,
-      backgroundColor: '#f9f9f9'
+      padding: 8,
+    },
+    ingredientEven: {
+        backgroundColor: '#f8f9fa'
+    },
+    ingredientHeader: {
+        backgroundColor: '#f1f3f5',
+        borderBottomWidth: 1,
+        borderBottomColor: '#dee2e6'
     },
     ingredientSupplier: {
       width: '20%',
@@ -113,56 +131,47 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
       width: '25%',
       flexDirection: 'row',
       flexWrap: 'wrap',
-      alignItems: 'center',
       paddingHorizontal: 5,
+      alignItems: 'center',
+      minHeight: 15 // Ensure consistent row height
     },
-    containsAllergy: {
-        color: '#ff0000'
+    boldText: {
+        fontFamily: 'Lato',
+        fontWeight: 'bold'
     },
     instructions: {
-      lineHeight: 1.5,
+      lineHeight: 1.6,
+      fontSize: 10,
     },
     notes: {
-      fontFamily: 'Helvetica-Oblique',
-      fontSize: 9,
-      color: '#555',
-      backgroundColor: '#f9f9f9',
-      padding: 10,
+      fontFamily: 'Lato',
+      fontStyle: 'italic',
+      fontSize: 10,
+      color: '#555555',
+      backgroundColor: '#f8f9fa',
+      padding: 12,
       borderRadius: 4,
-    },
-    costSummary: {
-      marginTop: 20,
-      paddingTop: 10,
-      borderTopWidth: 1,
-      borderTopColor: '#e0e0e0',
-    },
-    costItem: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginBottom: 5,
-    },
-    costLabel: {},
-    costValue: {
-      fontWeight: 'bold',
+      borderLeftWidth: 3,
+      borderLeftColor: '#ced4da'
     },
     allergySection: {
         position: 'absolute',
-        bottom: 60,
-        left: 30,
-        right: 30
+        bottom: 50,
+        left: 40,
+        right: 40
     },
     allergySummary: {
-      marginTop: 10,
-      padding: 10,
-      backgroundColor: '#fffbe6',
+      marginTop: 15,
+      padding: 12,
+      backgroundColor: '#fff9e6',
       borderRadius: 4,
       borderWidth: 1,
-      borderColor: '#ffe58f',
+      borderColor: '#ffe8b3',
     },
     allergyTitle: {
-      fontSize: 12,
-      fontWeight: 'bold',
-      marginBottom: 5,
+      fontSize: 14,
+      fontFamily: 'Oswald',
+      marginBottom: 8,
       color: '#d46b08',
     },
     allergyList: {
@@ -170,34 +179,40 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
       flexWrap: 'wrap',
     },
     allergyTag: {
-      margin: 2,
-      padding: 4,
-      borderRadius: 3,
-      fontSize: 9,
+      marginRight: 4,
+      marginBottom: 4,
+      paddingVertical: 3,
+      paddingHorizontal: 6,
+      borderRadius: 4,
+      fontSize: 8,
+      fontFamily: 'Lato',
+      fontWeight: 'bold'
     },
     containsTag: {
-      backgroundColor: '#ffccc7',
-      color: '#a8071a',
+      backgroundColor: '#ffe3e3',
+      color: '#c53030',
     },
     mayContainTag: {
-      backgroundColor: '#ffe58f',
-      color: '#ad6800',
+      backgroundColor: '#fff0c7',
+      color: '#b45309',
     },
     footer: {
       position: 'absolute',
-      bottom: 30,
-      left: 30,
-      right: 30,
+      bottom: 20,
+      left: 40,
+      right: 40,
       textAlign: 'center',
       fontSize: 8,
-      color: '#999',
+      color: '#aaaaaa',
     },
     photo: {
         width: '100%',
-        maxHeight: 200,
+        height: 220,
         objectFit: 'cover',
-        borderRadius: 4,
-        marginBottom: 20
+        borderRadius: 5,
+        marginBottom: 25,
+        borderWidth: 1,
+        borderColor: '#e0e0e0'
     }
   });
 
@@ -237,10 +252,12 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
-            <View>
+            <View style={styles.headerInfo}>
                 <Text style={styles.recipeName}>{recipe.name}</Text>
-                {recipe.code && <Text style={styles.recipeCode}>Code: {recipe.code}</Text>}
-                <Text style={styles.servings}>Serves: {recipe.servings}</Text>
+                <View>
+                    {recipe.code && <Text style={styles.recipeCode}>Code: {recipe.code}</Text>}
+                    <Text style={styles.servings}>Serves: {recipe.servings}</Text>
+                </View>
             </View>
         </View>
 
@@ -248,51 +265,53 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
         
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Ingredients</Text>
-           <View style={[styles.ingredient, { backgroundColor: 'transparent', borderBottomWidth: 1, borderBottomColor: '#e0e0e0', paddingBottom: 5 }]}>
-              <Text style={[styles.ingredientSupplier, { fontWeight: 'bold' }]}>Supplier</Text>
-              <Text style={[styles.ingredientProductCode, { fontWeight: 'bold' }]}>Code</Text>
-              <Text style={[styles.ingredientName, { fontWeight: 'bold' }]}>Ingredient</Text>
-              <Text style={[styles.ingredientQty, { fontWeight: 'bold' }]}>Quantity</Text>
-              <Text style={[styles.ingredientAllergy, { fontWeight: 'bold' }]}>Contains</Text>
-              <Text style={[styles.ingredientAllergy, { fontWeight: 'bold' }]}>May Contain</Text>
-           </View>
-          <View style={styles.ingredientList}>
-            {recipe.ingredients.map((ing: any, index: number) => {
-                const allergies = parseAllergies(ing.ingredientAllergies);
-                const containsAllergies = allergies.filter(a => a.status === 'has');
-                const mayContainAllergies = allergies.filter(a => a.status === 'may');
+           <View style={styles.ingredientList}>
+               <View style={[styles.ingredient, styles.ingredientHeader]}>
+                  <Text style={[styles.ingredientSupplier, styles.boldText]}>Supplier</Text>
+                  <Text style={[styles.ingredientProductCode, styles.boldText]}>Code</Text>
+                  <Text style={[styles.ingredientName, styles.boldText]}>Ingredient</Text>
+                  <Text style={[styles.ingredientQty, styles.boldText]}>Quantity</Text>
+                  <Text style={[styles.ingredientAllergy, styles.boldText]}>Contains</Text>
+                  <Text style={[styles.ingredientAllergy, styles.boldText]}>May Contain</Text>
+               </View>
+                {recipe.ingredients.map((ing: any, index: number) => {
+                    const allergies = parseAllergies(ing.ingredientAllergies);
+                    const containsAllergies = allergies.filter(a => a.status === 'has');
+                    const mayContainAllergies = allergies.filter(a => a.status === 'may');
 
-                return (
-                  <View key={index} style={styles.ingredient}>
-                    <Text style={styles.ingredientSupplier}>{ing.ingredientSupplier || 'N/A'}</Text>
-                    <Text style={styles.ingredientProductCode}>{ing.originalProductCode}</Text>
-                    <Text style={styles.ingredientName}>{ing.ingredientName}</Text>
-                    <Text style={styles.ingredientQty}>{ing.quantity} {ing.unit}</Text>
-                    <View style={styles.ingredientAllergy}>
-                        {containsAllergies.map(a => <Text key={a.name} style={[styles.allergyTag, styles.containsTag]}>{a.name}</Text>)}
-                    </View>
-                    <View style={styles.ingredientAllergy}>
-                        {mayContainAllergies.map(a => <Text key={a.name} style={[styles.allergyTag, styles.mayContainTag]}>{a.name}</Text>)}
-                    </View>
-                  </View>
-                )
-            })}
-          </View>
+                    return (
+                      <View key={index} style={[styles.ingredient, index % 2 === 0 ? {} : styles.ingredientEven]}>
+                        <Text style={styles.ingredientSupplier}>{ing.ingredientSupplier || 'N/A'}</Text>
+                        <Text style={styles.ingredientProductCode}>{ing.originalProductCode}</Text>
+                        <Text style={styles.ingredientName}>{ing.ingredientName}</Text>
+                        <Text style={styles.ingredientQty}>{ing.quantity} {ing.unit}</Text>
+                        <View style={styles.ingredientAllergy}>
+                            {containsAllergies.map(a => <Text key={a.name} style={[styles.allergyTag, styles.containsTag]}>{a.name}</Text>)}
+                        </View>
+                        <View style={styles.ingredientAllergy}>
+                            {mayContainAllergies.map(a => <Text key={a.name} style={[styles.allergyTag, styles.mayContainTag]}>{a.name}</Text>)}
+                        </View>
+                      </View>
+                    )
+                })}
+            </View>
         </View>
 
-        {recipe.instructions && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Instructions</Text>
-            <Text style={styles.instructions}>{recipe.instructions}</Text>
-          </View>
-        )}
-        
-        {recipe.notes && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Notes</Text>
-            <Text style={styles.notes}>{recipe.notes}</Text>
-          </View>
-        )}
+        <View style={styles.twoColumn}>
+            {recipe.instructions && (
+              <View style={[styles.section, styles.column]}>
+                <Text style={styles.sectionTitle}>Instructions</Text>
+                <Text style={styles.instructions}>{recipe.instructions}</Text>
+              </View>
+            )}
+            
+            {recipe.notes && (
+              <View style={[styles.section, styles.column]}>
+                <Text style={styles.sectionTitle}>Notes</Text>
+                <Text style={styles.notes}>{recipe.notes}</Text>
+              </View>
+            )}
+        </View>
         
         {allergySummary.size > 0 && (
           <View style={styles.allergySection}>
@@ -313,7 +332,7 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
         )}
 
         <Text style={styles.footer}>
-          Generated on {new Date().toLocaleDateString()}
+          Generated on {new Date().toLocaleDateString()} with RecipeDB
         </Text>
       </Page>
     </Document>
