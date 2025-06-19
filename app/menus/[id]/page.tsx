@@ -232,8 +232,6 @@ export default function MenuDetailPage() {
           ))}
         </div>
 
-        <AllergySummaryCard menu={menu} />
-
         {menu.dailyOptions && Object.values(menu.dailyOptions).some(r => r) && (
           <div className="mt-8 bg-white p-6 rounded-lg shadow">
             <h3 className="text-xl font-semibold text-gray-800">Daily Options</h3>
