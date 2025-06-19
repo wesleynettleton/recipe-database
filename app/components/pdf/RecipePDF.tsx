@@ -224,7 +224,7 @@ const RecipePDF = ({ recipe }: { recipe: any }) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Ingredients</Text>
           <View style={styles.ingredientList}>
-            {recipe.ingredients.map((ing, index) => (
+            {recipe.ingredients.map((ing: any, index: number) => (
               <View key={index} style={styles.ingredient}>
                 <Text style={styles.ingredientName}>{ing.ingredientName}</Text>
                 <Text style={styles.ingredientQty}>{`${ing.quantity} ${ing.unit || ''}`}</Text>
