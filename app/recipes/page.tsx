@@ -13,8 +13,6 @@ interface Recipe {
   totalCost?: number
   costPerServing?: number
   createdAt: string
-  menuName?: string
-  weekStartDate?: string
 }
 
 export default function ViewRecipesPage() {
@@ -200,9 +198,6 @@ export default function ViewRecipesPage() {
                     Recipe Name
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Menu
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Date Created
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -223,15 +218,6 @@ export default function ViewRecipesPage() {
                       >
                         {recipe.name}
                       </Link>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {recipe.menuName ? (
-                        <Link href={`/menus/${recipe.weekStartDate}`} className="text-indigo-600 hover:text-indigo-900">
-                          {recipe.menuName}
-                        </Link>
-                      ) : (
-                        '-'
-                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {formatDate(recipe.createdAt)}
