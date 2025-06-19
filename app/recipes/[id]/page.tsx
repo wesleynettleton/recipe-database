@@ -357,7 +357,10 @@ export default function RecipeDetailPage() {
                           <p className="text-sm text-gray-600">{ing.quantity} {ing.unit}</p>
                           {ing.notes && <p className="text-xs text-gray-500 italic">"{ing.notes}"</p>}
                         </div>
-                        <p className="text-sm font-medium text-gray-900">£{ing.cost.toFixed(2)}</p>
+                        <div className="text-right">
+                            <p className="text-sm font-medium text-gray-900">£{ing.cost.toFixed(2)}</p>
+                            <p className="text-xs text-gray-500">{ing.ingredientWeight}{ing.ingredientUnit}</p>
+                        </div>
                       </div>
                       {ingredientAllergies.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-1">
