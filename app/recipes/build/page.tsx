@@ -502,9 +502,16 @@ function BuildRecipePageComponent() {
                       <div
                         key={ingredient.productcode}
                         onClick={() => selectIngredient(ingredient)}
-                        className="cursor-pointer hover:bg-gray-100 p-2 flex justify-between"
+                        className="cursor-pointer hover:bg-gray-100 p-2 flex justify-between items-center"
                       >
-                        <span className="text-black">{ingredient.name}</span>
+                        <div>
+                          <span className="text-black">{ingredient.name}</span>
+                          {ingredient.weight && (
+                            <span className="text-sm text-gray-500 ml-2">
+                              ({ingredient.weight}{ingredient.unit || ''})
+                            </span>
+                          )}
+                        </div>
                         <span className="text-gray-500">{formatPrice(ingredient.price)}</span>
                       </div>
                     ))}

@@ -13,24 +13,25 @@ export default function MenusPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchMenus = async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch('/api/menus/list');
-        const data = await response.json();
-        if (data.success) {
-          setMenus(data.menus);
-        } else {
-          setError(data.error || 'Failed to fetch menus');
-        }
-      } catch (err) {
-        setError('An unexpected error occurred.');
-        console.error(err);
-      } finally {
-        setIsLoading(false);
+  const fetchMenus = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/menus/list');
+      const data = await response.json();
+      if (data.success) {
+        setMenus(data.menus);
+      } else {
+        setError(data.error || 'Failed to fetch menus');
       }
-    };
+    } catch (err) {
+      setError('An unexpected error occurred.');
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchMenus();
   }, []);
   
@@ -51,7 +52,7 @@ export default function MenusPage() {
       const response = await fetch(`/api/menus/${weekStartDate}`, { method: 'DELETE' });
       const data = await response.json();
       if (data.success) {
-        setMenus(prev => prev.filter(menu => menu.weekStartDate !== weekStartDate));
+        fetchMenus();
       } else {
         alert(data.error || 'Failed to delete menu.');
       }
