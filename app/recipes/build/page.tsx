@@ -352,6 +352,17 @@ function BuildRecipePageComponent() {
   }
 
   const saveRecipe = async () => {
+    console.log('--- Debugging Save ---');
+    console.log('Recipe Name:', `"${recipeName}"`, 'Type:', typeof recipeName);
+    console.log('Servings:', servings, 'Type:', typeof servings);
+    console.log('Ingredients Count:', selectedIngredients.length);
+    console.log('--- Validation Checks ---');
+    console.log('!recipeName ->', !recipeName);
+    console.log('!servings ->', !servings);
+    console.log('servings <= 0 ->', servings <= 0);
+    console.log('selectedIngredients.length === 0 ->', selectedIngredients.length === 0);
+    console.log('--- End Debugging ---');
+
     if (!recipeName || !servings || servings <= 0 || selectedIngredients.length === 0) {
       setSaveMessage('Recipe name, servings, and at least one ingredient are required.')
       return
