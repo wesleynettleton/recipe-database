@@ -361,6 +361,7 @@ function BuildRecipePageComponent() {
     setSaveMessage('')
 
     const ingredientsForApi = selectedIngredients.map(ing => ({
+      originalProductCode: ing.originalProductCode,
       productCode: ing.productCode,
       quantity: ing.quantity,
       unit: ing.unit,
