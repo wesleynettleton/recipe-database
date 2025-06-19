@@ -5,6 +5,11 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 
+interface AllergyInfo {
+  name: string;
+  status: 'has' | 'may';
+}
+
 interface Recipe {
   id: number
   name: string
@@ -33,6 +38,7 @@ interface RecipeIngredient {
   ingredientWeight: number
   ingredientUnit: string
   ingredientAllergies: string
+  allergies?: AllergyInfo[]
   ingredient: {
     productCode: string
     name: string
@@ -133,7 +139,7 @@ export default function EditRecipePage() {
         ...ing,
         allergies: parseAllergies(ing.ingredientAllergies)
       }));
-      setSelectedIngredients(parsedIngredients as any);
+      setSelectedIngredients(parsedIngredients);
     }
   }, [recipe]);
 
@@ -255,6 +261,7 @@ export default function EditRecipePage() {
       ingredientWeight: selectedIngredient.weight,
       ingredientUnit: selectedIngredient.unit,
       ingredientAllergies: JSON.stringify(selectedIngredient.allergies),
+      allergies: parseAllergies(selectedIngredient.allergies),
       ingredient: selectedIngredient
     };
 
@@ -337,32 +344,20 @@ export default function EditRecipePage() {
             <p className="font-semibold text-gray-800">{ing.ingredientName}</p>
             <p className="text-sm text-gray-600">{ing.quantity} {ing.unit}</p>
             {ing.notes && <p className="text-xs text-gray-500 italic">"{ing.notes}"</p>}
-            {ing.ingredient?.allergies && (
+            {ing.allergies && ing.allergies.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-1">
-                {ing.ingredient.allergies.map((allergy: string, allergyIndex: number) => {
-                  const [name, status] = allergy.split(':')
-                  if (status === 'has') {
-                    return (
+                {ing.allergies.map((allergy: AllergyInfo, allergyIndex: number) => (
                       <span
                         key={allergyIndex}
-                        className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                            allergy.status === 'has' 
+                            ? 'bg-red-100 text-red-800' 
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}
                       >
-                        Contains {name}
+                        {allergy.status === 'has' ? 'Contains ' : 'May contain '}{allergy.name}
                       </span>
-                    )
-                  } else if (status === 'may') {
-                    return (
-                      <span
-                        key={allergyIndex}
-                        className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"
-                      >
-                        May contain {name}
-                      </span>
-                    )
-                  }
-                  // Skip 'no'
-                  return null
-                })}
+                ))}
               </div>
             )}
           </div>
@@ -375,7 +370,7 @@ export default function EditRecipePage() {
     </ul>
   )
 
-  const parseAllergies = (allergies: any): { name: string; status: 'has' | 'may' }[] => {
+  const parseAllergies = (allergies: any): AllergyInfo[] => {
     if (!allergies) return []
     
     if (typeof allergies === 'string') {
@@ -399,7 +394,7 @@ export default function EditRecipePage() {
                     }
                 }
                 return null;
-            }).filter(Boolean) as { name: string; status: 'has' | 'may' }[];
+            }).filter(Boolean) as AllergyInfo[];
         }
       } catch {
         // Fallback for non-JSON strings (though the DB should store JSON)
@@ -421,7 +416,7 @@ export default function EditRecipePage() {
           return { name: a.allergy, status: (a.status || 'has') as 'has' | 'may' };
         }
         return null;
-      }).filter(Boolean) as { name: string; status: 'has' | 'may' }[];
+      }).filter(Boolean) as AllergyInfo[];
     }
     
     return []
