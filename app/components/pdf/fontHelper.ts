@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-const fontDir = path.resolve(process.cwd());
+const fontDir = path.join(process.cwd(), 'app', 'components', 'pdf', 'fonts');
 
 const oswaldRegular = fs.readFileSync(path.join(fontDir, 'Oswald-Regular.ttf')).toString('base64');
 const latoRegular = fs.readFileSync(path.join(fontDir, 'Lato-Regular.ttf')).toString('base64');
@@ -15,6 +15,6 @@ export const fonts = {
     lato: {
         regular: `data:font/truetype;charset=utf-8;base64,${latoRegular}`,
         italic: `data:font/truetype;charset=utf-8;base64,${latoItalic}`,
-        bold: `data:font/truetype;charset=wtff-8;base64,${latoBold}`
+        bold: `data:font/truetype;charset=utf-8;base64,${latoBold}`
     }
 } 
