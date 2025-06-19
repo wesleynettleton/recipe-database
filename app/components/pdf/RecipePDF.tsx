@@ -39,7 +39,7 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
     page: {
       padding: 30,
       fontFamily: 'Helvetica',
-      fontSize: 10,
+      fontSize: 9,
       color: '#333',
     },
     header: {
@@ -97,10 +97,13 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
       backgroundColor: '#f9f9f9'
     },
     ingredientSupplier: {
-      width: '25%',
+      width: '20%',
+    },
+    ingredientProductCode: {
+      width: '15%',
     },
     ingredientName: {
-      width: '35%',
+      width: '25%',
     },
     ingredientQty: {
       width: '10%',
@@ -245,6 +248,7 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
           <Text style={styles.sectionTitle}>Ingredients</Text>
            <View style={[styles.ingredient, { backgroundColor: 'transparent', borderBottomWidth: 1, borderBottomColor: '#e0e0e0', paddingBottom: 5 }]}>
               <Text style={[styles.ingredientSupplier, { fontWeight: 'bold' }]}>Supplier</Text>
+              <Text style={[styles.ingredientProductCode, { fontWeight: 'bold' }]}>Code</Text>
               <Text style={[styles.ingredientName, { fontWeight: 'bold' }]}>Ingredient</Text>
               <Text style={[styles.ingredientQty, { fontWeight: 'bold' }]}>Quantity</Text>
               <Text style={[styles.ingredientAllergy, { fontWeight: 'bold' }]}>Contains</Text>
@@ -259,6 +263,7 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
                 return (
                   <View key={index} style={styles.ingredient}>
                     <Text style={styles.ingredientSupplier}>{ing.ingredientSupplier || 'N/A'}</Text>
+                    <Text style={styles.ingredientProductCode}>{ing.originalProductCode}</Text>
                     <Text style={styles.ingredientName}>{ing.ingredientName}</Text>
                     <Text style={styles.ingredientQty}>{ing.quantity} {ing.unit}</Text>
                     <Text style={[styles.ingredientAllergy, styles.containsAllergy]}>{contains}</Text>
