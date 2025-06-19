@@ -145,36 +145,88 @@ export default function RecipeDetailPage() {
     })
   }
 
-  const parseAllergies = (allergiesString: string) => {
-    let allergies: { name: string; status: 'has' }[] = [];
-    try {
-      const parsed = JSON.parse(allergiesString);
-      if (Array.isArray(parsed)) {
-        allergies = parsed.map((a: string | { allergy: string; status: string }) => {
-          if (typeof a === 'string') {
-            // Handle 'allergy:status' format
-            const [name, status] = a.split(':');
-            return status === 'has' ? { name, status: 'has' } : null;
-          } else if (typeof a === 'object' && a.allergy && a.status === 'has') {
-            return { name: a.allergy, status: 'has' };
-          }
-          return null;
-        }).filter(Boolean) as { name: string; status: 'has' }[];
+  const parseAllergies = (allergies: any): { name: string; status: 'has' | 'may' }[] => {
+    if (!allergies) return []
+    
+    if (typeof allergies === 'string') {
+      try {
+        const parsed = JSON.parse(allergies);
+        if (Array.isArray(parsed)) {
+            return parsed.map((a: string | { allergy: string, status: 'has' | 'may' }) => {
+                if (typeof a === 'string') {
+                    const [name, status] = a.split(':');
+                    return { 
+                        name: name.trim(), 
+                        status: (status?.trim() || 'has') as 'has' | 'may' 
+                    };
+                }
+                if (typeof a === 'object' && a.allergy) {
+                    return {
+                        name: a.allergy,
+                        status: (a.status || 'has') as 'has' | 'may'
+                    }
+                }
+                return null;
+            }).filter(Boolean) as { name: string; status: 'has' | 'may' }[];
+        }
+      } catch {
+        return allergies.split(',').map(a => {
+          const [name, status] = a.split(':');
+          return { name: name.trim(), status: (status?.trim() || 'has') as 'has' | 'may' };
+        });
       }
-    } catch (e) {
-      // fallback: return empty array
-      allergies = [];
     }
-    return allergies;
+    
+    if (Array.isArray(allergies)) {
+      return allergies.map(a => {
+        if (typeof a === 'string') {
+          const [name, status] = a.split(':');
+          return { name: name.trim(), status: (status?.trim() || 'has') as 'has' | 'may' };
+        }
+        if (typeof a === 'object' && a.allergy) {
+          return { name: a.allergy, status: (a.status || 'has') as 'has' | 'may' };
+        }
+        return null;
+      }).filter(Boolean) as { name: string; status: 'has' | 'may' }[];
+    }
+    
+    return []
   }
 
-  const getAllergyBadgeStyle = (status: 'has') => {
-    return 'bg-red-100 text-red-800';
+  const getAllergyBadgeStyle = (status: 'has' | 'may') => {
+    switch (status) {
+      case 'has':
+        return 'bg-red-100 text-red-800'
+      case 'may':
+        return 'bg-yellow-100 text-yellow-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
   }
 
-  const getStatusPrefix = (status: 'has') => {
-    return 'Contains ';
+  const getStatusPrefix = (status: 'has' | 'may') => {
+    switch (status) {
+      case 'has':
+        return 'Contains '
+      case 'may':
+        return 'May contain '
+      default:
+        return ''
+    }
   }
+
+  // Calculate unique allergies for the summary
+  const allergySummary = recipe?.ingredients.reduce((acc, ingredient) => {
+    const allergies = parseAllergies(ingredient.ingredientAllergies);
+    allergies.forEach(allergy => {
+      const existing = acc.get(allergy.name);
+      // 'has' status has precedence over 'may'
+      if (!existing || (existing === 'may' && allergy.status === 'has')) {
+        acc.set(allergy.name, allergy.status);
+      }
+    });
+    return acc;
+  }, new Map<string, 'has' | 'may'>());
 
   if (loading) {
     return (
@@ -272,99 +324,57 @@ export default function RecipeDetailPage() {
               )}
             </div>
 
-            {/* Ingredients List */}
-            <div className="bg-white shadow rounded-lg p-6 mb-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Ingredients</h2>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Product Code
-                      </th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/2">
-                        Ingredient
-                      </th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Quantity
-                      </th>
-                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Cost
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {recipe.ingredients.map((ingredient, index) => {
-                      const allergies = parseAllergies(ingredient.ingredientAllergies || '[]')
-                      return (
-                        <tr key={index}>
-                          <td className="px-4 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">{ingredient.originalProductCode}</div>
-                          </td>
-                          <td className="px-4 py-4">
-                            <div>
-                              <p className="font-medium text-gray-900">{ingredient.ingredientName}</p>
-                              {ingredient.notes && (
-                                <p className="text-sm text-gray-500 italic mt-1">{ingredient.notes}</p>
-                              )}
-                              {allergies.length > 0 && (
-                                <div className="flex flex-wrap gap-1 mt-2">
-                                  {allergies.map((allergy, allergyIndex) => (
-                                    <span
-                                      key={allergyIndex}
-                                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getAllergyBadgeStyle(allergy.status)}`}
-                                    >
-                                      {getStatusPrefix(allergy.status)}{allergy.name}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">
-                              <span className="font-medium">{ingredient.quantity}</span>
-                              <span className="text-gray-500 ml-1">{ingredient.unit}</span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-right">
-                            <div className="text-sm font-medium text-gray-900">
-                              £{(() => {
-                                const cost = typeof ingredient.cost === 'number' ? ingredient.cost : parseFloat(String(ingredient.cost));
-                                return isNaN(cost) ? 0 : cost;
-                              })().toFixed(2)}
-                            </div>
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                  <tfoot className="bg-gray-50">
-                    <tr>
-                      <td colSpan={3} className="px-4 py-4 text-right text-sm font-medium text-gray-900">
-                        Total Cost:
-                      </td>
-                      <td className="px-4 py-4 text-right text-sm font-bold text-gray-900">
-                        £{(() => {
-                          const cost = typeof recipe.totalCost === 'number' ? recipe.totalCost : parseFloat(String(recipe.totalCost));
-                          return isNaN(cost) ? 0 : cost;
-                        })().toFixed(2)}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td colSpan={3} className="px-4 py-4 text-right text-sm font-medium text-gray-900">
-                        Cost per Serving:
-                      </td>
-                      <td className="px-4 py-4 text-right text-sm font-bold text-gray-900">
-                        £{(() => {
-                          const cost = typeof recipe.costPerServing === 'number' ? recipe.costPerServing : parseFloat(String(recipe.costPerServing));
-                          return isNaN(cost) ? 0 : cost;
-                        })().toFixed(2)}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
+            {/* Allergy Summary */}
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Allergy Summary</h3>
+              <div className="flex flex-wrap gap-2">
+                {allergySummary && allergySummary.size > 0 ? (
+                  Array.from(allergySummary.entries()).map(([name, status]) => (
+                    <span
+                      key={name}
+                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getAllergyBadgeStyle(status)}`}
+                    >
+                      {getStatusPrefix(status)}{name}
+                    </span>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500">No allergen information available for this recipe.</p>
+                )}
               </div>
+            </div>
+
+            {/* Ingredients List */}
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Ingredients</h2>
+              <ul className="divide-y divide-gray-200">
+                {recipe.ingredients.map((ing, index) => {
+                  const ingredientAllergies = parseAllergies(ing.ingredientAllergies);
+                  return (
+                    <li key={index} className="py-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-semibold text-gray-800">{ing.ingredientName}</p>
+                          <p className="text-sm text-gray-600">{ing.quantity} {ing.unit}</p>
+                          {ing.notes && <p className="text-xs text-gray-500 italic">"{ing.notes}"</p>}
+                        </div>
+                        <p className="text-sm font-medium text-gray-900">£{ing.cost.toFixed(2)}</p>
+                      </div>
+                      {ingredientAllergies.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {ingredientAllergies.map(allergy => (
+                            <span
+                              key={allergy.name}
+                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getAllergyBadgeStyle(allergy.status)}`}
+                            >
+                              {getStatusPrefix(allergy.status)}{allergy.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
 
             {/* Instructions */}
