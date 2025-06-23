@@ -120,6 +120,7 @@ export class DatabaseConnection {
   // Insert allergies
   async insertAllergies(allergies: Omit<Allergy, 'id' | 'createdAt' | 'updatedAt'>[]): Promise<void> {
     const client = await this.pool.connect();
+    const productCodesToUpdate: { productCode: string }[] = [];
     try {
       await client.query('BEGIN');
 
@@ -135,6 +136,10 @@ export class DatabaseConnection {
               status = EXCLUDED.status,
               updated_at = CURRENT_TIMESTAMP
           `, [allergy.productCode, allergy.allergy, allergy.status]);
+          
+          if (!productCodesToUpdate.some(p => p.productCode === allergy.productCode)) {
+            productCodesToUpdate.push({ productCode: allergy.productCode });
+          }
         }
       }
 
@@ -144,6 +149,10 @@ export class DatabaseConnection {
       throw e;
     } finally {
       client.release();
+    }
+
+    if (productCodesToUpdate.length > 0) {
+        await this.syncRecipeIngredientSnapshots(productCodesToUpdate);
     }
   }
 
