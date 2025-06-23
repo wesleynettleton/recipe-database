@@ -75,10 +75,9 @@ export async function GET(request: Request, { params }: { params: { id: string }
         'Molluscs': 9,
         'Mustard': 10,
         'Nuts': 11,
-        'Peanuts': 12,
-        'Sesame': 13,
-        'Soya': 14,
-        'Sulphur Dioxide': 15,
+        'Sesame': 12,
+        'Soya': 13,
+        'Sulphur Dioxide': 14,
     };
 
     // Helper function to write a recipe and its allergies to a specific row
