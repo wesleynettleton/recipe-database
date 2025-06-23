@@ -22,23 +22,49 @@ export default function ViewRecipesPage() {
   const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([])
   const [error, setError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<number | null>(null)
+  const [activeFilter, setActiveFilter] = useState<string>('All')
+  const [sortOrder, setSortOrder] = useState<string>('date-desc')
 
   useEffect(() => {
     fetchRecipes()
   }, [])
 
   useEffect(() => {
-    if (searchTerm.trim() === '') {
-      setFilteredRecipes(recipes)
-    } else {
-      const filtered = recipes.filter(recipe =>
-        recipe.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (recipe.code && recipe.code.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (recipe.instructions && recipe.instructions.toLowerCase().includes(searchTerm.toLowerCase()))
-      )
-      setFilteredRecipes(filtered)
+    let processedRecipes = [...recipes];
+
+    // 1. Filter by search term
+    if (searchTerm.trim() !== '') {
+        processedRecipes = processedRecipes.filter(recipe =>
+            recipe.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (recipe.code && recipe.code.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (recipe.instructions && recipe.instructions.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
     }
-  }, [searchTerm, recipes])
+
+    // 2. Filter by category
+    if (activeFilter !== 'All') {
+        processedRecipes = processedRecipes.filter(recipe =>
+            recipe.code && recipe.code.toUpperCase().startsWith(activeFilter)
+        );
+    }
+
+    // 3. Sort
+    processedRecipes.sort((a, b) => {
+        switch (sortOrder) {
+            case 'name-asc':
+                return a.name.localeCompare(b.name);
+            case 'name-desc':
+                return b.name.localeCompare(a.name);
+            case 'date-asc':
+                return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+            case 'date-desc':
+            default:
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        }
+    });
+
+    setFilteredRecipes(processedRecipes);
+  }, [searchTerm, recipes, activeFilter, sortOrder]);
 
   const fetchRecipes = async () => {
     try {
@@ -149,6 +175,54 @@ export default function ViewRecipesPage() {
               + New Recipe
             </Link>
           </div>
+        </div>
+
+        {/* Filters */}
+        <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+            <div className="flex space-x-2">
+                <FilterButton
+                    label="All"
+                    isActive={activeFilter === 'All'}
+                    onClick={() => setActiveFilter('All')}
+                />
+                <FilterButton
+                    label="Main"
+                    isActive={activeFilter === 'M'}
+                    onClick={() => setActiveFilter('M')}
+                />
+                <FilterButton
+                    label="Dessert"
+                    isActive={activeFilter === 'D'}
+                    onClick={() => setActiveFilter('D')}
+                />
+                <FilterButton
+                    label="Side"
+                    isActive={activeFilter === 'S'}
+                    onClick={() => setActiveFilter('S')}
+                />
+                <FilterButton
+                    label="Daily Option"
+                    isActive={activeFilter === 'A'}
+                    onClick={() => setActiveFilter('A')}
+                />
+            </div>
+            <div className="relative">
+                <select
+                    value={sortOrder}
+                    onChange={(e) => setSortOrder(e.target.value)}
+                    className="appearance-none pl-3 pr-8 py-2 border border-gray-300 rounded-md bg-white text-black focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                    <option value="date-desc">Newest First</option>
+                    <option value="date-asc">Oldest First</option>
+                    <option value="name-asc">Name (A-Z)</option>
+                    <option value="name-desc">Name (Z-A)</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                        <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                    </svg>
+                </div>
+            </div>
         </div>
 
         {/* Recipe Count */}
@@ -266,4 +340,19 @@ export default function ViewRecipesPage() {
       </div>
     </div>
   )
+}
+
+function FilterButton({ label, isActive, onClick }: { label: string; isActive: boolean; onClick: () => void }) {
+    return (
+        <button
+            onClick={onClick}
+            className={`px-3 py-1 rounded-full text-sm font-medium ${
+                isActive
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+        >
+            {label}
+        </button>
+    );
 } 
