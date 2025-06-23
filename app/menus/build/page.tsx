@@ -249,20 +249,23 @@ function BuildMenuPageComponent() {
     try {
       const response = await fetch('/api/menus', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ name: menuName, date: menuDate, weeklyMenu }),
       })
 
-      const result = await response.json()
+      const data = await response.json()
 
-      if (result.success) {
-        setSuccess(`Menu saved successfully!`)
-        router.push('/menus')
+      if (response.ok && data.success) {
+        setSuccess('Menu saved successfully!')
+        router.push(`/menus/${data.weekStartDate}`)
       } else {
-        setError(result.details || 'Failed to save menu.')
+        setError(data.error || 'Failed to save menu.')
       }
     } catch (err) {
-      setError('An unexpected error occurred during save.')
+      setError('An error occurred while saving the menu.')
+      console.error(err)
     } finally {
       setIsSaving(false)
     }
