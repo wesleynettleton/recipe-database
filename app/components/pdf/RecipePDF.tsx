@@ -96,6 +96,9 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
       textAlign: 'right',
       fontSize: 8,
     },
+    ingredientAllergyHeader: {
+      width: '15%',
+    },
     ingredientAllergy: {
       width: '15%',
       flexDirection: 'row',
@@ -253,7 +256,7 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
                 <Text style={[styles.ingredientProductCode, styles.boldText]}>Code</Text>
                 <Text style={[styles.ingredientName, styles.boldText]}>Ingredient</Text>
                 <Text style={[styles.ingredientQty, styles.boldText]}>Quantity</Text>
-                <Text style={[styles.ingredientAllergy, styles.boldText]}>Allergies</Text>
+                <Text style={[styles.ingredientAllergyHeader, styles.boldText]}>Allergies</Text>
              </View>
               {recipe.ingredients.map((ing: any, index: number) => {
                   const allergies = parseAllergies(ing.ingredientAllergies);
