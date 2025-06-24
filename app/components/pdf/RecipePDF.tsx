@@ -28,14 +28,17 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
       borderBottomWidth: 1,
       borderBottomColor: '#e0e0e0',
     },
-    headerInfo: {
-        flexDirection: 'column'
-    },
     recipeName: {
       fontSize: 22,
       fontFamily: 'Helvetica-Bold',
       color: '#1a1a1a',
       marginBottom: 5,
+      flex: 1,
+    },
+    headerRight: {
+        flexDirection: 'column',
+        alignItems: 'flex-end',
+        marginLeft: 20,
     },
     recipeCode: {
       fontSize: 8,
@@ -220,12 +223,10 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
   return (
     <Page size="A4" style={styles.page}>
       <View style={styles.header}>
-          <View style={styles.headerInfo}>
-              <Text style={styles.recipeName}>{recipe.name}</Text>
-              <View>
-                  {recipe.code && <Text style={styles.recipeCode}>Code: {recipe.code}</Text>}
-                  <Text style={styles.servings}>Serves: {recipe.servings}</Text>
-              </View>
+          <Text style={styles.recipeName}>{recipe.name}</Text>
+          <View style={styles.headerRight}>
+              {recipe.code && <Text style={styles.recipeCode}>Code: {recipe.code}</Text>}
+              <Text style={styles.servings}>Serves: {recipe.servings}</Text>
           </View>
       </View>
 
