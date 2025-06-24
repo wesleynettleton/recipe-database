@@ -98,6 +98,7 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
     },
     ingredientAllergyHeader: {
       width: '15%',
+      textAlign: 'right',
     },
     ingredientAllergy: {
       width: '15%',
@@ -105,6 +106,7 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
       flexWrap: 'wrap',
       paddingHorizontal: 5,
       alignItems: 'center',
+      justifyContent: 'flex-end',
       minHeight: 15 // Ensure consistent row height
     },
     boldText: {
