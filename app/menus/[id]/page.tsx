@@ -211,9 +211,9 @@ export default function MenuDetailPage() {
         const contentDisposition = response.headers.get('content-disposition');
         let filename = `menu_${menuId}.pdf`; // fallback filename
         if (contentDisposition) {
-            const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
-            if (filenameMatch && filenameMatch.length > 1) {
-                filename = filenameMatch[1];
+            const filenamePart = contentDisposition.split('filename=')[1];
+            if (filenamePart) {
+                filename = filenamePart.replace(/"/g, '');
             }
         }
         a.download = filename;
