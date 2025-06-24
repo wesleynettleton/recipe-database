@@ -16,7 +16,7 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
       padding: 30,
       fontFamily: 'Helvetica',
       fontSize: 8,
-      color: '#333333',
+      color: '#000000',
       backgroundColor: '#ffffff'
     },
     header: {
@@ -109,12 +109,13 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
     instructions: {
       lineHeight: 1.4,
       fontSize: 8,
+      color: '#000000',
     },
     notes: {
       fontFamily: 'Helvetica',
       fontStyle: 'italic',
       fontSize: 8,
-      color: '#555555',
+      color: '#000000',
       backgroundColor: '#f8f9fa',
       padding: 8,
       borderRadius: 4,
@@ -190,7 +191,7 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
       textAlign: 'center',
       fontStyle: 'italic',
       fontSize: 8,
-      color: '#495057',
+      color: '#000000',
       marginVertical: 8,
       paddingVertical: 5,
       paddingHorizontal: 10,
