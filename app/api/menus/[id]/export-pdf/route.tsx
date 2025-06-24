@@ -67,11 +67,14 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         const passthrough = new PassThrough();
         pdfStream.pipe(passthrough);
 
+        const sanitizedMenuName = menu.name.replace(/[\/\\?%*:|"<>]/g, '-');
+        const filename = `${sanitizedMenuName}_${menuDate}.pdf`;
+
         return new NextResponse(passthrough as any, {
             status: 200,
             headers: {
                 'Content-Type': 'application/pdf',
-                'Content-Disposition': `attachment; filename="menu_${menuDate}.pdf"`,
+                'Content-Disposition': `attachment; filename="${filename}"`,
             },
         });
     } catch (error) {

@@ -169,7 +169,6 @@ export default function MenuDetailPage() {
   const [menu, setMenu] = useState<MenuData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isExporting, setIsExporting] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
 
   useEffect(() => {
@@ -196,29 +195,6 @@ export default function MenuDetailPage() {
         });
     }
   }, [menuId]);
-
-  const handleExportAllergies = async () => {
-    setIsExporting(true);
-    try {
-        const response = await fetch(`/api/menus/${menuId}/export-allergies`);
-        if (!response.ok) {
-            throw new Error('Failed to export allergies');
-        }
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `menu_allergies_${menuId}.xlsx`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-    } catch (error) {
-        console.error('Export error:', error);
-        setError((error as Error).message);
-    } finally {
-        setIsExporting(false);
-    }
-  };
 
   const handleExportPdf = async () => {
     setIsExportingPdf(true);
@@ -279,13 +255,6 @@ export default function MenuDetailPage() {
                 <p className="text-lg text-gray-600">Week of {formatDisplayDate(menu.weekStartDate)}</p>
             </div>
             <div>
-              <button
-                  onClick={handleExportAllergies}
-                  className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mr-2"
-                  disabled={isExporting}
-              >
-                  {isExporting ? 'Exporting...' : 'Export Allergies'}
-              </button>
               <button
                   onClick={handleExportPdf}
                   className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"

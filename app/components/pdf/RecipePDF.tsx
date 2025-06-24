@@ -185,6 +185,19 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
         marginBottom: 25,
         borderWidth: 1,
         borderColor: '#e0e0e0'
+    },
+    substitutionNotice: {
+      textAlign: 'center',
+      fontStyle: 'italic',
+      fontSize: 8,
+      color: '#495057',
+      marginVertical: 10,
+      paddingVertical: 5,
+      paddingHorizontal: 10,
+      backgroundColor: '#f1f3f5',
+      borderRadius: 4,
+      borderWidth: 1,
+      borderColor: '#dee2e6'
     }
   });
 
@@ -229,6 +242,10 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
               <Text style={styles.servings}>Serves: {recipe.servings}</Text>
           </View>
       </View>
+
+      <Text style={styles.substitutionNotice}>
+          Substitutions should be avoided. If necessary, it is vital that any replacement products are checked for allergens, by a trained member of staff.
+      </Text>
 
       {recipe.photo && <Image src={recipe.photo} style={styles.photo} />}
       
