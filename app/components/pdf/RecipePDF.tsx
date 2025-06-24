@@ -162,10 +162,6 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
       backgroundColor: '#ffe3e3',
       color: '#c53030',
     },
-    mayContainTag: {
-      backgroundColor: '#fff0c7',
-      color: '#b45309',
-    },
     footer: {
       position: 'absolute',
       bottom: 15,
@@ -223,18 +219,15 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
       }
   };
 
-  const allergySummary = recipe.ingredients.reduce((acc: Map<string, 'has' | 'may'>, ingredient: any) => {
+  const allergySummary = recipe.ingredients.reduce((acc: Set<string>, ingredient: any) => {
     const allergies = parseAllergies(ingredient.ingredientAllergies);
     allergies.forEach(allergy => {
-      if (allergy && allergy.name) {
-          const existing = acc.get(allergy.name);
-          if (!existing || (existing === 'may' && allergy.status === 'has')) {
-              acc.set(allergy.name, allergy.status);
-          }
+      if (allergy && allergy.name && allergy.status === 'has') {
+          acc.add(allergy.name);
       }
     });
     return acc;
-  }, new Map<string, 'has' | 'may'>());
+  }, new Set<string>());
 
   return (
     <Page size="A4" style={styles.page}>
@@ -265,7 +258,6 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
               {recipe.ingredients.map((ing: any, index: number) => {
                   const allergies = parseAllergies(ing.ingredientAllergies);
                   const containsAllergies = allergies.filter(a => a.status === 'has');
-                  const mayContainAllergies = allergies.filter(a => a.status === 'may');
 
                   return (
                     <View key={index} style={[styles.ingredient, index % 2 === 0 ? {} : styles.ingredientEven]}>
@@ -275,7 +267,6 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
                       <Text style={styles.ingredientQty}>{ing.quantity} {ing.unit}</Text>
                       <View style={styles.ingredientAllergy}>
                           {containsAllergies.map(a => <Text key={a.name} style={[styles.allergyTag, styles.containsTag]}>{a.name}</Text>)}
-                          {mayContainAllergies.map(a => <Text key={a.name} style={[styles.allergyTag, styles.mayContainTag]}>{a.name}</Text>)}
                       </View>
                     </View>
                   )
@@ -302,12 +293,9 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
             <View style={styles.allergySummary}>
               <Text style={styles.allergyTitle}>Allergy Information</Text>
               <View style={styles.allergyList}>
-                {(Array.from(allergySummary.entries()) as [string, 'has' | 'may'][]).map(([name, status]) => (
-                  <Text key={name} style={[
-                    styles.allergyTag,
-                    status === 'has' ? styles.containsTag : styles.mayContainTag
-                  ]}>
-                    {status === 'has' ? 'Contains' : 'May Contain'} {name}
+                {(Array.from(allergySummary) as string[]).map((name) => (
+                  <Text key={name} style={[styles.allergyTag, styles.containsTag]}>
+                    {name}
                   </Text>
                 ))}
               </View>
