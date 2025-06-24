@@ -88,7 +88,13 @@ export default function RecipeDetailPage() {
       setIsExporting(true)
       console.log('Starting export for recipe ID:', recipeId)
       
-      const response = await fetch(`/api/recipes/export?recipeId=${recipeId}`)
+      const response = await fetch(`/api/recipes/export`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ recipe }),
+      });
       
       console.log('Export response status:', response.status)
       
