@@ -13,7 +13,7 @@ interface Allergy {
 const RecipePDF = ({ recipe }: RecipePDFProps) => {
   const styles = StyleSheet.create({
     page: {
-      padding: 40,
+      padding: 30,
       fontFamily: 'Helvetica',
       fontSize: 8,
       color: '#333333',
@@ -23,8 +23,8 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'flex-start',
-      marginBottom: 25,
-      paddingBottom: 15,
+      marginBottom: 15,
+      paddingBottom: 10,
       borderBottomWidth: 1,
       borderBottomColor: '#e0e0e0',
     },
@@ -50,12 +50,12 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
       marginTop: 2,
     },
     section: {
-      marginBottom: 25,
+      marginBottom: 15,
     },
     sectionTitle: {
       fontSize: 14,
       fontFamily: 'Helvetica-Bold',
-      marginBottom: 12,
+      marginBottom: 10,
       color: '#1a1a1a',
     },
     ingredientList: {
@@ -67,7 +67,7 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
     ingredient: {
       flexDirection: 'row',
       alignItems: 'center',
-      padding: 8,
+      padding: 5,
     },
     ingredientEven: {
         backgroundColor: '#f8f9fa'
@@ -107,7 +107,7 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
         fontWeight: 'bold'
     },
     instructions: {
-      lineHeight: 1.6,
+      lineHeight: 1.4,
       fontSize: 8,
     },
     notes: {
@@ -116,16 +116,16 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
       fontSize: 8,
       color: '#555555',
       backgroundColor: '#f8f9fa',
-      padding: 12,
+      padding: 8,
       borderRadius: 4,
       borderLeftWidth: 3,
       borderLeftColor: '#ced4da'
     },
     allergySection: {
         position: 'absolute',
-        bottom: 50,
-        left: 40,
-        right: 40
+        bottom: 40,
+        left: 30,
+        right: 30
     },
     allergySummary: {
       marginTop: 15,
@@ -165,9 +165,9 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
     },
     footer: {
       position: 'absolute',
-      bottom: 20,
-      left: 40,
-      right: 40,
+      bottom: 15,
+      left: 30,
+      right: 30,
       textAlign: 'center',
       fontSize: 6,
       color: '#aaaaaa',
@@ -182,7 +182,7 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
         height: 220,
         objectFit: 'cover',
         borderRadius: 5,
-        marginBottom: 25,
+        marginBottom: 15,
         borderWidth: 1,
         borderColor: '#e0e0e0'
     },
@@ -191,7 +191,7 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
       fontStyle: 'italic',
       fontSize: 8,
       color: '#495057',
-      marginVertical: 10,
+      marginVertical: 8,
       paddingVertical: 5,
       paddingHorizontal: 10,
       backgroundColor: '#f1f3f5',
