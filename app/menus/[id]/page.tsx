@@ -207,7 +207,17 @@ export default function MenuDetailPage() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `menu_${menuId}.pdf`;
+        
+        const contentDisposition = response.headers.get('content-disposition');
+        let filename = `menu_${menuId}.pdf`; // fallback filename
+        if (contentDisposition) {
+            const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
+            if (filenameMatch && filenameMatch.length > 1) {
+                filename = filenameMatch[1];
+            }
+        }
+        a.download = filename;
+
         document.body.appendChild(a);
         a.click();
         a.remove();
