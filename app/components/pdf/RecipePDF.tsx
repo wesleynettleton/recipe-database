@@ -88,16 +88,16 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
       fontSize: 8,
     },
     ingredientName: {
-      width: '30%',
+      width: '35%',
       fontSize: 8,
     },
     ingredientQty: {
-      width: '10%',
+      width: '15%',
       textAlign: 'right',
       fontSize: 8,
     },
     ingredientAllergy: {
-      width: '25%',
+      width: '15%',
       flexDirection: 'row',
       flexWrap: 'wrap',
       paddingHorizontal: 5,
