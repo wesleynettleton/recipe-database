@@ -88,7 +88,7 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
       fontSize: 8,
     },
     ingredientName: {
-      width: '25%',
+      width: '30%',
       fontSize: 8,
     },
     ingredientQty: {
@@ -260,8 +260,7 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
                 <Text style={[styles.ingredientProductCode, styles.boldText]}>Code</Text>
                 <Text style={[styles.ingredientName, styles.boldText]}>Ingredient</Text>
                 <Text style={[styles.ingredientQty, styles.boldText]}>Quantity</Text>
-                <Text style={[styles.ingredientAllergy, styles.boldText]}>Contains</Text>
-                <Text style={[styles.ingredientAllergy, styles.boldText]}>May Contain</Text>
+                <Text style={[styles.ingredientAllergy, styles.boldText]}>Allergies</Text>
              </View>
               {recipe.ingredients.map((ing: any, index: number) => {
                   const allergies = parseAllergies(ing.ingredientAllergies);
@@ -276,8 +275,6 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
                       <Text style={styles.ingredientQty}>{ing.quantity} {ing.unit}</Text>
                       <View style={styles.ingredientAllergy}>
                           {containsAllergies.map(a => <Text key={a.name} style={[styles.allergyTag, styles.containsTag]}>{a.name}</Text>)}
-                      </View>
-                      <View style={styles.ingredientAllergy}>
                           {mayContainAllergies.map(a => <Text key={a.name} style={[styles.allergyTag, styles.mayContainTag]}>{a.name}</Text>)}
                       </View>
                     </View>
