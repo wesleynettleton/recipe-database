@@ -42,12 +42,14 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
     },
     recipeCode: {
       fontSize: 8,
-      color: '#666666',
+      color: '#000000',
+      fontFamily: 'Helvetica-Bold',
     },
     servings: {
       fontSize: 8,
-      color: '#666666',
+      color: '#000000',
       marginTop: 2,
+      fontFamily: 'Helvetica-Bold',
     },
     section: {
       marginBottom: 15,
