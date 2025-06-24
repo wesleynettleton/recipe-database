@@ -15,7 +15,7 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
     page: {
       padding: 40,
       fontFamily: 'Helvetica',
-      fontSize: 10,
+      fontSize: 8,
       color: '#333333',
       backgroundColor: '#ffffff'
     },
@@ -32,17 +32,17 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
         flexDirection: 'column'
     },
     recipeName: {
-      fontSize: 24,
+      fontSize: 22,
       fontFamily: 'Helvetica-Bold',
       color: '#1a1a1a',
       marginBottom: 5,
     },
     recipeCode: {
-      fontSize: 10,
+      fontSize: 8,
       color: '#666666',
     },
     servings: {
-      fontSize: 10,
+      fontSize: 8,
       color: '#666666',
       marginTop: 2,
     },
@@ -50,7 +50,7 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
       marginBottom: 25,
     },
     sectionTitle: {
-      fontSize: 16,
+      fontSize: 14,
       fontFamily: 'Helvetica-Bold',
       marginBottom: 12,
       color: '#1a1a1a',
@@ -76,20 +76,20 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
     },
     ingredientSupplier: {
       width: '20%',
-      fontSize: 10,
+      fontSize: 8,
     },
     ingredientProductCode: {
       width: '15%',
-      fontSize: 10,
+      fontSize: 8,
     },
     ingredientName: {
       width: '25%',
-      fontSize: 10,
+      fontSize: 8,
     },
     ingredientQty: {
       width: '10%',
       textAlign: 'right',
-      fontSize: 10,
+      fontSize: 8,
     },
     ingredientAllergy: {
       width: '25%',
@@ -105,12 +105,12 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
     },
     instructions: {
       lineHeight: 1.6,
-      fontSize: 10,
+      fontSize: 8,
     },
     notes: {
       fontFamily: 'Helvetica',
       fontStyle: 'italic',
-      fontSize: 10,
+      fontSize: 8,
       color: '#555555',
       backgroundColor: '#f8f9fa',
       padding: 12,
@@ -133,7 +133,7 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
       borderColor: '#ffe8b3',
     },
     allergyTitle: {
-      fontSize: 12,
+      fontSize: 10,
       fontFamily: 'Helvetica-Bold',
       marginBottom: 8,
       color: '#d46b08',
@@ -148,7 +148,7 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
       paddingVertical: 3,
       paddingHorizontal: 6,
       borderRadius: 4,
-      fontSize: 8,
+      fontSize: 6,
       fontFamily: 'Helvetica',
       fontWeight: 'bold'
     },
@@ -166,12 +166,12 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
       left: 40,
       right: 40,
       textAlign: 'center',
-      fontSize: 8,
+      fontSize: 6,
       color: '#aaaaaa',
     },
     confidentialityNotice: {
         marginTop: 5,
-        fontSize: 8,
+        fontSize: 6,
         fontStyle: 'italic',
     },
     photo: {
