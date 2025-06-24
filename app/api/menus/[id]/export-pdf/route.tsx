@@ -5,6 +5,7 @@ import RecipePDF from '../../../../components/pdf/RecipePDF';
 import { PassThrough } from 'stream';
 import React from 'react';
 import { RecipeWithIngredients } from '../../../../../lib/types';
+import { format, parseISO } from 'date-fns';
 
 const extractRecipesFromMenu = (menu: any): RecipeWithIngredients[] => {
     const recipesMap = new Map<number, RecipeWithIngredients>();
@@ -80,7 +81,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         pdfStream.pipe(passthrough);
 
         const sanitizedMenuName = menu.name.replace(/[\/\\?%*:|"<>]/g, '-');
-        const filename = `${sanitizedMenuName}_${menuDate}.pdf`;
+        const formattedDate = format(parseISO(menuDate), 'yyyy-MM-dd');
+        const filename = `${sanitizedMenuName}_${formattedDate}.pdf`;
 
         return new NextResponse(passthrough as any, {
             status: 200,
