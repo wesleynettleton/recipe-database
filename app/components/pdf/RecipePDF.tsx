@@ -1,16 +1,8 @@
 import React from 'react';
+import { Page, View, Text, StyleSheet, Font, Image } from '@react-pdf/renderer';
 
 interface RecipePDFProps {
   recipe: any;
-  components: {
-    Page: any;
-    View: any;
-    Text: any;
-    Document: any;
-    StyleSheet: any;
-    Font: any;
-    Image: any;
-  };
 }
 
 interface Allergy {
@@ -18,9 +10,7 @@ interface Allergy {
     status: 'has' | 'may';
 }
 
-const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
-  const { Page, Text, View, Document, StyleSheet, Font, Image } = components;
-
+const RecipePDF = ({ recipe }: RecipePDFProps) => {
   const styles = StyleSheet.create({
     page: {
       padding: 40,
@@ -176,9 +166,9 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
       color: '#aaaaaa',
     },
     confidentialityNotice: {
-        marginTop: 4,
-        fontSize: 7,
-        color: '#888888',
+        marginTop: 5,
+        fontSize: 8,
+        fontStyle: 'italic',
     },
     photo: {
         width: '100%',
@@ -224,96 +214,92 @@ const RecipePDF = ({ recipe, components }: RecipePDFProps) => {
   }, new Map<string, 'has' | 'may'>());
 
   return (
-    <Document>
-      <Page size="A4" style={styles.page}>
-        <View style={styles.header}>
-            <View style={styles.headerInfo}>
-                <Text style={styles.recipeName}>{recipe.name}</Text>
-                <View>
-                    {recipe.code && <Text style={styles.recipeCode}>Code: {recipe.code}</Text>}
-                    <Text style={styles.servings}>Serves: {recipe.servings}</Text>
-                </View>
-            </View>
-        </View>
-
-        {recipe.photo && <Image src={recipe.photo} style={styles.photo} />}
-        
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Ingredients</Text>
-           <View style={styles.ingredientList}>
-               <View style={[styles.ingredient, styles.ingredientHeader]}>
-                  <Text style={[styles.ingredientSupplier, styles.boldText]}>Supplier</Text>
-                  <Text style={[styles.ingredientProductCode, styles.boldText]}>Code</Text>
-                  <Text style={[styles.ingredientName, styles.boldText]}>Ingredient</Text>
-                  <Text style={[styles.ingredientQty, styles.boldText]}>Quantity</Text>
-                  <Text style={[styles.ingredientAllergy, styles.boldText]}>Contains</Text>
-                  <Text style={[styles.ingredientAllergy, styles.boldText]}>May Contain</Text>
-               </View>
-                {recipe.ingredients.map((ing: any, index: number) => {
-                    const allergies = parseAllergies(ing.ingredientAllergies);
-                    const containsAllergies = allergies.filter(a => a.status === 'has');
-                    const mayContainAllergies = allergies.filter(a => a.status === 'may');
-
-                    return (
-                      <View key={index} style={[styles.ingredient, index % 2 === 0 ? {} : styles.ingredientEven]}>
-                        <Text style={styles.ingredientSupplier}>{ing.ingredientSupplier || 'N/A'}</Text>
-                        <Text style={styles.ingredientProductCode}>{ing.originalProductCode}</Text>
-                        <Text style={styles.ingredientName}>{ing.ingredientName}</Text>
-                        <Text style={styles.ingredientQty}>{ing.quantity} {ing.unit}</Text>
-                        <View style={styles.ingredientAllergy}>
-                            {containsAllergies.map(a => <Text key={a.name} style={[styles.allergyTag, styles.containsTag]}>{a.name}</Text>)}
-                        </View>
-                        <View style={styles.ingredientAllergy}>
-                            {mayContainAllergies.map(a => <Text key={a.name} style={[styles.allergyTag, styles.mayContainTag]}>{a.name}</Text>)}
-                        </View>
-                      </View>
-                    )
-                })}
-            </View>
-        </View>
-
-        {recipe.instructions && (
-            <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Instructions</Text>
-            <Text style={styles.instructions}>{recipe.instructions}</Text>
-            </View>
-        )}
-        
-        {recipe.notes && (
-            <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Notes</Text>
-            <Text style={styles.notes}>{recipe.notes}</Text>
-            </View>
-        )}
-        
-        {allergySummary.size > 0 && (
-          <View style={styles.allergySection}>
-              <View style={styles.allergySummary}>
-                <Text style={styles.allergyTitle}>Allergy Information</Text>
-                <View style={styles.allergyList}>
-                  {(Array.from(allergySummary.entries()) as [string, 'has' | 'may'][]).map(([name, status]) => (
-                    <Text key={name} style={[
-                      styles.allergyTag,
-                      status === 'has' ? styles.containsTag : styles.mayContainTag
-                    ]}>
-                      {status === 'has' ? 'Contains' : 'May Contain'} {name}
-                    </Text>
-                  ))}
-                </View>
+    <Page size="A4" style={styles.page}>
+      <View style={styles.header}>
+          <View style={styles.headerInfo}>
+              <Text style={styles.recipeName}>{recipe.name}</Text>
+              <View>
+                  {recipe.code && <Text style={styles.recipeCode}>Code: {recipe.code}</Text>}
+                  <Text style={styles.servings}>Serves: {recipe.servings}</Text>
               </View>
           </View>
-        )}
+      </View>
 
-        <View style={styles.footer}>
-            <Text>
-                Generated on {new Date().toLocaleDateString()} with RecipeDB
-            </Text>
-            <Text style={styles.confidentialityNotice}>
-                Private and confidential - not to be copied or reproduced
-            </Text>
+      {recipe.photo && <Image src={recipe.photo} style={styles.photo} />}
+      
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Ingredients</Text>
+         <View style={styles.ingredientList}>
+             <View style={[styles.ingredient, styles.ingredientHeader]}>
+                <Text style={[styles.ingredientSupplier, styles.boldText]}>Supplier</Text>
+                <Text style={[styles.ingredientProductCode, styles.boldText]}>Code</Text>
+                <Text style={[styles.ingredientName, styles.boldText]}>Ingredient</Text>
+                <Text style={[styles.ingredientQty, styles.boldText]}>Quantity</Text>
+                <Text style={[styles.ingredientAllergy, styles.boldText]}>Contains</Text>
+                <Text style={[styles.ingredientAllergy, styles.boldText]}>May Contain</Text>
+             </View>
+              {recipe.ingredients.map((ing: any, index: number) => {
+                  const allergies = parseAllergies(ing.ingredientAllergies);
+                  const containsAllergies = allergies.filter(a => a.status === 'has');
+                  const mayContainAllergies = allergies.filter(a => a.status === 'may');
+
+                  return (
+                    <View key={index} style={[styles.ingredient, index % 2 === 0 ? {} : styles.ingredientEven]}>
+                      <Text style={styles.ingredientSupplier}>{ing.ingredientSupplier || 'N/A'}</Text>
+                      <Text style={styles.ingredientProductCode}>{ing.originalProductCode}</Text>
+                      <Text style={styles.ingredientName}>{ing.ingredientName}</Text>
+                      <Text style={styles.ingredientQty}>{ing.quantity} {ing.unit}</Text>
+                      <View style={styles.ingredientAllergy}>
+                          {containsAllergies.map(a => <Text key={a.name} style={[styles.allergyTag, styles.containsTag]}>{a.name}</Text>)}
+                      </View>
+                      <View style={styles.ingredientAllergy}>
+                          {mayContainAllergies.map(a => <Text key={a.name} style={[styles.allergyTag, styles.mayContainTag]}>{a.name}</Text>)}
+                      </View>
+                    </View>
+                  )
+              })}
+          </View>
+      </View>
+
+      {recipe.instructions && (
+          <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Instructions</Text>
+          <Text style={styles.instructions}>{recipe.instructions}</Text>
+          </View>
+      )}
+      
+      {recipe.notes && (
+          <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Notes</Text>
+          <Text style={styles.notes}>{recipe.notes}</Text>
+          </View>
+      )}
+      
+      {allergySummary.size > 0 && (
+        <View style={styles.allergySection}>
+            <View style={styles.allergySummary}>
+              <Text style={styles.allergyTitle}>Allergy Information</Text>
+              <View style={styles.allergyList}>
+                {(Array.from(allergySummary.entries()) as [string, 'has' | 'may'][]).map(([name, status]) => (
+                  <Text key={name} style={[
+                    styles.allergyTag,
+                    status === 'has' ? styles.containsTag : styles.mayContainTag
+                  ]}>
+                    {status === 'has' ? 'Contains' : 'May Contain'} {name}
+                  </Text>
+                ))}
+              </View>
+            </View>
         </View>
-      </Page>
-    </Document>
+      )}
+
+      <Text style={styles.footer}>
+          Generated on {new Date().toLocaleDateString()} with RecipeDB
+          <Text style={styles.confidentialityNotice}>
+              Private and confidential - not to be copied or reproduced
+          </Text>
+      </Text>
+    </Page>
   );
 };
 

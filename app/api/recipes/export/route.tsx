@@ -1,53 +1,36 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '../../../../lib/database';
+import { renderToStream } from '@react-pdf/renderer';
+import RecipePDF from '../../../components/pdf/RecipePDF';
+import { Document } from '@react-pdf/renderer';
 import { PassThrough } from 'stream';
 import React from 'react';
-import RecipePDF from '../../../components/pdf/RecipePDF';
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const recipeId = searchParams.get('recipeId')
+export async function POST(req: NextRequest) {
+    try {
+        const { recipe } = await req.json();
 
-  if (!recipeId) {
-    return NextResponse.json({ error: 'Recipe ID is required' }, { status: 400 })
-  }
+        if (!recipe) {
+            return new NextResponse('Recipe data is required', { status: 400 });
+        }
 
-  try {
-    const db = getDatabase();
-    const recipe = await db.getRecipeWithIngredients(parseInt(recipeId, 10));
-    
-    if (!recipe) {
-      return NextResponse.json({ error: 'Recipe not found' }, { status: 404 });
+        const pdfStream = await renderToStream(
+            <Document>
+                <RecipePDF recipe={recipe} />
+            </Document>
+        );
+
+        const passthrough = new PassThrough();
+        pdfStream.pipe(passthrough);
+
+        return new NextResponse(passthrough as any, {
+            headers: {
+                'Content-Type': 'application/pdf',
+                'Content-Disposition': `attachment; filename="${recipe.name.replace(/ /g, '_')}.pdf"`,
+            },
+        });
+    } catch (error) {
+        console.error('Error generating PDF:', error);
+        return new NextResponse('Error generating PDF', { status: 500 });
     }
-
-    // Dynamically import @react-pdf/renderer
-    const { renderToStream, Page, View, Text, Document, StyleSheet, Font, Image } = await import('@react-pdf/renderer');
-    
-    const pdfStream = await renderToStream(
-        <RecipePDF 
-            recipe={recipe} 
-            components={{ Page, View, Text, Document, StyleSheet, Font, Image }}
-        />
-    );
-    
-    const passthrough = new PassThrough();
-    pdfStream.pipe(passthrough);
-    
-    const sanitizedRecipeName = recipe.name.replace(/[\/\\?%*:|"<>]/g, '-');
-    const filename = recipe.code 
-      ? `${recipe.code} - ${sanitizedRecipeName}.pdf`
-      : `${sanitizedRecipeName}.pdf`;
-    
-    return new NextResponse(passthrough as any, {
-        status: 200,
-        headers: {
-            'Content-Type': 'application/pdf',
-            'Content-Disposition': `attachment; filename="${filename}"`,
-        },
-    });
-
-  } catch (error) {
-    console.error('Failed to generate recipe PDF:', error);
-    return NextResponse.json({ error: 'Failed to generate PDF' }, { status: 500 });
-  }
 } 

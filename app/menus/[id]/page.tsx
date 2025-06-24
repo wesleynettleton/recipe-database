@@ -21,11 +21,15 @@ interface Recipe {
 }
 
 interface DailyMenu {
-  lunchOption1: Recipe | null;
-  lunchOption2: Recipe | null;
-  lunchOption3: Recipe | null;
-  servedWith123: Recipe | null;
-  dessertOptionD: Recipe | null;
+  breakfast?: Recipe | null;
+  lunch?: Recipe | null;
+  dinner?: Recipe | null;
+}
+
+interface DailyOptions {
+  option1?: Recipe | null;
+  option2?: Recipe | null;
+  option3?: Recipe | null;
 }
 
 interface MenuData {
@@ -37,7 +41,7 @@ interface MenuData {
   wednesday: DailyMenu | null;
   thursday: DailyMenu | null;
   friday: DailyMenu | null;
-  dailyOptions: { [key: string]: Recipe | null };
+  dailyOptions: DailyOptions | null;
 }
 
 const AllergySummaryCard = ({ menu }: { menu: MenuData }) => {
@@ -82,7 +86,7 @@ const AllergySummaryCard = ({ menu }: { menu: MenuData }) => {
   };
 
   Object.values(menu).forEach(day => {
-    if (day && typeof day === 'object' && 'lunchOption1' in day) {
+    if (day && typeof day === 'object' && 'breakfast' in day) {
       const dailyMenu = day as DailyMenu;
       Object.values(dailyMenu).forEach(processRecipe);
     }
@@ -117,41 +121,16 @@ const AllergySummaryCard = ({ menu }: { menu: MenuData }) => {
   );
 };
 
-const DayCard = ({ day, menu }: { day: string; menu: DailyMenu | null }) => {
-  if (!menu) {
-    return (
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-xl font-semibold text-gray-800 capitalize">{day}</h3>
-        <p className="text-gray-500 mt-2">No menu set for this day.</p>
-      </div>
-    );
-  }
-
-  const renderRecipe = (recipe: Recipe | null, label: string) => {
-    if (!recipe) return null;
-    return (
-      <div>
-        <span className="font-semibold">{label}:</span>
-        <Link href={`/recipes/${recipe.id}`} className="ml-2 text-blue-600 hover:underline">
-          {recipe.name} ({recipe.code})
-        </Link>
-      </div>
-    );
-  };
-
-  return (
+const DayCard = ({ day, menu }: { day: string, menu: DailyMenu | null }) => (
     <div className="bg-white p-6 rounded-lg shadow">
-      <h3 className="text-xl font-semibold text-gray-800 capitalize">{day}</h3>
-      <div className="mt-4 space-y-2 text-gray-700">
-        {renderRecipe(menu.lunchOption1, 'Lunch 1')}
-        {renderRecipe(menu.lunchOption2, 'Lunch 2')}
-        {renderRecipe(menu.lunchOption3, 'Lunch 3')}
-        {renderRecipe(menu.servedWith123, 'Served With')}
-        {renderRecipe(menu.dessertOptionD, 'Dessert')}
-      </div>
+        <h3 className="text-xl font-semibold text-gray-800 capitalize">{day}</h3>
+        <div className="mt-4 space-y-2 text-gray-700">
+            {menu?.breakfast ? <Link href={`/recipes/${menu.breakfast.id}`} className="block text-blue-600 hover:underline">B: {menu.breakfast.name} ({menu.breakfast.code})</Link> : <p>B: Not set</p>}
+            {menu?.lunch ? <Link href={`/recipes/${menu.lunch.id}`} className="block text-blue-600 hover:underline">L: {menu.lunch.name} ({menu.lunch.code})</Link> : <p>L: Not set</p>}
+            {menu?.dinner ? <Link href={`/recipes/${menu.dinner.id}`} className="block text-blue-600 hover:underline">D: {menu.dinner.name} ({menu.dinner.code})</Link> : <p>D: Not set</p>}
+        </div>
     </div>
-  );
-};
+);
 
 export default function MenuDetailPage() {
   const params = useParams();
@@ -159,6 +138,8 @@ export default function MenuDetailPage() {
   const [menu, setMenu] = useState<MenuData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
 
   useEffect(() => {
     if (!menuId) return;
@@ -206,46 +187,112 @@ export default function MenuDetailPage() {
 
   const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
 
+  const handleExportAllergies = async () => {
+    setIsExporting(true);
+    try {
+        const response = await fetch(`/api/menus/${menuId}/export-allergies`);
+        if (!response.ok) {
+            throw new Error('Failed to export allergies');
+        }
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `menu_allergies_${menuId}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    } catch (error) {
+        console.error('Export error:', error);
+        setError((error as Error).message);
+    } finally {
+        setIsExporting(false);
+    }
+  };
+
+  const handleExportPdf = async () => {
+    setIsExportingPdf(true);
+    try {
+        const response = await fetch(`/api/menus/${menuId}/export-pdf`);
+        if (!response.ok) {
+            throw new Error('Failed to export PDF');
+        }
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `menu_${menuId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    } catch (error) {
+        console.error('Export PDF error:', error);
+        setError((error as Error).message);
+    } finally {
+        setIsExportingPdf(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <Link href="/menus" className="text-sm font-medium text-gray-500 hover:text-gray-700">
-              &larr; Back to Menus
-            </Link>
-            <div className="text-center">
-                <h1 className="text-2xl font-bold text-gray-900">{menu.name}</h1>
-                <p className="text-lg text-gray-600">Week of {formatDisplayDate(menu.weekStartDate)}</p>
-            </div>
-            <Link href={`/menus/build?date=${menu.weekStartDate}`} className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md">
-              Edit Menu
-            </Link>
-          </div>
-        </div>
+    <div className="container mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-4">Menu for {menu.name}</h1>
+      <div className="flex space-x-2 mb-4">
+        <button
+          onClick={handleExportAllergies}
+          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+          disabled={isExporting}
+        >
+          {isExporting ? 'Exporting...' : 'Export Allergies'}
+        </button>
+        <button
+          onClick={handleExportPdf}
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          disabled={isExportingPdf}
+        >
+          {isExportingPdf ? 'Exporting...' : 'Export to PDF'}
+        </button>
       </div>
 
-      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {days.map(day => (
-            <DayCard key={day} day={day} menu={menu[day as keyof MenuData] as DailyMenu | null} />
-          ))}
-        </div>
-
-        {menu.dailyOptions && Object.values(menu.dailyOptions).some(r => r) && (
-          <div className="mt-8 bg-white p-6 rounded-lg shadow">
-            <h3 className="text-xl font-semibold text-gray-800">Daily Options</h3>
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
-              {Object.values(menu.dailyOptions).map((recipe, index) => (
-                recipe ? (
-                  <Link key={recipe.id || index} href={`/recipes/${recipe.id}`} className="text-blue-600 hover:underline">
-                    {recipe.name} ({recipe.code})
-                  </Link>
-                ) : null
-              ))}
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-white shadow">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-6">
+              <Link href="/menus" className="text-sm font-medium text-gray-500 hover:text-gray-700">
+                &larr; Back to Menus
+              </Link>
+              <div className="text-center">
+                  <h1 className="text-2xl font-bold text-gray-900">{menu.name}</h1>
+                  <p className="text-lg text-gray-600">Week of {formatDisplayDate(menu.weekStartDate)}</p>
+              </div>
+              <Link href={`/menus/build?date=${menu.weekStartDate}`} className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md">
+                Edit Menu
+              </Link>
             </div>
           </div>
-        )}
+        </div>
+
+        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {days.map(day => (
+              <DayCard key={day} day={day} menu={menu[day as keyof MenuData] as DailyMenu | null} />
+            ))}
+          </div>
+
+          {menu.dailyOptions && Object.values(menu.dailyOptions).some(r => r) && (
+            <div className="mt-8 bg-white p-6 rounded-lg shadow">
+              <h3 className="text-xl font-semibold text-gray-800">Daily Options</h3>
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
+                {Object.values(menu.dailyOptions).map((recipe, index) => (
+                  recipe ? (
+                    <Link key={recipe.id || index} href={`/recipes/${recipe.id}`} className="text-blue-600 hover:underline">
+                      {recipe.name} ({recipe.code})
+                    </Link>
+                  ) : null
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
