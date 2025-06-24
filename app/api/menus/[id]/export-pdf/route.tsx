@@ -50,15 +50,27 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
             return new NextResponse('Menu not found', { status: 404 });
         }
         
-        const recipes = extractRecipesFromMenu(menu);
-
-        if (recipes.length === 0) {
+        const recipeStubs = extractRecipesFromMenu(menu);
+        
+        if (recipeStubs.length === 0) {
             return new NextResponse('Menu has no recipes', { status: 404 });
+        }
+        
+        const recipes = await Promise.all(
+            recipeStubs
+                .filter(stub => stub.id)
+                .map(stub => db.getRecipeWithIngredients(stub.id!))
+        );
+
+        const validRecipes = recipes.filter((r): r is RecipeWithIngredients => r !== null);
+
+        if (validRecipes.length === 0) {
+            return new NextResponse('Could not load full recipe details for menu', { status: 404 });
         }
 
         const pdfStream = await renderToStream(
             <Document>
-                {recipes.map((recipe, index) => (
+                {validRecipes.map((recipe, index) => (
                     <RecipePDF key={index} recipe={recipe} />
                 ))}
             </Document>
