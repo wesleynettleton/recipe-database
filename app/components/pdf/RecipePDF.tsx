@@ -32,17 +32,17 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
         flexDirection: 'column'
     },
     recipeName: {
-      fontSize: 28,
+      fontSize: 24,
       fontFamily: 'Helvetica-Bold',
       color: '#1a1a1a',
       marginBottom: 5,
     },
     recipeCode: {
-      fontSize: 11,
+      fontSize: 10,
       color: '#666666',
     },
     servings: {
-      fontSize: 11,
+      fontSize: 10,
       color: '#666666',
       marginTop: 2,
     },
@@ -50,9 +50,9 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
       marginBottom: 25,
     },
     sectionTitle: {
-      fontSize: 18,
+      fontSize: 16,
       fontFamily: 'Helvetica-Bold',
-      marginBottom: 15,
+      marginBottom: 12,
       color: '#1a1a1a',
     },
     ingredientList: {
@@ -76,16 +76,20 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
     },
     ingredientSupplier: {
       width: '20%',
+      fontSize: 10,
     },
     ingredientProductCode: {
       width: '15%',
+      fontSize: 10,
     },
     ingredientName: {
       width: '25%',
+      fontSize: 10,
     },
     ingredientQty: {
       width: '10%',
-      textAlign: 'right'
+      textAlign: 'right',
+      fontSize: 10,
     },
     ingredientAllergy: {
       width: '25%',
@@ -129,7 +133,7 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
       borderColor: '#ffe8b3',
     },
     allergyTitle: {
-      fontSize: 14,
+      fontSize: 12,
       fontFamily: 'Helvetica-Bold',
       marginBottom: 8,
       color: '#d46b08',
