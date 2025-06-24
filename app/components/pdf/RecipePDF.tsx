@@ -137,7 +137,7 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
       borderColor: '#ffe8b3',
     },
     allergyTitle: {
-      fontSize: 10,
+      fontSize: 12,
       fontFamily: 'Helvetica-Bold',
       marginBottom: 8,
       color: '#d46b08',
@@ -152,7 +152,7 @@ const RecipePDF = ({ recipe }: RecipePDFProps) => {
       paddingVertical: 3,
       paddingHorizontal: 6,
       borderRadius: 4,
-      fontSize: 6,
+      fontSize: 8,
       fontFamily: 'Helvetica',
       fontWeight: 'bold'
     },
