@@ -55,6 +55,10 @@ export default function ViewRecipesPage() {
                 return a.name.localeCompare(b.name);
             case 'name-desc':
                 return b.name.localeCompare(a.name);
+            case 'code-asc':
+                return (a.code || '').localeCompare(b.code || '');
+            case 'code-desc':
+                return (b.code || '').localeCompare(a.code || '');
             case 'date-asc':
                 return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
             case 'date-desc':
@@ -216,6 +220,8 @@ export default function ViewRecipesPage() {
                     <option value="date-asc">Oldest First</option>
                     <option value="name-asc">Name (A-Z)</option>
                     <option value="name-desc">Name (Z-A)</option>
+                    <option value="code-asc">Code (A-Z)</option>
+                    <option value="code-desc">Code (Z-A)</option>
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                     <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
