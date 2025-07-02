@@ -590,13 +590,20 @@ export class DatabaseConnection {
     });
 
     // Update with validated numbers
-    await this.query(`
+    const updateResult = await this.query(`
       UPDATE recipes
       SET totalcost = $1, costperserving = $2, updated_at = CURRENT_TIMESTAMP
       WHERE id = $3
     `, [calculatedTotalCost, calculatedCostPerServing, recipeId]);
 
-    console.log('Recipe cost updated in database');
+    console.log('Recipe cost updated in database. Rows affected:', updateResult.rowCount);
+    
+    // Verify the update worked
+    const verifyResult = await this.query(`
+      SELECT totalcost, costperserving FROM recipes WHERE id = $1
+    `, [recipeId]);
+    
+    console.log('Verification - values now in database:', verifyResult.rows[0]);
   }
 
   // Get menu by week_start_date (for API compatibility)

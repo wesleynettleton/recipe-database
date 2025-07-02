@@ -1,34 +1,47 @@
 import { NextResponse } from 'next/server';
-import { getDatabase } from '../../../lib/database';
+import { getDatabase } from '@/lib/database';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    console.log('Testing database connection...');
+    const database = getDatabase();
     
-    // Test database connection
-    const db = getDatabase();
-    console.log('Database instance created successfully');
+    // Test basic connection
+    const ingredientCount = await database.getIngredientsCount();
     
-    // Test a simple query
-    const count = await db.getIngredientsCount();
-    console.log('Database query successful, ingredient count:', count);
+    // Get recipe data BEFORE recalculation
+    const allRecipesBefore = await database.getAllRecipes();
+    const testRecipeBefore = allRecipesBefore.find(r => r.id === 89);
+    
+    console.log('Recipe 89 BEFORE recalculation:', testRecipeBefore);
+    
+    // Manually trigger recalculation
+    try {
+      await database.recalculateRecipeCost(89);
+      console.log('Recalculation completed for recipe 89');
+    } catch (error) {
+      console.error('Recalculation failed:', error);
+    }
+    
+    // Get recipe data AFTER recalculation
+    const allRecipesAfter = await database.getAllRecipes();
+    const testRecipeAfter = allRecipesAfter.find(r => r.id === 89);
+    
+    console.log('Recipe 89 AFTER recalculation:', testRecipeAfter);
     
     return NextResponse.json({
       success: true,
       message: 'Database connection test successful',
-      ingredientCount: count
+      ingredientCount: ingredientCount.toString(),
+      before: testRecipeBefore,
+      after: testRecipeAfter
     });
-    
   } catch (error) {
-    console.error('Database test error:', error);
-    
-    return NextResponse.json({
-      success: false,
-      message: 'Database connection test failed',
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
-    }, { status: 500 });
+    console.error('Database test failed:', error);
+    return NextResponse.json(
+      { success: false, error: 'Database connection failed' },
+      { status: 500 }
+    );
   }
 } 
