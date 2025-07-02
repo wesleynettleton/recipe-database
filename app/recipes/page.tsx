@@ -173,6 +173,12 @@ export default function ViewRecipesPage() {
           </div>
           <div className="flex gap-3">
             <Link
+              href="/recipes/analytics"
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              📊 Analytics
+            </Link>
+            <Link
               href="/recipes/build"
               className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
