@@ -56,8 +56,11 @@ export default function RecipeAnalyticsPage() {
     }
   }
 
-  const formatCurrency = (amount: number) => {
-    return `£${amount.toFixed(2)}`
+  const formatCurrency = (amount: number | null | undefined) => {
+    if (amount === null || amount === undefined || isNaN(amount)) {
+      return '£0.00';
+    }
+    return `£${Number(amount).toFixed(2)}`;
   }
 
   const getDistributionPercentage = (count: number, total: number) => {

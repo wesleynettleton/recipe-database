@@ -14,13 +14,19 @@ export async function GET() {
     
     // Filter out recipes without cost data - be more lenient
     const recipesWithCosts = recipes.filter(recipe => {
-      const hasCost = recipe.costPerServing !== undefined && 
-                     recipe.costPerServing !== null && 
-                     !isNaN(recipe.costPerServing) &&
-                     recipe.costPerServing >= 0; // Allow 0 cost recipes
+      // Convert to number if it's a string
+      const costPerServing = recipe.costPerServing ? Number(recipe.costPerServing) : 0;
+      
+      const hasCost = costPerServing !== null && 
+                     costPerServing !== undefined && 
+                     !isNaN(costPerServing) &&
+                     costPerServing >= 0;
       
       if (!hasCost) {
-        console.log(`Recipe "${recipe.name}" filtered out - costPerServing:`, recipe.costPerServing);
+        console.log(`Recipe "${recipe.name}" filtered out - costPerServing:`, recipe.costPerServing, 'converted:', costPerServing);
+      } else {
+        // Update the recipe object with the converted number
+        recipe.costPerServing = costPerServing;
       }
       
       return hasCost;
