@@ -560,30 +560,41 @@ export class DatabaseConnection {
     
     console.log('Ingredients found for cost calculation:', ingredientsCheck.rows);
     
+    // Calculate costs with proper null handling
     const result = await this.query(`
       SELECT 
-        SUM(quantity * (ingredientPrice / NULLIF(ingredientWeight, 0))) as totalCost,
+        COALESCE(
+          SUM(
+            CASE 
+              WHEN ingredientWeight IS NOT NULL AND ingredientWeight > 0 AND ingredientPrice IS NOT NULL 
+              THEN quantity * (CAST(ingredientPrice AS NUMERIC) / CAST(ingredientWeight AS NUMERIC))
+              ELSE 0
+            END
+          ), 0
+        ) as totalCost,
         (SELECT servings FROM recipes WHERE id = $1) as servings
       FROM recipe_ingredients
       WHERE recipeId = $1
     `, [recipeId]);
 
     const { totalCost, servings } = result.rows[0];
-    const costPerServing = servings ? totalCost / servings : 0;
+    const calculatedTotalCost = parseFloat(totalCost) || 0;
+    const calculatedCostPerServing = (servings && servings > 0) ? calculatedTotalCost / servings : 0;
 
     console.log('Cost calculation results:', {
       recipeId,
-      totalCost,
+      totalCost: calculatedTotalCost,
       servings,
-      costPerServing,
+      costPerServing: calculatedCostPerServing,
       rawResult: result.rows[0]
     });
 
+    // Update with validated numbers
     await this.query(`
       UPDATE recipes
       SET totalcost = $1, costperserving = $2, updated_at = CURRENT_TIMESTAMP
       WHERE id = $3
-    `, [totalCost || 0, costPerServing, recipeId]);
+    `, [calculatedTotalCost, calculatedCostPerServing, recipeId]);
 
     console.log('Recipe cost updated in database');
   }
