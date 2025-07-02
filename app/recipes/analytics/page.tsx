@@ -32,6 +32,7 @@ export default function RecipeAnalyticsPage() {
   const [analytics, setAnalytics] = useState<Analytics | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [recalculating, setRecalculating] = useState(false)
 
   useEffect(() => {
     fetchAnalytics()
@@ -53,6 +54,29 @@ export default function RecipeAnalyticsPage() {
       console.error(err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleRecalculateCosts = async () => {
+    try {
+      setRecalculating(true)
+      const response = await fetch('/api/recipes/recalculate-costs', {
+        method: 'POST'
+      })
+      const data = await response.json()
+      
+      if (data.success) {
+        alert(`Cost recalculation completed! Recalculated ${data.recalculatedCount} recipes.`)
+        // Refresh the analytics data
+        fetchAnalytics()
+      } else {
+        alert('Failed to recalculate costs: ' + (data.error || 'Unknown error'))
+      }
+    } catch (err) {
+      alert('Failed to recalculate costs')
+      console.error(err)
+    } finally {
+      setRecalculating(false)
     }
   }
 
@@ -109,7 +133,15 @@ export default function RecipeAnalyticsPage() {
               </Link>
             </div>
             <h1 className="text-2xl font-bold text-gray-900">Recipe Cost Analytics</h1>
-            <div className="w-24"></div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleRecalculateCosts}
+                disabled={recalculating}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {recalculating ? 'Recalculating...' : 'Recalculate Costs'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
