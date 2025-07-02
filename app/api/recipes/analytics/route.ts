@@ -10,14 +10,26 @@ export async function GET() {
     // Get all recipes with cost data
     const recipes = await db.getAllRecipes();
     
-    // Filter out recipes without cost data
-    const recipesWithCosts = recipes.filter(recipe => 
-      recipe.costPerServing !== undefined && 
-      recipe.costPerServing !== null && 
-      recipe.costPerServing > 0
-    );
+    console.log('Raw recipes from database:', recipes.slice(0, 3)); // Log first 3 for debugging
+    
+    // Filter out recipes without cost data - be more lenient
+    const recipesWithCosts = recipes.filter(recipe => {
+      const hasCost = recipe.costPerServing !== undefined && 
+                     recipe.costPerServing !== null && 
+                     !isNaN(recipe.costPerServing) &&
+                     recipe.costPerServing >= 0; // Allow 0 cost recipes
+      
+      if (!hasCost) {
+        console.log(`Recipe "${recipe.name}" filtered out - costPerServing:`, recipe.costPerServing);
+      }
+      
+      return hasCost;
+    });
+
+    console.log(`Found ${recipesWithCosts.length} recipes with cost data out of ${recipes.length} total`);
 
     if (recipesWithCosts.length === 0) {
+      console.log('No recipes with cost data found');
       return NextResponse.json({
         success: true,
         analytics: {
@@ -71,6 +83,12 @@ export async function GET() {
       topCheapest,
       costDistribution
     };
+
+    console.log('Analytics result:', {
+      totalRecipes: analytics.totalRecipes,
+      recipesWithCosts: analytics.recipesWithCosts,
+      averageCost: analytics.averageCost
+    });
 
     return NextResponse.json({ success: true, analytics });
   } catch (error) {
