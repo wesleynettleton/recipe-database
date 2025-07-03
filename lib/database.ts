@@ -577,8 +577,8 @@ export class DatabaseConnection {
       WHERE recipeId = $1
     `, [recipeId]);
 
-    const { totalCost, servings } = result.rows[0];
-    const calculatedTotalCost = parseFloat(totalCost) || 0;
+    const { totalcost, servings } = result.rows[0];
+    const calculatedTotalCost = parseFloat(totalcost) || 0;
     const calculatedCostPerServing = (servings && servings > 0) ? calculatedTotalCost / servings : 0;
 
     console.log('Cost calculation results:', {
