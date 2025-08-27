@@ -25,6 +25,21 @@ interface Analytics {
   averageCost: number
   topExpensive: Recipe[]
   topCheapest: Recipe[]
+  mains: {
+    count: number
+    topExpensive: Recipe[]
+    topCheapest: Recipe[]
+  }
+  sides: {
+    count: number
+    topExpensive: Recipe[]
+    topCheapest: Recipe[]
+  }
+  desserts: {
+    count: number
+    topExpensive: Recipe[]
+    topCheapest: Recipe[]
+  }
   costDistribution: CostDistribution
 }
 
@@ -33,6 +48,7 @@ export default function RecipeAnalyticsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [recalculating, setRecalculating] = useState(false)
+  const [activeTab, setActiveTab] = useState<'overview' | 'mains' | 'sides' | 'desserts'>('overview')
 
   useEffect(() => {
     fetchAnalytics()
@@ -213,8 +229,56 @@ export default function RecipeAnalyticsPage() {
           </div>
         </div>
 
-        {/* Top Lists */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Recipe Categories Tabs */}
+        <div className="mb-8">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('overview')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'overview'
+                    ? 'border-indigo-500 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Overview
+              </button>
+              <button
+                onClick={() => setActiveTab('mains')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'mains'
+                    ? 'border-indigo-500 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Mains ({analytics.mains.count})
+              </button>
+              <button
+                onClick={() => setActiveTab('sides')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'sides'
+                    ? 'border-indigo-500 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Sides ({analytics.sides.count})
+              </button>
+              <button
+                onClick={() => setActiveTab('desserts')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'desserts'
+                    ? 'border-indigo-500 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Desserts ({analytics.desserts.count})
+              </button>
+            </nav>
+          </div>
+
+          {/* Tab Content */}
+          {activeTab === 'overview' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
           {/* Most Expensive Recipes */}
           <div className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-lg font-medium text-gray-900 mb-4">Most Expensive Recipes</h2>
@@ -272,6 +336,194 @@ export default function RecipeAnalyticsPage() {
               ))}
             </div>
           </div>
+        </div>
+      )}
+
+      {activeTab === 'mains' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
+          {/* Most Expensive Mains */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-lg font-medium text-gray-900 mb-4">Most Expensive Mains</h2>
+            <div className="space-y-3">
+              {analytics.mains.topExpensive.map((recipe, index) => (
+                <div key={recipe.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-500">#{index + 1}</span>
+                      <Link 
+                        href={`/recipes/${recipe.id}`}
+                        className="font-medium text-gray-900 hover:text-indigo-600"
+                      >
+                        {recipe.name}
+                      </Link>
+                    </div>
+                    {recipe.code && (
+                      <div className="text-sm text-gray-500">{recipe.code}</div>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold text-red-600">{formatCurrency(recipe.costPerServing || 0)}</div>
+                    <div className="text-xs text-gray-500">per serving</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Least Expensive Mains */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-lg font-medium text-gray-900 mb-4">Least Expensive Mains</h2>
+            <div className="space-y-3">
+              {analytics.mains.topCheapest.map((recipe, index) => (
+                <div key={recipe.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-500">#{index + 1}</span>
+                      <Link 
+                        href={`/recipes/${recipe.id}`}
+                        className="font-medium text-gray-900 hover:text-indigo-600"
+                      >
+                        {recipe.name}
+                      </Link>
+                    </div>
+                    {recipe.code && (
+                      <div className="text-sm text-gray-500">{recipe.code}</div>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold text-green-600">{formatCurrency(recipe.costPerServing || 0)}</div>
+                    <div className="text-xs text-gray-500">per serving</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'sides' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
+          {/* Most Expensive Sides */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-lg font-medium text-gray-900 mb-4">Most Expensive Sides</h2>
+            <div className="space-y-3">
+              {analytics.sides.topExpensive.map((recipe, index) => (
+                <div key={recipe.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-500">#{index + 1}</span>
+                      <Link 
+                        href={`/recipes/${recipe.id}`}
+                        className="font-medium text-gray-900 hover:text-indigo-600"
+                      >
+                        {recipe.name}
+                      </Link>
+                    </div>
+                    {recipe.code && (
+                      <div className="text-sm text-gray-500">{recipe.code}</div>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold text-red-600">{formatCurrency(recipe.costPerServing || 0)}</div>
+                    <div className="text-xs text-gray-500">per serving</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Least Expensive Sides */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-lg font-medium text-gray-900 mb-4">Least Expensive Sides</h2>
+            <div className="space-y-3">
+              {analytics.sides.topCheapest.map((recipe, index) => (
+                <div key={recipe.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-500">#{index + 1}</span>
+                      <Link 
+                        href={`/recipes/${recipe.id}`}
+                        className="font-medium text-gray-900 hover:text-indigo-600"
+                      >
+                        {recipe.name}
+                      </Link>
+                    </div>
+                    {recipe.code && (
+                      <div className="text-sm text-gray-500">{recipe.code}</div>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold text-green-600">{formatCurrency(recipe.costPerServing || 0)}</div>
+                    <div className="text-xs text-gray-500">per serving</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'desserts' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
+          {/* Most Expensive Desserts */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-lg font-medium text-gray-900 mb-4">Most Expensive Desserts</h2>
+            <div className="space-y-3">
+              {analytics.desserts.topExpensive.map((recipe, index) => (
+                <div key={recipe.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-500">#{index + 1}</span>
+                      <Link 
+                        href={`/recipes/${recipe.id}`}
+                        className="font-medium text-gray-900 hover:text-indigo-600"
+                      >
+                        {recipe.name}
+                      </Link>
+                    </div>
+                    {recipe.code && (
+                      <div className="text-sm text-gray-500">{recipe.code}</div>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold text-red-600">{formatCurrency(recipe.costPerServing || 0)}</div>
+                    <div className="text-xs text-gray-500">per serving</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Least Expensive Desserts */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-lg font-medium text-gray-900 mb-4">Least Expensive Desserts</h2>
+            <div className="space-y-3">
+              {analytics.desserts.topCheapest.map((recipe, index) => (
+                <div key={recipe.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-500">#{index + 1}</span>
+                      <Link 
+                        href={`/recipes/${recipe.id}`}
+                        className="font-medium text-gray-900 hover:text-indigo-600"
+                      >
+                        {recipe.name}
+                      </Link>
+                    </div>
+                    {recipe.code && (
+                      <div className="text-sm text-gray-500">{recipe.code}</div>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold text-green-600">{formatCurrency(recipe.costPerServing || 0)}</div>
+                    <div className="text-xs text-gray-500">per serving</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
         </div>
       </div>
     </div>

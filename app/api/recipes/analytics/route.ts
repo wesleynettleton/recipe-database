@@ -65,7 +65,25 @@ export async function GET() {
     const totalCost = recipesWithCosts.reduce((sum, recipe) => sum + (recipe.costPerServing || 0), 0);
     const averageCost = totalCost / recipesWithCosts.length;
 
-    // Get top 10 most expensive and cheapest
+    // Categorize recipes by type based on code
+    const mains = recipesWithCosts.filter(recipe => recipe.code?.startsWith('M'));
+    const sides = recipesWithCosts.filter(recipe => recipe.code?.startsWith('S'));
+    const desserts = recipesWithCosts.filter(recipe => recipe.code?.startsWith('D'));
+
+    // Sort each category by cost
+    const sortedMains = [...mains].sort((a, b) => (b.costPerServing || 0) - (a.costPerServing || 0));
+    const sortedSides = [...sides].sort((a, b) => (b.costPerServing || 0) - (a.costPerServing || 0));
+    const sortedDesserts = [...desserts].sort((a, b) => (b.costPerServing || 0) - (a.costPerServing || 0));
+
+    // Get top 10 most and least expensive for each category
+    const topExpensiveMains = sortedMains.slice(0, 10);
+    const topCheapestMains = sortedMains.slice(-10).reverse();
+    const topExpensiveSides = sortedSides.slice(0, 10);
+    const topCheapestSides = sortedSides.slice(-10).reverse();
+    const topExpensiveDesserts = sortedDesserts.slice(0, 10);
+    const topCheapestDesserts = sortedDesserts.slice(-10).reverse();
+
+    // Overall top 10 (keeping for backward compatibility)
     const topExpensive = sortedByCost.slice(0, 10);
     const topCheapest = sortedByCost.slice(-10).reverse();
 
@@ -85,8 +103,25 @@ export async function GET() {
       mostExpensive: sortedByCost[0],
       leastExpensive: sortedByCost[sortedByCost.length - 1],
       averageCost: Math.round(averageCost * 100) / 100, // Round to 2 decimal places
+      // Overall lists
       topExpensive,
       topCheapest,
+      // Categorized lists
+      mains: {
+        count: mains.length,
+        topExpensive: topExpensiveMains,
+        topCheapest: topCheapestMains
+      },
+      sides: {
+        count: sides.length,
+        topExpensive: topExpensiveSides,
+        topCheapest: topCheapestSides
+      },
+      desserts: {
+        count: desserts.length,
+        topExpensive: topExpensiveDesserts,
+        topCheapest: topCheapestDesserts
+      },
       costDistribution
     };
 
