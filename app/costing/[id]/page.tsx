@@ -99,24 +99,10 @@ export default function MenuCostingDetailPage({ params }: { params: { id: string
   const renderDay = (dayData: MenuDay, dayName: string) => {
     if (!dayData) return null;
 
-    const dayCost = [
-      dayData.lunchOption1?.costPerServing || 0,
-      dayData.lunchOption2?.costPerServing || 0,
-      dayData.lunchOption3?.costPerServing || 0,
-      dayData.servedWith123?.costPerServing || 0,
-      dayData.dessertOptionD?.costPerServing || 0
-    ].reduce((sum, cost) => sum + cost, 0);
-
     return (
       <div className="bg-gray-50 rounded-lg p-6 mb-6">
-        <div className="flex justify-between items-center mb-4">
+        <div className="mb-4">
           <h3 className="text-xl font-semibold text-gray-900">{dayName}</h3>
-          <div className="text-right">
-            <div className="text-lg font-bold text-emerald-600">
-              {formatCurrency(dayCost)}
-            </div>
-            <div className="text-sm text-gray-500">total per person</div>
-          </div>
         </div>
 
         {renderRecipeWithCost(dayData.lunchOption1, 'Lunch Option 1')}
@@ -131,23 +117,10 @@ export default function MenuCostingDetailPage({ params }: { params: { id: string
   const renderDailyOptions = (dailyOptions: DailyOptions) => {
     if (!dailyOptions) return null;
 
-    const optionsCost = [
-      dailyOptions.option1?.costPerServing || 0,
-      dailyOptions.option2?.costPerServing || 0,
-      dailyOptions.option3?.costPerServing || 0,
-      dailyOptions.option4?.costPerServing || 0
-    ].reduce((sum, cost) => sum + cost, 0);
-
     return (
       <div className="bg-gray-50 rounded-lg p-6 mb-6">
-        <div className="flex justify-between items-center mb-4">
+        <div className="mb-4">
           <h3 className="text-xl font-semibold text-gray-900">Daily Options</h3>
-          <div className="text-right">
-            <div className="text-lg font-bold text-emerald-600">
-              {formatCurrency(optionsCost)}
-            </div>
-            <div className="text-sm text-gray-500">total per person</div>
-          </div>
         </div>
 
         {renderRecipeWithCost(dailyOptions.option1, 'Option 1')}
@@ -182,19 +155,7 @@ export default function MenuCostingDetailPage({ params }: { params: { id: string
     );
   }
 
-  // Calculate total weekly cost
-  const totalWeeklyCost = [
-    menu.monday, menu.tuesday, menu.wednesday, menu.thursday, menu.friday
-  ].reduce((total, day) => {
-    if (!day) return total;
-    return total + [
-      day.lunchOption1?.costPerServing || 0,
-      day.lunchOption2?.costPerServing || 0,
-      day.lunchOption3?.costPerServing || 0,
-      day.servedWith123?.costPerServing || 0,
-      day.dessertOptionD?.costPerServing || 0
-    ].reduce((sum, cost) => sum + cost, 0);
-  }, 0);
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -217,12 +178,7 @@ export default function MenuCostingDetailPage({ params }: { params: { id: string
               <h1 className="text-2xl font-bold text-gray-900">{menu.name}</h1>
               <p className="text-sm text-gray-500">Week of {new Date(menu.weekStartDate).toLocaleDateString()}</p>
             </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-emerald-600">
-                {formatCurrency(totalWeeklyCost)}
-              </div>
-              <div className="text-sm text-gray-500">total per person</div>
-            </div>
+
           </div>
         </div>
       </div>
