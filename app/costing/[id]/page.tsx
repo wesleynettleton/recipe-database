@@ -80,30 +80,16 @@ export default function MenuCostingDetailPage({ params }: { params: { id: string
     
     return (
       <div className="bg-white rounded-lg shadow p-4 mb-4">
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-center">
           <div className="flex-1">
             <h4 className="font-semibold text-gray-900 mb-1">{title}</h4>
-            <h5 className="text-lg font-medium text-gray-800 mb-2">{recipe.name}</h5>
-            {recipe.code && (
-              <p className="text-sm text-gray-500 mb-2">Code: {recipe.code}</p>
-            )}
-            <p className="text-sm text-gray-600 mb-2">Servings: {recipe.servings}</p>
-            {recipe.instructions && (
-              <p className="text-sm text-gray-600 mb-2">{recipe.instructions}</p>
-            )}
-            {recipe.notes && (
-              <p className="text-sm text-gray-500 italic">{recipe.notes}</p>
-            )}
+            <h5 className="text-lg font-medium text-gray-800">{recipe.name}</h5>
           </div>
           <div className="text-right ml-4">
-            <div className="text-2xl font-bold text-emerald-600 mb-1">
+            <div className="text-2xl font-bold text-emerald-600">
               {formatCurrency(recipe.costPerServing)}
             </div>
             <div className="text-sm text-gray-500">per serving</div>
-            <div className="text-lg font-semibold text-gray-700 mt-2">
-              {formatCurrency(recipe.costPerServing * recipe.servings)}
-            </div>
-            <div className="text-xs text-gray-500">total cost</div>
           </div>
         </div>
       </div>
