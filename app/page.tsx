@@ -3,37 +3,14 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 
-interface MenuCostingItem {
-  type: string;
-  name: string;
-  cost: number;
-  servings: number;
-}
 
-interface DailyCost {
-  day: string;
-  cost: number;
-  items: MenuCostingItem[];
-  servings: number;
-}
-
-interface MenuCosting {
-  id: number;
-  name: string;
-  weekStartDate: string;
-  totalWeeklyCost: number;
-  totalWeeklyServings: number;
-  costPerPerson: number;
-  dailyCosts: DailyCost[];
-}
 
 export default function HomePage() {
   const [ingredientsCount, setIngredientsCount] = useState(0);
   const [recipesCount, setRecipesCount] = useState(0);
   const [menusCount, setMenusCount] = useState(0);
   const [allergyTypesCount, setAllergyTypesCount] = useState(0);
-  const [costingData, setCostingData] = useState<MenuCosting[]>([]);
-  const [costingLoading, setCostingLoading] = useState(true);
+
 
   useEffect(() => {
     const fetchCounts = async () => {
@@ -64,24 +41,7 @@ export default function HomePage() {
       }
     };
 
-    const fetchCostingData = async () => {
-      try {
-        setCostingLoading(true);
-        const response = await fetch('/api/menus/costing');
-        const data = await response.json();
-        
-        if (data.success) {
-          setCostingData(data.menus);
-        }
-      } catch (error) {
-        console.error("Failed to fetch costing data", error);
-      } finally {
-        setCostingLoading(false);
-      }
-    };
-
     fetchCounts();
-    fetchCostingData();
   }, []);
 
   const navigationCards = [
@@ -154,7 +114,7 @@ export default function HomePage() {
     {
       title: 'Costing',
       description: 'View menu costs and per-portion pricing for budgeting and planning',
-      href: '#costing',
+      href: '/costing',
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
@@ -249,75 +209,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Costing Section */}
-      <div id="costing" className="bg-gray-50">
-        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-extrabold text-gray-900">
-              Menu Costing
-            </h2>
-            <p className="mt-4 text-lg text-gray-500">
-              View detailed cost breakdowns for all your built menus
-            </p>
-          </div>
 
-          {costingLoading ? (
-            <div className="text-center py-8">
-              <div className="text-gray-500">Loading costing data...</div>
-            </div>
-          ) : costingData.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="text-gray-500">No menus found. Build some menus to see costing data.</div>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {costingData.map((menu) => (
-                <div key={menu.id} className="bg-white rounded-lg shadow-md p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-xl font-semibold text-gray-900">{menu.name}</h3>
-                      <p className="text-sm text-gray-500">Week of {new Date(menu.weekStartDate).toLocaleDateString()}</p>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-emerald-600">£{menu.costPerPerson}</div>
-                      <div className="text-sm text-gray-500">per person</div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                    {menu.dailyCosts.map((day) => (
-                      <div key={day.day} className="border rounded-lg p-3">
-                        <h4 className="font-medium text-gray-900 mb-2">{day.day}</h4>
-                        <div className="text-lg font-semibold text-gray-700 mb-2">£{day.cost}</div>
-                        <div className="space-y-1">
-                          {day.items.map((item, index) => (
-                            <div key={index} className="text-xs text-gray-600">
-                              <span className="font-medium">{item.type}:</span> {item.name}
-                              <br />
-                              <span className="text-gray-500">£{item.cost} per serving</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-500">Total weekly cost:</span>
-                      <span className="text-lg font-semibold text-gray-900">£{menu.totalWeeklyCost}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-500">Servings per day:</span>
-                      <span className="text-sm text-gray-900">{menu.totalWeeklyServings}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
     </div>
   )
 } 

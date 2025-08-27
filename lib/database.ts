@@ -606,6 +606,62 @@ export class DatabaseConnection {
     console.log('Verification - values now in database:', verifyResult.rows[0]);
   }
 
+  // Get menu by ID
+  async getMenuById(menuId: number): Promise<any | null> {
+    const result = await this.query('SELECT * FROM menus WHERE id = $1', [menuId]);
+    if (result.rows.length === 0) return null;
+    
+    const row = result.rows[0];
+
+    // Helper to fetch recipe details
+    const getRecipeDetails = async (id: number | null): Promise<RecipeWithIngredients | null> => {
+        if (!id) return null;
+        // Use getRecipeWithIngredients to get full details including allergies
+        return await this.getRecipeWithIngredients(id);
+    };
+    
+    // Helper to process a day's menu from JSON
+    const processDay = async (dayData: any) => {
+        if (!dayData) return null;
+        // The data in the DB is already parsed if it's JSONB, but if it's a string, parse it.
+        const data = typeof dayData === 'string' ? JSON.parse(dayData) : dayData;
+        return {
+            lunchOption1: await getRecipeDetails(data.lunchOption1),
+            lunchOption2: await getRecipeDetails(data.lunchOption2),
+            lunchOption3: await getRecipeDetails(data.lunchOption3),
+            servedWith123: await getRecipeDetails(data.servedWith123),
+            dessertOptionD: await getRecipeDetails(data.dessertOptionD),
+        };
+    };
+
+    // Helper to process daily options from JSON
+    const processDailyOptions = async (optionsData: any) => {
+        if (!optionsData) return null;
+        const data = typeof optionsData === 'string' ? JSON.parse(optionsData) : optionsData;
+        return {
+            option1: await getRecipeDetails(data.option1),
+            option2: await getRecipeDetails(data.option2),
+            option3: await getRecipeDetails(data.option3),
+            option4: await getRecipeDetails(data.option4),
+        };
+    };
+    
+    // Map snake_case to camelCase and expand the JSONB columns
+    return {
+      id: row.id,
+      name: row.name,
+      weekStartDate: row.week_start_date,
+      monday: await processDay(row.monday),
+      tuesday: await processDay(row.tuesday),
+      wednesday: await processDay(row.wednesday),
+      thursday: await processDay(row.thursday),
+      friday: await processDay(row.friday),
+      dailyOptions: await processDailyOptions(row.daily_options),
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    };
+  }
+
   // Get menu by week_start_date (for API compatibility)
   async getMenuByDate(menuDate: string): Promise<any | null> {
     const result = await this.query('SELECT * FROM menus WHERE week_start_date = $1', [menuDate]);
