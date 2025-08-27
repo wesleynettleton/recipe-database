@@ -7,9 +7,6 @@ interface MenuCosting {
   id: number;
   name: string;
   weekStartDate: string;
-  totalWeeklyCost: number;
-  totalWeeklyServings: number;
-  costPerPerson: number;
 }
 
 export default function CostingPage() {
@@ -38,10 +35,6 @@ export default function CostingPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return `£${amount.toFixed(2)}`;
   };
 
   if (loading) {
@@ -111,27 +104,10 @@ export default function CostingPage() {
                 className="block bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
               >
                 <div className="p-6">
-                  <div className="flex justify-between items-start">
+                  <div className="flex justify-between items-center">
                     <div className="flex-1">
                       <h3 className="text-xl font-semibold text-gray-900 mb-2">{menu.name}</h3>
                       <p className="text-sm text-gray-500">Week of {new Date(menu.weekStartDate).toLocaleDateString()}</p>
-                    </div>
-                    <div className="text-right ml-6">
-                      <div className="text-3xl font-bold text-emerald-600 mb-1">
-                        {formatCurrency(menu.costPerPerson)}
-                      </div>
-                      <div className="text-sm text-gray-500">per person</div>
-                      <div className="text-lg font-semibold text-gray-700 mt-2">
-                        {formatCurrency(menu.totalWeeklyCost)}
-                      </div>
-                      <div className="text-xs text-gray-500">total weekly</div>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <div className="flex justify-between text-sm text-gray-600">
-                      <span>Servings per day:</span>
-                      <span className="font-medium">{menu.totalWeeklyServings}</span>
                     </div>
                   </div>
                 </div>
