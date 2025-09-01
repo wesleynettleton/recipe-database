@@ -100,25 +100,57 @@ export default function ViewRecipesPage() {
       return
     }
 
+    setDeletingId(recipeId)
     try {
-      setDeletingId(recipeId)
       const response = await fetch(`/api/recipes/${recipeId}`, {
-        method: 'DELETE',
+        method: 'DELETE'
       })
 
       if (response.ok) {
-        // Remove the recipe from the local state
-        setRecipes(prevRecipes => prevRecipes.filter(recipe => recipe.id !== recipeId))
-        // Note: setFilteredRecipes will be updated by the useEffect hook
+        // Remove the deleted recipe from the list
+        setRecipes(recipes.filter(recipe => recipe.id !== recipeId))
       } else {
         const data = await response.json()
-        alert(`Failed to delete recipe: ${data.error || 'Unknown error'}`)
+        alert(data.error || 'Failed to delete recipe')
       }
     } catch (error) {
       console.error('Error deleting recipe:', error)
-      alert('Failed to delete recipe. Please try again.')
+      alert('Failed to delete recipe')
     } finally {
       setDeletingId(null)
+    }
+  }
+
+  const handleDuplicateRecipe = async (recipeId: number, recipeName: string) => {
+    if (!confirm(`Are you sure you want to duplicate "${recipeName}"?`)) {
+      return
+    }
+
+    try {
+      const response = await fetch('/api/recipes/duplicate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ recipeId })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          alert(`Recipe "${recipeName}" duplicated successfully!`)
+          // Refresh the recipes list to show the new duplicate
+          fetchRecipes()
+        } else {
+          alert(data.error || 'Failed to duplicate recipe')
+        }
+      } else {
+        const data = await response.json()
+        alert(data.error || 'Failed to duplicate recipe')
+      }
+    } catch (error) {
+      console.error('Error duplicating recipe:', error)
+      alert('Failed to duplicate recipe')
     }
   }
 
@@ -341,6 +373,15 @@ export default function ViewRecipesPage() {
                             </>
                           )}
                         </button>
+                                                 <button
+                           onClick={() => handleDuplicateRecipe(recipe.id, recipe.name)}
+                           className="inline-flex items-center px-3 py-1 border border-blue-300 text-xs font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                         >
+                           <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                           </svg>
+                           Duplicate
+                         </button>
                       </div>
                     </td>
                   </tr>
