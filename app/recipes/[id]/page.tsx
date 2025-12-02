@@ -328,6 +328,24 @@ export default function RecipeDetailPage() {
                   </span>
                 </div>
               )}
+
+              {/* Cost Information (screen only, not included in PDF) */}
+              {(recipe.totalCost !== null || recipe.costPerServing !== null) && (
+                <div className="mt-4 text-sm text-gray-700 space-y-1">
+                  {recipe.totalCost !== null && (
+                    <p>
+                      <span className="font-medium">Total cost:</span>{' '}
+                      £{recipe.totalCost.toFixed(2)}
+                    </p>
+                  )}
+                  {recipe.costPerServing !== null && (
+                    <p>
+                      <span className="font-medium">Cost per portion:</span>{' '}
+                      £{recipe.costPerServing.toFixed(2)}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Ingredients List */}
