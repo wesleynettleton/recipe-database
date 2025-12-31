@@ -99,7 +99,7 @@ export function parseHoldsworthPricesExcel(buffer: Buffer): {
 
       ingredients.push({
         productCode,
-        name: name || undefined, // Allow empty name for price-only updates
+        name: name || '', // Use empty string if missing (database will handle validation)
         supplier: supplier || undefined,
         weight: !isNaN(weight!) ? weight : undefined,
         unit: unit || undefined,
