@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { parseExcelFiles } from '../../../lib/excelParser';
+import { parseExcelFiles, parseHoldsworthPricesExcel } from '../../../lib/excelParser';
 import { getDatabase } from '../../../lib/database';
 import * as XLSX from 'xlsx';
 
@@ -17,8 +17,10 @@ export async function POST(request: NextRequest) {
     console.log('FormData received, checking files...');
     
     const ingredientsFile = formData.get('ingredients') as File;
-    const allergiesFile = formData.get('allergies') as File;
+    const allergiesFile = formData.get('allergies') as File | null;
+    const mode = (formData.get('mode') as string) || 'full';
 
+    console.log('Upload mode:', mode);
     console.log('Ingredients file:', ingredientsFile ? {
       name: ingredientsFile.name,
       size: ingredientsFile.size,
@@ -31,20 +33,35 @@ export async function POST(request: NextRequest) {
       type: allergiesFile.type
     } : 'null');
 
-    if (!ingredientsFile || !allergiesFile) {
-      console.log('Missing required files');
+    if (!ingredientsFile) {
+      console.log('Missing required ingredients file');
       return NextResponse.json({
         success: false,
-        message: 'Both ingredients and allergies Excel files are required'
+        message: 'Prices Excel file is required'
+      }, { status: 400 });
+    }
+
+    if (mode === 'full' && !allergiesFile) {
+      console.log('Missing required allergies file for full upload');
+      return NextResponse.json({
+        success: false,
+        message: 'Both ingredients and allergies Excel files are required for full upload'
       }, { status: 400 });
     }
 
     // Check file sizes to prevent timeout (reduced for hobby plan)
     const maxSize = 5 * 1024 * 1024; // 5MB (reduced from 10MB)
-    if (ingredientsFile.size > maxSize || allergiesFile.size > maxSize) {
+    if (ingredientsFile.size > maxSize) {
       return NextResponse.json({
         success: false,
-        message: 'File size too large. Please use files smaller than 5MB each for faster processing.'
+        message: 'Prices file size too large. Please use files smaller than 5MB for faster processing.'
+      }, { status: 400 });
+    }
+
+    if (allergiesFile && allergiesFile.size > maxSize) {
+      return NextResponse.json({
+        success: false,
+        message: 'Allergies file size too large. Please use files smaller than 5MB for faster processing.'
       }, { status: 400 });
     }
 
@@ -53,11 +70,11 @@ export async function POST(request: NextRequest) {
         !ingredientsFile.name.toLowerCase().endsWith('.xls')) {
       return NextResponse.json({
         success: false,
-        message: 'Ingredients file must be an Excel file (.xlsx or .xls)'
+        message: 'Prices file must be an Excel file (.xlsx or .xls)'
       }, { status: 400 });
     }
 
-    if (!allergiesFile.name.toLowerCase().endsWith('.xlsx') && 
+    if (allergiesFile && !allergiesFile.name.toLowerCase().endsWith('.xlsx') && 
         !allergiesFile.name.toLowerCase().endsWith('.xls')) {
       return NextResponse.json({
         success: false,
@@ -69,7 +86,7 @@ export async function POST(request: NextRequest) {
     
     // Convert File to Buffer with error handling
     let ingredientsBuffer: Buffer;
-    let allergiesBuffer: Buffer;
+    let allergiesBuffer: Buffer | null = null;
     
     try {
       ingredientsBuffer = Buffer.from(await ingredientsFile.arrayBuffer());
@@ -78,24 +95,26 @@ export async function POST(request: NextRequest) {
       console.error('Error creating ingredients buffer:', error);
       return NextResponse.json({
         success: false,
-        message: 'Failed to read ingredients file'
+        message: 'Failed to read prices file'
       }, { status: 400 });
     }
     
-    try {
-      allergiesBuffer = Buffer.from(await allergiesFile.arrayBuffer());
-      console.log('Allergies buffer created successfully, size:', allergiesBuffer.length);
-    } catch (error) {
-      console.error('Error creating allergies buffer:', error);
-      return NextResponse.json({
-        success: false,
-        message: 'Failed to read allergies file'
-      }, { status: 400 });
+    if (allergiesFile) {
+      try {
+        allergiesBuffer = Buffer.from(await allergiesFile.arrayBuffer());
+        console.log('Allergies buffer created successfully, size:', allergiesBuffer.length);
+      } catch (error) {
+        console.error('Error creating allergies buffer:', error);
+        return NextResponse.json({
+          success: false,
+          message: 'Failed to read allergies file'
+        }, { status: 400 });
+      }
     }
     
     console.log('Buffer sizes:', {
       ingredients: ingredientsBuffer.length,
-      allergies: allergiesBuffer.length
+      allergies: allergiesBuffer?.length || 0
     });
 
     // Debug: Check headers manually (simplified to reduce processing time)
@@ -122,26 +141,28 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    console.log('=== DEBUGGING ALLERGIES FILE HEADERS ===');
-    try {
-      const workbook = XLSX.read(allergiesBuffer, { type: 'buffer' });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-      
-      console.log('Sheet names:', workbook.SheetNames);
-      console.log('Total rows in allergies file:', jsonData.length);
-      
-      if (jsonData.length > 0) {
-        console.log('Row 0 (headers):', jsonData[0]);
-        if (jsonData.length > 1) console.log('Row 1:', jsonData[1]);
+    if (allergiesBuffer) {
+      console.log('=== DEBUGGING ALLERGIES FILE HEADERS ===');
+      try {
+        const workbook = XLSX.read(allergiesBuffer, { type: 'buffer' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        
+        console.log('Sheet names:', workbook.SheetNames);
+        console.log('Total rows in allergies file:', jsonData.length);
+        
+        if (jsonData.length > 0) {
+          console.log('Row 0 (headers):', jsonData[0]);
+          if (jsonData.length > 1) console.log('Row 1:', jsonData[1]);
+        }
+      } catch (error) {
+        console.error('Error reading allergies file headers:', error);
+        return NextResponse.json({
+          success: false,
+          message: 'Failed to read allergies Excel file structure'
+        }, { status: 400 });
       }
-    } catch (error) {
-      console.error('Error reading allergies file headers:', error);
-      return NextResponse.json({
-        success: false,
-        message: 'Failed to read allergies Excel file structure'
-      }, { status: 400 });
     }
 
     console.log('Parsing Excel files...');
@@ -149,7 +170,17 @@ export async function POST(request: NextRequest) {
     // Parse Excel files with detailed error handling
     let parseResult;
     try {
-      parseResult = parseExcelFiles(ingredientsBuffer, allergiesBuffer);
+      if (allergiesBuffer) {
+        parseResult = parseExcelFiles(ingredientsBuffer, allergiesBuffer);
+      } else {
+        // Price-only mode: only parse ingredients
+        const ingredientsResult = parseHoldsworthPricesExcel(ingredientsBuffer);
+        parseResult = {
+          ingredients: ingredientsResult.ingredients,
+          allergies: [],
+          errors: ingredientsResult.errors
+        };
+      }
       console.log('Excel parsing completed successfully');
     } catch (error) {
       console.error('Error during Excel parsing:', error);
@@ -222,11 +253,12 @@ export async function POST(request: NextRequest) {
       
       // Process in smaller batches to work within 60s limit
       const batchSize = 50; // Reduced from 100
+      const priceOnlyMode = mode === 'prices-only';
       for (let i = 0; i < parseResult.ingredients.length; i += batchSize) {
         const batch = parseResult.ingredients.slice(i, i + batchSize);
         console.log(`Processing batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(parseResult.ingredients.length/batchSize)}`);
         try {
-          await db.insertIngredients(batch);
+          await db.insertIngredients(batch, priceOnlyMode);
         } catch (error) {
           console.error(`Error inserting batch ${Math.floor(i/batchSize) + 1}:`, error);
           return NextResponse.json({
@@ -239,7 +271,7 @@ export async function POST(request: NextRequest) {
       console.log('Ingredients inserted successfully');
     }
     
-    if (parseResult.allergies.length > 0) {
+    if (allergiesBuffer && parseResult.allergies.length > 0) {
       console.log(`Inserting ${parseResult.allergies.length} allergies...`);
       
       // Process in smaller batches to work within 60s limit
@@ -265,9 +297,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Excel files processed successfully',
+      message: mode === 'prices-only' 
+        ? 'Prices updated successfully' 
+        : 'Excel files processed successfully',
       ingredientsProcessed: parseResult.ingredients.length,
-      allergiesProcessed: parseResult.allergies.length
+      allergiesProcessed: allergiesBuffer ? parseResult.allergies.length : 0
     });
 
   } catch (error) {

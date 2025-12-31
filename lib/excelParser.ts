@@ -53,9 +53,14 @@ export function parseHoldsworthPricesExcel(buffer: Buffer): {
       price: priceIndex
     });
 
-    if (codeIndex === -1 || nameIndex === -1 || priceIndex === -1) {
-      errors.push(`Missing required columns. Expected: Code, Product Name, Price. Found: ${headers.join(', ')}`);
+    if (codeIndex === -1 || priceIndex === -1) {
+      errors.push(`Missing required columns. Expected: Code, Price. Found: ${headers.join(', ')}`);
       return { ingredients, errors, skipped };
+    }
+    
+    // Name is required for full uploads, but optional for price-only updates
+    if (nameIndex === -1) {
+      console.warn('Name column not found - this is OK for price-only updates');
     }
 
     // Process data rows starting from index 2 (skip header row 0 and empty row 1)
@@ -68,7 +73,7 @@ export function parseHoldsworthPricesExcel(buffer: Buffer): {
       }
 
       const productCode = String(row[codeIndex] || '').trim();
-      const name = String(row[nameIndex] || '').trim();
+      const name = nameIndex !== -1 ? String(row[nameIndex] || '').trim() : '';
       const supplier = supplierIndex !== -1 ? String(row[supplierIndex] || '').trim() : undefined;
       const weightValue = row[weightIndex];
       const unit = String(row[unitIndex] || '').trim();
@@ -80,10 +85,8 @@ export function parseHoldsworthPricesExcel(buffer: Buffer): {
         continue;
       }
 
-      if (!name) {
-        skipped++;
-        continue;
-      }
+      // Name is optional for price-only updates, but still include it if present
+      // (The database method will handle whether name is required)
 
       const price = parseFloat(String(priceValue));
       if (isNaN(price) || price < 0) {
@@ -96,7 +99,7 @@ export function parseHoldsworthPricesExcel(buffer: Buffer): {
 
       ingredients.push({
         productCode,
-        name,
+        name: name || undefined, // Allow empty name for price-only updates
         supplier: supplier || undefined,
         weight: !isNaN(weight!) ? weight : undefined,
         unit: unit || undefined,

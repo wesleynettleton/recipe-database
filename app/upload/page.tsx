@@ -3,7 +3,10 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 
+type UploadMode = 'full' | 'prices-only'
+
 export default function UploadPage() {
+  const [uploadMode, setUploadMode] = useState<UploadMode>('full')
   const [ingredientsFile, setIngredientsFile] = useState<File | null>(null)
   const [allergiesFile, setAllergiesFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
@@ -22,8 +25,13 @@ export default function UploadPage() {
   }
 
   const handleUpload = async () => {
-    if (!ingredientsFile || !allergiesFile) {
-      setUploadError('Please select both Excel files')
+    if (!ingredientsFile) {
+      setUploadError('Please select a prices Excel file')
+      return
+    }
+
+    if (uploadMode === 'full' && !allergiesFile) {
+      setUploadError('Please select both Excel files for full upload')
       return
     }
 
@@ -34,7 +42,10 @@ export default function UploadPage() {
     try {
       const formData = new FormData()
       formData.append('ingredients', ingredientsFile)
-      formData.append('allergies', allergiesFile)
+      if (allergiesFile) {
+        formData.append('allergies', allergiesFile)
+      }
+      formData.append('mode', uploadMode)
 
       const response = await fetch('/api/upload-excel', {
         method: 'POST',
@@ -44,9 +55,15 @@ export default function UploadPage() {
       const result = await response.json()
 
       if (result.success) {
-        setUploadResult(
-          `Successfully processed ${result.ingredientsProcessed} ingredients and ${result.allergiesProcessed} allergy records`
-        )
+        if (uploadMode === 'prices-only') {
+          setUploadResult(
+            `Successfully updated prices for ${result.ingredientsProcessed} ingredients`
+          )
+        } else {
+          setUploadResult(
+            `Successfully processed ${result.ingredientsProcessed} ingredients and ${result.allergiesProcessed || 0} allergy records`
+          )
+        }
         // Clear file inputs after successful upload
         setIngredientsFile(null)
         setAllergiesFile(null)
@@ -99,12 +116,60 @@ export default function UploadPage() {
                 Upload your ingredient prices and allergy information to populate the database
               </p>
             </div>
+
+            {/* Upload Mode Selection */}
+            <div className="mb-8">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Upload Mode
+              </label>
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  onClick={() => {
+                    setUploadMode('full')
+                    setUploadResult(null)
+                    setUploadError(null)
+                  }}
+                  className={`px-4 py-3 rounded-lg border-2 transition-colors ${
+                    uploadMode === 'full'
+                      ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  }`}
+                >
+                  <div className="font-semibold">Full Upload</div>
+                  <div className="text-xs mt-1">Prices + Allergies</div>
+                </button>
+                <button
+                  onClick={() => {
+                    setUploadMode('prices-only')
+                    setAllergiesFile(null)
+                    setUploadResult(null)
+                    setUploadError(null)
+                    // Reset allergies file input
+                    const allergiesInput = document.querySelector('input[type="file"][data-type="allergies"]') as HTMLInputElement
+                    if (allergiesInput) allergiesInput.value = ''
+                  }}
+                  className={`px-4 py-3 rounded-lg border-2 transition-colors ${
+                    uploadMode === 'prices-only'
+                      ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  }`}
+                >
+                  <div className="font-semibold">Update Prices Only</div>
+                  <div className="text-xs mt-1">For existing items</div>
+                </button>
+              </div>
+              {uploadMode === 'prices-only' && (
+                <p className="mt-3 text-sm text-gray-600 bg-blue-50 border border-blue-200 rounded-md p-3">
+                  <strong>Note:</strong> This will update prices for existing ingredients based on product codes. New items will be added if they don't exist.
+                </p>
+              )}
+            </div>
             
             <div className="space-y-8">
               {/* Ingredients File Upload */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Prices Excel File
+                  Prices Excel File <span className="text-red-500">*</span>
                 </label>
                 <div className="flex items-center justify-center w-full">
                   <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
@@ -133,41 +198,44 @@ export default function UploadPage() {
               </div>
 
               {/* Allergies File Upload */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Allergy Excel File
-                </label>
-                <div className="flex items-center justify-center w-full">
-                  <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <svg className="w-10 h-10 mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                      </svg>
-                      <p className="mb-2 text-sm text-gray-500">
-                        <span className="font-semibold">Click to upload</span> or drag and drop
-                      </p>
-                      <p className="text-xs text-gray-500">Excel files (.xlsx, .xls)</p>
-                      {allergiesFile && (
-                        <p className="mt-2 text-sm text-green-600 font-medium">
-                          ✓ {allergiesFile.name}
-                        </p>
-                      )}
-                    </div>
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept=".xlsx,.xls"
-                      onChange={(e) => handleFileChange('allergies', e.target.files?.[0] || null)}
-                    />
+              {uploadMode === 'full' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Allergy Excel File <span className="text-red-500">*</span>
                   </label>
+                  <div className="flex items-center justify-center w-full">
+                    <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <svg className="w-10 h-10 mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                        <p className="mb-2 text-sm text-gray-500">
+                          <span className="font-semibold">Click to upload</span> or drag and drop
+                        </p>
+                        <p className="text-xs text-gray-500">Excel files (.xlsx, .xls)</p>
+                        {allergiesFile && (
+                          <p className="mt-2 text-sm text-green-600 font-medium">
+                            ✓ {allergiesFile.name}
+                          </p>
+                        )}
+                      </div>
+                      <input
+                        type="file"
+                        data-type="allergies"
+                        className="hidden"
+                        accept=".xlsx,.xls"
+                        onChange={(e) => handleFileChange('allergies', e.target.files?.[0] || null)}
+                      />
+                    </label>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Upload Button */}
               <div className="text-center">
                 <button
                   onClick={handleUpload}
-                  disabled={!ingredientsFile || !allergiesFile || uploading}
+                  disabled={!ingredientsFile || (uploadMode === 'full' && !allergiesFile) || uploading}
                   className="inline-flex items-center px-8 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                 >
                   {uploading ? (
@@ -179,7 +247,7 @@ export default function UploadPage() {
                       Processing...
                     </>
                   ) : (
-                    'Upload and Process Files'
+                    uploadMode === 'prices-only' ? 'Update Prices' : 'Upload and Process Files'
                   )}
                 </button>
               </div>

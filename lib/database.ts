@@ -72,7 +72,7 @@ export class DatabaseConnection {
   }
 
   // Insert ingredients
-  async insertIngredients(ingredients: Omit<Ingredient, 'id' | 'createdAt' | 'updatedAt'>[]): Promise<{ skipped: number, productCodesToUpdate: { productCode: string }[] }> {
+  async insertIngredients(ingredients: Omit<Ingredient, 'id' | 'createdAt' | 'updatedAt'>[], priceOnly: boolean = false): Promise<{ skipped: number, productCodesToUpdate: { productCode: string }[] }> {
     let skipped = 0;
     const productCodesToUpdate: { productCode: string }[] = [];
 
@@ -81,24 +81,47 @@ export class DatabaseConnection {
       await client.query('BEGIN');
 
       for (const ing of ingredients) {
-        if (!ing.productCode || !ing.name || ing.price == null) {
+        if (!ing.productCode || ing.price == null) {
           skipped++;
           continue;
         }
+        
+        // For price-only updates, name is not required
+        if (!priceOnly && !ing.name) {
+          skipped++;
+          continue;
+        }
+
         // Defensive: ensure price is a number
         const price = typeof ing.price === 'number' ? ing.price : parseFloat(String(ing.price));
-        await client.query(`
-          INSERT INTO ingredients (productcode, name, supplier, weight, unit, price)
-          VALUES ($1, $2, $3, $4, $5, $6)
-          ON CONFLICT(productcode) DO UPDATE SET
-            name = EXCLUDED.name,
-            supplier = EXCLUDED.supplier,
-            weight = EXCLUDED.weight,
-            unit = EXCLUDED.unit,
-            price = EXCLUDED.price,
-            updated_at = CURRENT_TIMESTAMP
-        `, [ing.productCode, ing.name, ing.supplier, ing.weight, ing.unit, price]);
-        productCodesToUpdate.push({ productCode: ing.productCode });
+        
+        if (priceOnly) {
+          // Price-only update: only update the price field, leave other fields unchanged
+          const result = await client.query(`
+            UPDATE ingredients 
+            SET price = $1, updated_at = CURRENT_TIMESTAMP
+            WHERE productcode = $2
+          `, [price, ing.productCode]);
+          
+          // Only track if an existing row was updated (not if it's a new item)
+          if (result.rowCount && result.rowCount > 0) {
+            productCodesToUpdate.push({ productCode: ing.productCode });
+          }
+        } else {
+          // Full update: update all fields
+          await client.query(`
+            INSERT INTO ingredients (productcode, name, supplier, weight, unit, price)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            ON CONFLICT(productcode) DO UPDATE SET
+              name = EXCLUDED.name,
+              supplier = EXCLUDED.supplier,
+              weight = EXCLUDED.weight,
+              unit = EXCLUDED.unit,
+              price = EXCLUDED.price,
+              updated_at = CURRENT_TIMESTAMP
+          `, [ing.productCode, ing.name, ing.supplier, ing.weight, ing.unit, price]);
+          productCodesToUpdate.push({ productCode: ing.productCode });
+        }
       }
 
       await client.query('COMMIT');
