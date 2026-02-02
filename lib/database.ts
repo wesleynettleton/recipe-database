@@ -94,6 +94,13 @@ export class DatabaseConnection {
 
         // Defensive: ensure price is a number
         const price = typeof ing.price === 'number' ? ing.price : parseFloat(String(ing.price));
+        // Defensive: ensure sugarPer100g is a number (blank or invalid treated as 0)
+        const sugarPer100g =
+          ing.sugarPer100g != null
+            ? (typeof ing.sugarPer100g === 'number'
+                ? ing.sugarPer100g
+                : parseFloat(String(ing.sugarPer100g)) || 0)
+            : 0;
         
         if (priceOnly) {
           // Price-only update: only update the price field, leave other fields unchanged
@@ -108,18 +115,19 @@ export class DatabaseConnection {
             productCodesToUpdate.push({ productCode: ing.productCode });
           }
         } else {
-          // Full update: update all fields
+          // Full update: update all fields, including sugar_per_100g
           await client.query(`
-            INSERT INTO ingredients (productcode, name, supplier, weight, unit, price)
-            VALUES ($1, $2, $3, $4, $5, $6)
+            INSERT INTO ingredients (productcode, name, supplier, weight, unit, price, sugar_per_100g)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
             ON CONFLICT(productcode) DO UPDATE SET
               name = EXCLUDED.name,
               supplier = EXCLUDED.supplier,
               weight = EXCLUDED.weight,
               unit = EXCLUDED.unit,
               price = EXCLUDED.price,
+              sugar_per_100g = EXCLUDED.sugar_per_100g,
               updated_at = CURRENT_TIMESTAMP
-          `, [ing.productCode, ing.name, ing.supplier, ing.weight, ing.unit, price]);
+          `, [ing.productCode, ing.name, ing.supplier, ing.weight, ing.unit, price, sugarPer100g]);
           productCodesToUpdate.push({ productCode: ing.productCode });
         }
       }
@@ -295,27 +303,63 @@ export class DatabaseConnection {
       WHERE ri.recipeId = $1
     `, [id]);
 
-    // Calculate cost for each ingredient (using camelCase)
-    const ingredientsWithCost = ingredientsResult.rows.map(ingredient => {
+    // Look up sugar_per_100g for all product codes used in this recipe
+    const productCodes = ingredientsResult.rows
+      .map((row: any) => row.originalProductCode)
+      .filter((code: string | null | undefined) => !!code);
+
+    let sugarPer100gMap = new Map<string, number>();
+    if (productCodes.length > 0) {
+      const sugarResult = await this.query(
+        'SELECT productcode, sugar_per_100g FROM ingredients WHERE productcode = ANY($1)',
+        [productCodes]
+      );
+      sugarPer100gMap = new Map(
+        sugarResult.rows.map((row: any) => [
+          row.productcode,
+          row.sugar_per_100g != null ? Number(row.sugar_per_100g) || 0 : 0
+        ])
+      );
+    }
+
+    // Calculate cost and sugar for each ingredient (using camelCase)
+    const ingredientsWithCostAndSugar = ingredientsResult.rows.map((ingredient: any) => {
       const quantity = parseFloat(String(ingredient.quantity));
       const price = parseFloat(String(ingredient.ingredientPrice));
       const weight = parseFloat(String(ingredient.ingredientWeight));
-      
+
       // Calculate price per unit (e.g., price per gram)
-      const pricePerUnit = (weight && weight > 0) ? price / weight : price;
-      
+      const pricePerUnit = weight && weight > 0 ? price / weight : price;
       // Calculate cost for the quantity used
       const cost = quantity * pricePerUnit;
-      
+
+      // Sugar calculations
+      const sugarPer100g =
+        ingredient.originalProductCode && sugarPer100gMap.has(ingredient.originalProductCode)
+          ? sugarPer100gMap.get(ingredient.originalProductCode) || 0
+          : 0;
+      // Assume quantity is in grams; blank/invalid sugarPer100g treated as 0
+      const sugar = isNaN(quantity) || !sugarPer100g ? 0 : quantity * (sugarPer100g / 100);
+
       return {
         ...ingredient,
-        cost: cost || 0
+        cost: cost || 0,
+        sugarPer100g,
+        sugar
       };
     });
 
-    // Calculate total cost and cost per serving
-    const totalCost = ingredientsWithCost.reduce((sum, ingredient) => sum + (ingredient.cost || 0), 0);
+    // Calculate total cost/sugar and per serving
+    const totalCost = ingredientsWithCostAndSugar.reduce(
+      (sum, ingredient) => sum + (ingredient.cost || 0),
+      0
+    );
+    const totalSugar = ingredientsWithCostAndSugar.reduce(
+      (sum, ingredient) => sum + (ingredient.sugar || 0),
+      0
+    );
     const costPerServing = recipe.servings > 0 ? totalCost / recipe.servings : 0;
+    const sugarPerServing = recipe.servings > 0 ? totalSugar / recipe.servings : 0;
 
     console.log('Calculated costs:', {
       totalCost,
@@ -336,7 +380,9 @@ export class DatabaseConnection {
       updatedAt: recipe.updated_at,
       totalCost: totalCost,
       costPerServing: costPerServing,
-      ingredients: ingredientsWithCost.map(ing => ({
+      totalSugar,
+      sugarPerServing,
+      ingredients: ingredientsWithCostAndSugar.map(ing => ({
         ...ing,
         originalProductCode: ing.originalProductCode,
         ingredientName: ing.ingredientName,
@@ -786,10 +832,11 @@ export class DatabaseConnection {
       allergiesMap.get(row.productcode)!.push(`${row.allergy}:${row.status}`);
     }
 
-    // Attach allergies to each ingredient
+    // Attach allergies and map sugar field to camelCase
     return ingredients.map(ingredient => ({
       ...ingredient,
       productCode: ingredient.productcode, // Map to camelCase
+      sugarPer100g: ingredient.sugar_per_100g,
       allergies: allergiesMap.get(ingredient.productcode) || [],
     }));
   }
@@ -817,9 +864,10 @@ export class DatabaseConnection {
         allergiesMap.get(row.productcode)!.push(`${row.allergy}:${row.status}`);
       }
 
-      // Attach allergies to each ingredient
+      // Attach allergies and map sugar field to camelCase
       return result.rows.map(ingredient => ({
         ...ingredient,
+        sugarPer100g: ingredient.sugar_per_100g,
         allergies: allergiesMap.get(ingredient.productcode) || [],
       }));
     }

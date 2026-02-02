@@ -27,7 +27,7 @@ export function parseHoldsworthPricesExcel(buffer: Buffer): {
       return { ingredients, errors, skipped };
     }
 
-    // Headers are in row 0: ['Code', 'Product Name', 'Weight', 'Unit', 'Price']
+    // Headers are in row 0: ['Code', 'Product Name', 'Weight', 'Unit', 'Price', 'Sugar Per 100g', ...]
     const headers = jsonData[0] as string[];
     console.log('Headers found:', headers);
 
@@ -43,6 +43,9 @@ export function parseHoldsworthPricesExcel(buffer: Buffer): {
     const weightIndex = headers.findIndex(h => h && h.toString().toLowerCase().includes('weight'));
     const unitIndex = headers.findIndex(h => h && h.toString().toLowerCase().includes('unit'));
     const priceIndex = headers.findIndex(h => h && h.toString().toLowerCase().includes('price'));
+    const sugarIndex = headers.findIndex(
+      h => h && h.toString().toLowerCase().includes('sugar per 100g')
+    );
 
     console.log('Column indices found:', {
       code: codeIndex,
@@ -100,10 +103,18 @@ export function parseHoldsworthPricesExcel(buffer: Buffer): {
       ingredients.push({
         productCode,
         name: name || '', // Use empty string if missing (database will handle validation)
-        supplier: supplier || undefined,
-        weight: !isNaN(weight!) ? weight : undefined,
-        unit: unit || undefined,
-        price
+      supplier: supplier || undefined,
+      weight: !isNaN(weight!) ? weight : undefined,
+      unit: unit || undefined,
+      price,
+      // Sugar per 100g from Excel; blank or invalid = 0
+      sugarPer100g:
+        sugarIndex !== -1 && row[sugarIndex] !== undefined && row[sugarIndex] !== null && row[sugarIndex] !== ''
+          ? (() => {
+              const sugarVal = parseFloat(String(row[sugarIndex]));
+              return isNaN(sugarVal) || sugarVal < 0 ? 0 : sugarVal;
+            })()
+          : 0
       });
     }
 

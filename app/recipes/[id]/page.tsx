@@ -15,6 +15,9 @@ interface Recipe {
   createdAt: string
   totalCost: number | null
   costPerServing: number | null
+   // Derived sugar values from ingredients (not stored directly in DB)
+  totalSugar?: number | null
+  sugarPerServing?: number | null
   ingredients: RecipeIngredient[]
   allergies: string[]
 }
@@ -329,8 +332,10 @@ export default function RecipeDetailPage() {
                 </div>
               )}
 
-              {/* Cost Information (screen only, not included in PDF) */}
-              {(recipe.totalCost !== null || recipe.costPerServing !== null) && (
+              {/* Cost & sugar info (screen only, not included in PDF) */}
+              {(recipe.totalCost !== null ||
+                recipe.costPerServing !== null ||
+                recipe.sugarPerServing != null) && (
                 <div className="mt-4 text-sm text-gray-700 space-y-1">
                   {recipe.totalCost !== null && (
                     <p>
@@ -342,6 +347,12 @@ export default function RecipeDetailPage() {
                     <p>
                       <span className="font-medium">Cost per portion:</span>{' '}
                       £{recipe.costPerServing.toFixed(2)}
+                    </p>
+                  )}
+                  {recipe.sugarPerServing != null && (
+                    <p>
+                      <span className="font-medium">Sugar per portion:</span>{' '}
+                      {recipe.sugarPerServing.toFixed(1)}g
                     </p>
                   )}
                 </div>
