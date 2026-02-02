@@ -365,7 +365,7 @@ export class DatabaseConnection {
       totalCost,
       costPerServing,
       servings: recipe.servings,
-      ingredientsCount: ingredientsWithCost.length
+      ingredientsCount: ingredientsWithCostAndSugar.length
     });
 
     const result = {
