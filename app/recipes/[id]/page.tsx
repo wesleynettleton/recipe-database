@@ -335,7 +335,8 @@ export default function RecipeDetailPage() {
               {/* Cost & sugar info (screen only, not included in PDF) */}
               {(recipe.totalCost !== null ||
                 recipe.costPerServing !== null ||
-                recipe.sugarPerServing != null) && (
+                // Only show sugar info for desserts (codes starting with "D")
+                (recipe.code && recipe.code.toUpperCase().startsWith('D') && recipe.sugarPerServing != null)) && (
                 <div className="mt-4 text-sm text-gray-700 space-y-1">
                   {recipe.totalCost !== null && (
                     <p>
@@ -349,7 +350,9 @@ export default function RecipeDetailPage() {
                       £{recipe.costPerServing.toFixed(2)}
                     </p>
                   )}
-                  {recipe.sugarPerServing != null && (
+                  {recipe.code &&
+                    recipe.code.toUpperCase().startsWith('D') &&
+                    recipe.sugarPerServing != null && (
                     <p>
                       <span className="font-medium">Sugar per portion:</span>{' '}
                       {recipe.sugarPerServing.toFixed(1)}g
