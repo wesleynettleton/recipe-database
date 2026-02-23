@@ -375,8 +375,8 @@ export default function RecipeDetailPage() {
                 <div className="flex justify-between items-center text-xs text-gray-500 mb-2">
                   {/* Empty space over ingredient names */}
                   <span className="flex-1" />
-                  {/* Sugar column header */}
-                  <span className="w-28 text-center">Sugar for ingredient</span>
+                  {/* Sugar column header aligned with sugar values */}
+                  <span className="w-20 text-right">Sugar</span>
                   {/* Qty / cost headers aligned over right-hand data */}
                   <div className="flex items-center space-x-4 text-right">
                     <span>Qty</span>
@@ -411,7 +411,7 @@ export default function RecipeDetailPage() {
                           )}
                         </div>
                         {isDessert && (
-                          <div className="w-28 text-sm text-gray-700 text-center">
+                          <div className="w-20 text-sm text-gray-700 text-right">
                             {ing.sugar != null ? `${ing.sugar.toFixed(1)}g` : '—'}
                           </div>
                         )}
