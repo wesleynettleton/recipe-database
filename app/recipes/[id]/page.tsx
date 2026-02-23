@@ -35,6 +35,9 @@ interface RecipeIngredient {
   ingredientWeight: number
   ingredientUnit: string
   ingredientAllergies: string
+  // Derived sugar values for this ingredient in the recipe
+  sugarPer100g?: number
+  sugar?: number
   ingredient: {
     productCode: string
     name: string
@@ -237,6 +240,9 @@ export default function RecipeDetailPage() {
     return acc;
   }, new Map<string, 'has' | 'may'>());
 
+  const isDessert =
+    !!recipe?.code && recipe.code.toUpperCase().startsWith('D');
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -365,6 +371,16 @@ export default function RecipeDetailPage() {
             {/* Ingredients List */}
             <div className="bg-white p-6 rounded-lg shadow">
               <h2 className="text-lg font-medium text-gray-900 mb-4">Ingredients</h2>
+              {isDessert && (
+                <div className="flex justify-between items-center text-xs text-gray-500 mb-2">
+                  <span className="sr-only">Ingredient details</span>
+                  <div className="flex items-center space-x-4 text-right">
+                    <span>Qty</span>
+                    <span>Sugar for ingredient</span>
+                    <span>Cost</span>
+                  </div>
+                </div>
+              )}
               <ul className="divide-y divide-gray-200">
                 {recipe.ingredients.map((ing, index) => {
                   const ingredientAllergies = parseAllergies(ing.ingredientAllergies);
@@ -392,8 +408,17 @@ export default function RecipeDetailPage() {
                           )}
                         </div>
                         <div className="flex items-center space-x-4 text-right">
-                            <p className="text-sm font-normal text-black">{ing.quantity} {ing.unit}</p>
-                            <p className="text-sm font-medium text-gray-900">£{ing.cost.toFixed(2)}</p>
+                          <p className="text-sm font-normal text-black">
+                            {ing.quantity} {ing.unit}
+                          </p>
+                          {isDessert && (
+                            <p className="text-sm text-gray-700">
+                              {ing.sugar != null ? `${ing.sugar.toFixed(1)}g sugar` : '—'}
+                            </p>
+                          )}
+                          <p className="text-sm font-medium text-gray-900">
+                            £{ing.cost.toFixed(2)}
+                          </p>
                         </div>
                       </div>
                     </li>
