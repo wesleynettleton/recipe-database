@@ -373,10 +373,13 @@ export default function RecipeDetailPage() {
               <h2 className="text-lg font-medium text-gray-900 mb-4">Ingredients</h2>
               {isDessert && (
                 <div className="flex justify-between items-center text-xs text-gray-500 mb-2">
-                  <span className="sr-only">Ingredient details</span>
+                  {/* Empty space over ingredient names */}
+                  <span className="flex-1" />
+                  {/* Sugar column header */}
+                  <span className="w-28 text-center">Sugar for ingredient</span>
+                  {/* Qty / cost headers aligned over right-hand data */}
                   <div className="flex items-center space-x-4 text-right">
                     <span>Qty</span>
-                    <span>Sugar for ingredient</span>
                     <span>Cost</span>
                   </div>
                 </div>
@@ -387,7 +390,7 @@ export default function RecipeDetailPage() {
                   return (
                     <li key={index} className="py-3">
                       <div className="flex justify-between items-center">
-                        <div>
+                        <div className="flex-1">
                           <p className="font-normal text-gray-800">{ing.ingredientName}</p>
                           {ing.notes && <p className="text-xs text-gray-500 italic">"{ing.notes}"</p>}
                            {ingredientAllergies.length > 0 && (
@@ -407,15 +410,15 @@ export default function RecipeDetailPage() {
                             </div>
                           )}
                         </div>
+                        {isDessert && (
+                          <div className="w-28 text-sm text-gray-700 text-center">
+                            {ing.sugar != null ? `${ing.sugar.toFixed(1)}g` : '—'}
+                          </div>
+                        )}
                         <div className="flex items-center space-x-4 text-right">
                           <p className="text-sm font-normal text-black">
                             {ing.quantity} {ing.unit}
                           </p>
-                          {isDessert && (
-                            <p className="text-sm text-gray-700">
-                              {ing.sugar != null ? `${ing.sugar.toFixed(1)}g sugar` : '—'}
-                            </p>
-                          )}
                           <p className="text-sm font-medium text-gray-900">
                             £{ing.cost.toFixed(2)}
                           </p>
