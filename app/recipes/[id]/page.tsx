@@ -372,13 +372,13 @@ export default function RecipeDetailPage() {
             <div className="bg-white p-6 rounded-lg shadow">
               <h2 className="text-lg font-medium text-gray-900 mb-4">Ingredients</h2>
               {isDessert && (
-                <div className="flex justify-between items-center text-xs text-gray-500 mb-2">
+                <div className="flex items-center text-xs text-gray-500 mb-2">
                   {/* Empty space over ingredient names */}
-                  <span className="flex-1" />
-                  {/* Sugar column header aligned with sugar values */}
-                  <span className="w-24 mr-4 text-right">Sugar</span>
+                  <span className="flex-[2]" />
+                  {/* Sugar column header close to ingredient name */}
+                  <span className="flex-[1] text-right">Sugar</span>
                   {/* Qty / cost headers aligned over right-hand data */}
-                  <div className="flex items-center space-x-4 text-right">
+                  <div className="flex-[2] flex items-center justify-end space-x-4 text-right">
                     <span>Qty</span>
                     <span>Cost</span>
                   </div>
@@ -390,7 +390,7 @@ export default function RecipeDetailPage() {
                   return (
                     <li key={index} className="py-3">
                       <div className="flex justify-between items-center">
-                        <div className="flex-1">
+                        <div className="flex-[2]">
                           <p className="font-normal text-gray-800">{ing.ingredientName}</p>
                           {ing.notes && <p className="text-xs text-gray-500 italic">"{ing.notes}"</p>}
                            {ingredientAllergies.length > 0 && (
@@ -411,11 +411,11 @@ export default function RecipeDetailPage() {
                           )}
                         </div>
                         {isDessert && (
-                          <div className="w-24 mr-4 text-sm text-gray-700 text-right">
+                          <div className="flex-[1] text-sm text-gray-700 text-right">
                             {ing.sugar != null ? `${ing.sugar.toFixed(1)}g` : '—'}
                           </div>
                         )}
-                        <div className="flex items-center space-x-4 text-right">
+                        <div className="flex-[2] flex items-center justify-end space-x-4 text-right">
                           <p className="text-sm font-normal text-black">
                             {ing.quantity} {ing.unit}
                           </p>
