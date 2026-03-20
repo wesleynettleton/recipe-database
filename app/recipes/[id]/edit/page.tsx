@@ -592,189 +592,6 @@ export default function EditRecipePage() {
               </div>
             </div>
 
-            {/* Compliance Tagging */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Compliance Tags</h2>
-              <p className="text-sm text-gray-600 mb-4">
-                Tag how this recipe should be classified for the school lunch checklist.
-              </p>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <label className="flex items-center space-x-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={!!complianceTags.isStarchyFood}
-                    onChange={(e) => setComplianceTags((p) => ({ ...p, isStarchyFood: e.target.checked }))}
-                  />
-                  <span>Starchy food</span>
-                </label>
-                <label className="flex items-center space-x-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={!!complianceTags.isWholegrainStarchy}
-                    onChange={(e) => setComplianceTags((p) => ({ ...p, isWholegrainStarchy: e.target.checked }))}
-                  />
-                  <span>Wholegrain starchy</span>
-                </label>
-                <label className="flex items-center space-x-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={!!complianceTags.isStarchyCookedInFatOil}
-                    onChange={(e) => setComplianceTags((p) => ({ ...p, isStarchyCookedInFatOil: e.target.checked }))}
-                  />
-                  <span>Starchy cooked in fat/oil</span>
-                </label>
-                <label className="flex items-center space-x-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={!!complianceTags.isBreadNoAddedFatOil}
-                    onChange={(e) => setComplianceTags((p) => ({ ...p, isBreadNoAddedFatOil: e.target.checked }))}
-                  />
-                  <span>Bread (no added fat/oil)</span>
-                </label>
-
-                <label className="flex items-center space-x-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={!!complianceTags.hasVegetableOrSaladAccompaniment}
-                    onChange={(e) =>
-                      setComplianceTags((p) => ({ ...p, hasVegetableOrSaladAccompaniment: e.target.checked }))
-                    }
-                  />
-                  <span>Vegetable/salad accompaniment</span>
-                </label>
-                <label className="flex items-center space-x-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={!!complianceTags.hasFruitPortion}
-                    onChange={(e) => setComplianceTags((p) => ({ ...p, hasFruitPortion: e.target.checked }))}
-                  />
-                  <span>Fruit portion</span>
-                </label>
-                <label className="flex items-center space-x-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={!!complianceTags.isFruitDessert50Plus}
-                    onChange={(e) => setComplianceTags((p) => ({ ...p, isFruitDessert50Plus: e.target.checked }))}
-                  />
-                  <span>Fruit dessert &gt;= 50%</span>
-                </label>
-
-                <label className="flex items-center space-x-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={!!complianceTags.hasProtein}
-                    onChange={(e) => setComplianceTags((p) => ({ ...p, hasProtein: e.target.checked }))}
-                  />
-                  <span>Protein portion</span>
-                </label>
-                <label className="flex items-center space-x-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={!!complianceTags.isMeatOrPoultry}
-                    onChange={(e) => setComplianceTags((p) => ({ ...p, isMeatOrPoultry: e.target.checked }))}
-                  />
-                  <span>Meat/poultry</span>
-                </label>
-                <label className="flex items-center space-x-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={!!complianceTags.isOilyFish}
-                    onChange={(e) => setComplianceTags((p) => ({ ...p, isOilyFish: e.target.checked }))}
-                  />
-                  <span>Oily fish</span>
-                </label>
-                <label className="flex items-center space-x-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={!!complianceTags.isVegetarianNonDairyProtein}
-                    onChange={(e) =>
-                      setComplianceTags((p) => ({ ...p, isVegetarianNonDairyProtein: e.target.checked }))
-                    }
-                  />
-                  <span>Non-dairy vegetarian protein</span>
-                </label>
-                <label className="flex items-center space-x-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={!!complianceTags.isMeatOrPoultryProduct}
-                    onChange={(e) =>
-                      setComplianceTags((p) => ({ ...p, isMeatOrPoultryProduct: e.target.checked }))
-                    }
-                  />
-                  <span>Meat/poultry product</span>
-                </label>
-
-                <label className="flex items-center space-x-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={!!complianceTags.isDeepFriedBatteredBreadcrumbed}
-                    onChange={(e) =>
-                      setComplianceTags((p) => ({ ...p, isDeepFriedBatteredBreadcrumbed: e.target.checked }))
-                    }
-                  />
-                  <span>Deep-fried/battered/breadcrumbed</span>
-                </label>
-                <label className="flex items-center space-x-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={!!complianceTags.hasPastry}
-                    onChange={(e) => setComplianceTags((p) => ({ ...p, hasPastry: e.target.checked }))}
-                  />
-                  <span>Includes pastry</span>
-                </label>
-                <label className="flex items-center space-x-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={!!complianceTags.hasConfectionery}
-                    onChange={(e) => setComplianceTags((p) => ({ ...p, hasConfectionery: e.target.checked }))}
-                  />
-                  <span>Contains confectionery/chocolate</span>
-                </label>
-                <label className="flex items-center space-x-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={!!complianceTags.isDairyFood}
-                    onChange={(e) => setComplianceTags((p) => ({ ...p, isDairyFood: e.target.checked }))}
-                  />
-                  <span>Dairy portion</span>
-                </label>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 mt-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Starchy varieties (comma-separated)</label>
-                  <input
-                    type="text"
-                    value={starchyVarietiesText}
-                    onChange={(e) => setStarchyVarietiesText(e.target.value)}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
-                    placeholder="potato, pasta, rice"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Fruit varieties (comma-separated)</label>
-                  <input
-                    type="text"
-                    value={fruitVarietiesText}
-                    onChange={(e) => setFruitVarietiesText(e.target.value)}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
-                    placeholder="apple, pear, berries"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Vegetable varieties (comma-separated)</label>
-                  <input
-                    type="text"
-                    value={vegetableVarietiesText}
-                    onChange={(e) => setVegetableVarietiesText(e.target.value)}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
-                    placeholder="carrots, peas, broccoli"
-                  />
-                </div>
-              </div>
-            </div>
-
             {/* Ingredient Adder */}
             <div className="bg-white p-6 rounded-lg shadow">
               <h2 className="text-lg font-medium text-gray-900 mb-4">Add Ingredients</h2>
@@ -849,6 +666,237 @@ export default function EditRecipePage() {
               >
                 + Add Ingredient
               </button>
+            </div>
+
+            {/* Compliance Tagging */}
+            <div className="bg-white p-6 rounded-lg shadow text-black">
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Compliance Tags</h2>
+              <p className="text-sm text-black mb-4">
+                Tag how this recipe should be classified for the school lunch checklist.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label className="flex items-center space-x-2 text-sm text-black">
+                  <input
+                    type="checkbox"
+                    checked={!!complianceTags.isStarchyFood}
+                    onChange={(e) =>
+                      setComplianceTags((p) => ({ ...p, isStarchyFood: e.target.checked }))
+                    }
+                  />
+                  <span className="text-black">Starchy food</span>
+                </label>
+                <label className="flex items-center space-x-2 text-sm text-black">
+                  <input
+                    type="checkbox"
+                    checked={!!complianceTags.isWholegrainStarchy}
+                    onChange={(e) =>
+                      setComplianceTags((p) => ({ ...p, isWholegrainStarchy: e.target.checked }))
+                    }
+                  />
+                  <span className="text-black">Wholegrain starchy</span>
+                </label>
+                <label className="flex items-center space-x-2 text-sm text-black">
+                  <input
+                    type="checkbox"
+                    checked={!!complianceTags.isStarchyCookedInFatOil}
+                    onChange={(e) =>
+                      setComplianceTags((p) => ({
+                        ...p,
+                        isStarchyCookedInFatOil: e.target.checked,
+                      }))
+                    }
+                  />
+                  <span className="text-black">Starchy cooked in fat/oil</span>
+                </label>
+                <label className="flex items-center space-x-2 text-sm text-black">
+                  <input
+                    type="checkbox"
+                    checked={!!complianceTags.isBreadNoAddedFatOil}
+                    onChange={(e) =>
+                      setComplianceTags((p) => ({
+                        ...p,
+                        isBreadNoAddedFatOil: e.target.checked,
+                      }))
+                    }
+                  />
+                  <span className="text-black">Bread (no added fat/oil)</span>
+                </label>
+
+                <label className="flex items-center space-x-2 text-sm text-black">
+                  <input
+                    type="checkbox"
+                    checked={!!complianceTags.hasVegetableOrSaladAccompaniment}
+                    onChange={(e) =>
+                      setComplianceTags((p) => ({
+                        ...p,
+                        hasVegetableOrSaladAccompaniment: e.target.checked,
+                      }))
+                    }
+                  />
+                  <span className="text-black">Vegetable/salad accompaniment</span>
+                </label>
+                <label className="flex items-center space-x-2 text-sm text-black">
+                  <input
+                    type="checkbox"
+                    checked={!!complianceTags.hasFruitPortion}
+                    onChange={(e) =>
+                      setComplianceTags((p) => ({ ...p, hasFruitPortion: e.target.checked }))
+                    }
+                  />
+                  <span className="text-black">Fruit portion</span>
+                </label>
+                <label className="flex items-center space-x-2 text-sm text-black">
+                  <input
+                    type="checkbox"
+                    checked={!!complianceTags.isFruitDessert50Plus}
+                    onChange={(e) =>
+                      setComplianceTags((p) => ({
+                        ...p,
+                        isFruitDessert50Plus: e.target.checked,
+                      }))
+                    }
+                  />
+                  <span className="text-black">Fruit dessert &gt;= 50%</span>
+                </label>
+
+                <label className="flex items-center space-x-2 text-sm text-black">
+                  <input
+                    type="checkbox"
+                    checked={!!complianceTags.hasProtein}
+                    onChange={(e) =>
+                      setComplianceTags((p) => ({ ...p, hasProtein: e.target.checked }))
+                    }
+                  />
+                  <span className="text-black">Protein portion</span>
+                </label>
+                <label className="flex items-center space-x-2 text-sm text-black">
+                  <input
+                    type="checkbox"
+                    checked={!!complianceTags.isMeatOrPoultry}
+                    onChange={(e) =>
+                      setComplianceTags((p) => ({
+                        ...p,
+                        isMeatOrPoultry: e.target.checked,
+                      }))
+                    }
+                  />
+                  <span className="text-black">Meat/poultry</span>
+                </label>
+                <label className="flex items-center space-x-2 text-sm text-black">
+                  <input
+                    type="checkbox"
+                    checked={!!complianceTags.isOilyFish}
+                    onChange={(e) =>
+                      setComplianceTags((p) => ({ ...p, isOilyFish: e.target.checked }))
+                    }
+                  />
+                  <span className="text-black">Oily fish</span>
+                </label>
+                <label className="flex items-center space-x-2 text-sm text-black">
+                  <input
+                    type="checkbox"
+                    checked={!!complianceTags.isVegetarianNonDairyProtein}
+                    onChange={(e) =>
+                      setComplianceTags((p) => ({
+                        ...p,
+                        isVegetarianNonDairyProtein: e.target.checked,
+                      }))
+                    }
+                  />
+                  <span className="text-black">Non-dairy vegetarian protein</span>
+                </label>
+                <label className="flex items-center space-x-2 text-sm text-black">
+                  <input
+                    type="checkbox"
+                    checked={!!complianceTags.isMeatOrPoultryProduct}
+                    onChange={(e) =>
+                      setComplianceTags((p) => ({
+                        ...p,
+                        isMeatOrPoultryProduct: e.target.checked,
+                      }))
+                    }
+                  />
+                  <span className="text-black">Meat/poultry product</span>
+                </label>
+
+                <label className="flex items-center space-x-2 text-sm text-black">
+                  <input
+                    type="checkbox"
+                    checked={!!complianceTags.isDeepFriedBatteredBreadcrumbed}
+                    onChange={(e) =>
+                      setComplianceTags((p) => ({
+                        ...p,
+                        isDeepFriedBatteredBreadcrumbed: e.target.checked,
+                      }))
+                    }
+                  />
+                  <span className="text-black">Deep-fried/battered/breadcrumbed</span>
+                </label>
+                <label className="flex items-center space-x-2 text-sm text-black">
+                  <input
+                    type="checkbox"
+                    checked={!!complianceTags.hasPastry}
+                    onChange={(e) =>
+                      setComplianceTags((p) => ({ ...p, hasPastry: e.target.checked }))
+                    }
+                  />
+                  <span className="text-black">Includes pastry</span>
+                </label>
+                <label className="flex items-center space-x-2 text-sm text-black">
+                  <input
+                    type="checkbox"
+                    checked={!!complianceTags.hasConfectionery}
+                    onChange={(e) =>
+                      setComplianceTags((p) => ({ ...p, hasConfectionery: e.target.checked }))
+                    }
+                  />
+                  <span className="text-black">Contains confectionery/chocolate</span>
+                </label>
+                <label className="flex items-center space-x-2 text-sm text-black">
+                  <input
+                    type="checkbox"
+                    checked={!!complianceTags.isDairyFood}
+                    onChange={(e) =>
+                      setComplianceTags((p) => ({ ...p, isDairyFood: e.target.checked }))
+                    }
+                  />
+                  <span className="text-black">Dairy portion</span>
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 mt-4">
+                <div>
+                  <label className="block text-sm font-medium text-black">Starchy varieties (comma-separated)</label>
+                  <input
+                    type="text"
+                    value={starchyVarietiesText}
+                    onChange={(e) => setStarchyVarietiesText(e.target.value)}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                    placeholder="potato, pasta, rice"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-black">Fruit varieties (comma-separated)</label>
+                  <input
+                    type="text"
+                    value={fruitVarietiesText}
+                    onChange={(e) => setFruitVarietiesText(e.target.value)}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                    placeholder="apple, pear, berries"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-black">Vegetable varieties (comma-separated)</label>
+                  <input
+                    type="text"
+                    value={vegetableVarietiesText}
+                    onChange={(e) => setVegetableVarietiesText(e.target.value)}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-black"
+                    placeholder="carrots, peas, broccoli"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
