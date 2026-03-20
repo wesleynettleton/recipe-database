@@ -27,6 +27,37 @@ export interface IngredientWithAllergies extends Ingredient {
   allergies: string[];
 }
 
+export interface RecipeComplianceTags {
+  // Starchy food
+  isStarchyFood?: boolean;
+  isWholegrainStarchy?: boolean;
+  isStarchyCookedInFatOil?: boolean;
+  isBreadNoAddedFatOil?: boolean;
+
+  // Fruit & vegetables
+  hasVegetableOrSaladAccompaniment?: boolean;
+  hasFruitPortion?: boolean;
+  isFruitDessert50Plus?: boolean;
+  fruitVarieties?: string[];
+  vegetableVarieties?: string[];
+  starchyVarieties?: string[];
+
+  // Protein
+  hasProtein?: boolean;
+  isMeatOrPoultry?: boolean;
+  isOilyFish?: boolean;
+  isVegetarianNonDairyProtein?: boolean;
+  isMeatOrPoultryProduct?: boolean;
+
+  // High fat/sugar/salt controls
+  isDeepFriedBatteredBreadcrumbed?: boolean;
+  hasPastry?: boolean;
+  hasConfectionery?: boolean;
+
+  // Partial dairy coverage (menu must provide a dairy portion every day)
+  isDairyFood?: boolean;
+}
+
 export interface Recipe {
   id?: number;
   name: string;
@@ -40,6 +71,11 @@ export interface Recipe {
   photo?: string;
   totalCost?: number;
   costPerServing?: number;
+  /**
+   * Deterministic, rule-based compliance metadata used by the menu compliance checker.
+   * Stored as JSON in `recipes.compliance_tags`.
+   */
+  complianceTags?: RecipeComplianceTags | null;
   // Derived nutritional fields (not stored in DB yet)
   totalSugar?: number;        // total grams of sugar in the whole recipe
   sugarPerServing?: number;   // grams of sugar per serving

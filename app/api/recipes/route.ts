@@ -47,7 +47,8 @@ export async function POST(request: Request) {
       photo,
       ingredients, 
       totalCost, 
-      costPerServing 
+      costPerServing,
+      complianceTags
     } = body;
 
     console.log('Extracted data:', {
@@ -86,7 +87,8 @@ export async function POST(request: Request) {
       notes: notes || undefined,
       photo: photo || undefined,
       totalCost: totalCost || 0,
-      costPerServing: costPerServing || 0
+      costPerServing: costPerServing || 0,
+      complianceTags: complianceTags || undefined,
     }
 
     console.log('Creating recipe with data:', recipeData);

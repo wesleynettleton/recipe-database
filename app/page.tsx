@@ -112,6 +112,18 @@ export default function HomePage() {
       color: 'from-indigo-500 to-indigo-600'
     },
     {
+      title: 'Menu Compliance Tester',
+      description: 'Build draft menus and check lunch guidelines',
+      href: '/menu-compliance/tester',
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m2 0a8 8 0 11-16 0 8 8 0 0116 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l2 2" />
+        </svg>
+      ),
+      color: 'from-teal-500 to-teal-600'
+    },
+    {
       title: 'Costing',
       description: 'View menu costs and per-portion pricing for budgeting and planning',
       href: '/costing',

@@ -110,7 +110,7 @@ export async function PUT(
       )
     }
 
-    const { ingredients, name, code, servings, instructions, notes, photo, totalCost, costPerServing } = await request.json()
+    const { ingredients, name, code, servings, instructions, notes, photo, totalCost, costPerServing, complianceTags } = await request.json()
     
     const database = getDatabase()
     
@@ -140,7 +140,9 @@ export async function PUT(
       notes,
       photo,
       totalcost: totalCostCalculated,
-      costperserving: costPerServingCalculated
+      costperserving: costPerServingCalculated,
+      // Optional compliance JSON for deterministic rule checking
+      ...(complianceTags != null ? { complianceTags } : {})
     }
 
     // Update recipe basic info

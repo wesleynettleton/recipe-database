@@ -205,6 +205,35 @@ export class DatabaseConnection {
 
   // Create recipe
   async createRecipe(recipe: Omit<Recipe, 'id' | 'createdAt' | 'updatedAt'>): Promise<number> {
+    const complianceTags = (recipe as any).complianceTags;
+
+    // Only include compliance_tags in INSERT if the caller provided it.
+    // This keeps the app backwards compatible if the column hasn't been added yet.
+    if (complianceTags != null) {
+      const result = await this.query(
+        `
+        INSERT INTO recipes (name, code, description, servings, preptime, cooktime, instructions, notes, photo, totalcost, costperserving, compliance_tags)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb)
+        RETURNING id
+        `,
+        [
+          recipe.name,
+          recipe.code,
+          recipe.description,
+          recipe.servings,
+          recipe.prepTime,
+          recipe.cookTime,
+          recipe.instructions,
+          recipe.notes,
+          recipe.photo,
+          recipe.totalCost,
+          recipe.costPerServing,
+          JSON.stringify(complianceTags),
+        ]
+      );
+      return result.rows[0].id;
+    }
+
     const result = await this.query(`
       INSERT INTO recipes (name, code, description, servings, preptime, cooktime, instructions, notes, photo, totalcost, costperserving)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
@@ -378,6 +407,8 @@ export class DatabaseConnection {
       photo: recipe.photo,
       createdAt: recipe.created_at,
       updatedAt: recipe.updated_at,
+      // Optional: may be undefined if the column hasn't been added yet.
+      complianceTags: (recipe as any).compliance_tags ?? null,
       totalCost: totalCost,
       costPerServing: costPerServing,
       totalSugar,
@@ -903,6 +934,7 @@ export class DatabaseConnection {
       costPerServing: 'costperserving',
       prepTime: 'preptime',
       cookTime: 'cooktime',
+      complianceTags: 'compliance_tags',
       createdAt: 'created_at',
       updatedAt: 'updated_at'
     };
@@ -954,6 +986,25 @@ export class DatabaseConnection {
       [`%${query.toLowerCase()}%`, limit]
     );
     return result.rows;
+  }
+
+  // Fetch compliance tags for a set of recipes.
+  // Used by the menu compliance checker.
+  async getRecipesComplianceTagsByIds(recipeIds: number[]): Promise<
+    Array<{ id: number; code: string | null; complianceTags: any | null }>
+  > {
+    if (!recipeIds || recipeIds.length === 0) return []
+
+    const result = await this.query(
+      'SELECT id, code, compliance_tags FROM recipes WHERE id = ANY($1)',
+      [recipeIds]
+    )
+
+    return result.rows.map((row: any) => ({
+      id: row.id,
+      code: row.code ?? null,
+      complianceTags: row.compliance_tags ?? null,
+    }))
   }
 
   // Clear all recipes and recipe ingredients
