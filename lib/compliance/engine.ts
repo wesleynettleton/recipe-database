@@ -142,22 +142,8 @@ export function checkMenuCompliance(
     const ok = dayHas(lunch, (r) => !!r.complianceTags?.isBreadNoAddedFatOil)
     if (!ok) breadDaysMissing.push(day)
   }
-  const breadEveryDayPass = breadDaysMissing.length === 0
-  if (!breadEveryDayPass) {
-    issues.push({
-      severity: 'fail',
-      message: `Bread (no added fat/oil) missing on: ${breadDaysMissing.join(', ')}`,
-    })
-  }
-  ruleResults.push({
-    ruleId: 'bread_no_added_fat_oil_every_day',
-    title: 'Bread (no added fat/oil) every day',
-    status: breadEveryDayPass ? 'pass' : 'fail',
-    message: breadEveryDayPass
-      ? 'Bread (no added fat/oil) is available every day.'
-      : 'Bread (no added fat/oil) is missing for one or more days.',
-    evidence: { missingDays: breadDaysMissing },
-  })
+  // Bread is served every day in your setting, regardless of the menu.
+  // We intentionally do not evaluate this rule to avoid false failures.
 
   // Starchy variety diversity (3+ different starchy foods each week)
   const allLunch = dayKeys.flatMap((d) => getDayLunch(d))
@@ -329,13 +315,6 @@ export function checkMenuCompliance(
       message: vegProteinPass ? 'Vegetarian protein frequency met.' : 'Vegetarian protein frequency not met.',
       evidence: { vegProteinDays, vegProteinDaysCount: vegProteinDays.length },
     })
-  } else {
-    ruleResults.push({
-      ruleId: 'vegetarian_non_dairy_protein_3plus',
-      title: 'Non-dairy vegetarian protein on 3+ days/week',
-      status: 'manual',
-      message: 'Vegetarian rule not enforced (vegetarianMode disabled).',
-    })
   }
 
   // Meat/poultry products (primary: once/week, secondary: twice/week)
@@ -351,7 +330,7 @@ export function checkMenuCompliance(
     evidence: { meatProductPortions, meatProductLimit, schoolPhase: settings.schoolPhase },
   })
 
-  // Oily fish: strict across 3 weeks (check uses tags). Single-week is manual.
+  // Oily fish: strict across 3 weeks.
   const flattenAllItemsAcrossDaySlots = (w: WeekMenuSelection) =>
     dayKeys.flatMap((d) => {
       const dayMenu = w[d]
@@ -383,17 +362,6 @@ export function checkMenuCompliance(
         evidence: { oilyFishCount },
       })
     }
-  } else {
-    const hasOilyFishThisWeek = anyOf(allLunch, (r) => !!r.complianceTags?.isOilyFish)
-    ruleResults.push({
-      ruleId: 'oily_fish_once_every_3_weeks',
-      title: 'Oily fish once or more every 3 weeks',
-      status: hasOilyFishThisWeek ? 'pass' : 'manual',
-      message: hasOilyFishThisWeek
-        ? 'Oily fish is included this week (helps meet the 3-week requirement).'
-        : 'No oily fish detected this week (strict 3-week evaluation requires 3 weeks).',
-      evidence: { hasOilyFishThisWeek },
-    })
   }
 
   // --- High fat/sugar/salt ---
@@ -430,62 +398,19 @@ export function checkMenuCompliance(
     message: confectioneryPass ? 'No confectionery/chocolate detected in tagged recipes.' : 'Confectionery/chocolate detected in one or more recipes.',
   })
 
-  // --- Milk and dairy (partial) ---
-  const dairyDaysMissing: DayKey[] = []
-  for (const day of dayKeys) {
-    const lunch = getDayLunch(day)
-    const hasDairy = dayHas(lunch, (r) => !!r.complianceTags?.isDairyFood)
-    if (!hasDairy) dairyDaysMissing.push(day)
-  }
-  const dairyEveryDayPass = dairyDaysMissing.length === 0
-  if (!dairyEveryDayPass) issues.push({ severity: 'fail', message: `Dairy portion missing on: ${dairyDaysMissing.join(', ')}` })
-  ruleResults.push({
-    ruleId: 'dairy_portion_every_day',
-    title: 'Dairy portion every day',
-    status: dairyEveryDayPass ? 'pass' : 'fail',
-    message: dairyEveryDayPass ? 'Dairy portion provided each day.' : 'Some days are missing dairy portion.',
-    evidence: { missingDays: dairyDaysMissing },
-  })
-
-  ruleResults.push({
-    ruleId: 'lower_fat_milk_available_for_drinking',
-    title: 'Lower fat milk available for drinking at least once a day',
-    status: 'manual',
-    message: 'This requires drink/snack modelling or a manual check (not represented in the current menu slots).',
-  })
-
-  ruleResults.push({
-    ruleId: 'salt_not_available_to_add_after_cooking',
-    title: 'Salt must not be available to add to food after it has been cooked',
-    status: 'manual',
-    message: 'Manual check required (salt availability is not modelled in the current menu data).',
-  })
-
-  ruleResults.push({
-    ruleId: 'no_snacks_except_allowed',
-    title: 'No snacks (except allowed categories)',
-    status: 'manual',
-    message: 'Manual check required (snacks are not modelled in the current menu data).',
-  })
-
-  ruleResults.push({
-    ruleId: 'condiments_limited',
-    title: 'Condiments limited to sachets/portions',
-    status: 'manual',
-    message: 'Manual check required (condiment sizing/availability is not modelled in the current menu data).',
-  })
-
-  ruleResults.push({
-    ruleId: 'healthy_drinks_water_available',
-    title: 'Healthy drinks (water available; allowed drinks only)',
-    status: 'manual',
-    message: 'Manual check required (drinks are not modelled in the current menu data).',
-  })
+  // --- Dairy/drinks/salt/snacks/condiments ---
+  // In your environment:
+  // - lower-fat milk is supplied everyday (so we do not enforce daily dairy portion here)
+  // - snacks are not supplied
+  // - salt is not available to add after cooking
+  // - healthy drinks rules are handled outside the menu model
+  // - condiments are handled outside the menu model
+  //
+  // Therefore we intentionally omit the corresponding checklist rules.
 
   // --- Overall status ---
   const hasFail = ruleResults.some((r) => r.status === 'fail')
-  const hasManual = ruleResults.some((r) => r.status === 'manual')
-  const status: ComplianceStatus = hasFail ? 'fail' : hasManual ? 'manual' : 'pass'
+  const status: ComplianceStatus = hasFail ? 'fail' : 'pass'
 
   counts.totalDays = dayKeys.length
   counts.deepFriedCount = deepFriedCount
@@ -493,7 +418,6 @@ export function checkMenuCompliance(
   counts.starchyOilDaysCount = starchyOilDays.length
   counts.meatDaysCount = meatDays.length
   counts.meatProductPortions = meatProductPortions
-  counts.dairyMissingDaysCount = dairyDaysMissing.length
 
   return { status, ruleResults, issues, counts }
 }
