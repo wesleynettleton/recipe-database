@@ -415,10 +415,16 @@ export default function MenuComplianceTesterPage() {
 
               {checkResult?.ruleResults?.length > 0 && (
                 <div className="mt-4 space-y-3">
-                  {checkResult.ruleResults
-                    .filter((r: any) => r.status === 'fail' || r.status === 'manual')
-                    .map((r: any) => (
-                      <div key={r.ruleId} className="border rounded-md p-3 bg-gray-50">
+                  {checkResult.ruleResults.map((r: any) => {
+                    const rowClass =
+                      r.status === 'pass'
+                        ? 'bg-green-50 border-green-200'
+                        : r.status === 'fail'
+                          ? 'bg-red-50 border-red-200'
+                          : 'bg-yellow-50 border-yellow-200'
+
+                    return (
+                      <div key={r.ruleId} className={`border rounded-md p-3 ${rowClass}`}>
                         <div className="flex items-center justify-between">
                           <div className="font-semibold text-gray-900">{r.title}</div>
                           <div className="text-xs font-bold">
@@ -427,10 +433,11 @@ export default function MenuComplianceTesterPage() {
                         </div>
                         <div className="text-sm text-gray-700 mt-1">{r.message}</div>
                       </div>
-                    ))}
+                    )
+                  })}
 
-                  {checkResult.ruleResults.filter((r: any) => r.status === 'fail' || r.status === 'manual').length === 0 && (
-                    <p className="text-sm text-gray-600">All enforced rules passed.</p>
+                  {checkResult.ruleResults.every((r: any) => r.status === 'pass') && (
+                    <p className="text-sm text-gray-600">All rules passed.</p>
                   )}
                 </div>
               )}
