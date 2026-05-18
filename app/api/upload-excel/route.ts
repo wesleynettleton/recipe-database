@@ -178,6 +178,7 @@ export async function POST(request: NextRequest) {
         parseResult = {
           ingredients: ingredientsResult.ingredients,
           allergies: [],
+          allergyProductCodesInSheet: [],
           errors: ingredientsResult.errors
         };
       }
@@ -194,6 +195,7 @@ export async function POST(request: NextRequest) {
     console.log('Parse result:', {
       ingredientsCount: parseResult.ingredients.length,
       allergiesCount: parseResult.allergies.length,
+      allergyProductCodesInSheet: parseResult.allergyProductCodesInSheet.length,
       errors: parseResult.errors
     });
 
@@ -271,26 +273,52 @@ export async function POST(request: NextRequest) {
       console.log('Ingredients inserted successfully');
     }
     
-    if (allergiesBuffer && parseResult.allergies.length > 0) {
-      console.log(`Inserting ${parseResult.allergies.length} allergies...`);
-      
-      // Process in smaller batches to work within 60s limit
-      const batchSize = 50; // Reduced from 100
-      for (let i = 0; i < parseResult.allergies.length; i += batchSize) {
-        const batch = parseResult.allergies.slice(i, i + batchSize);
-        console.log(`Processing allergy batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(parseResult.allergies.length/batchSize)}`);
-        try {
-          await db.insertAllergies(batch);
-        } catch (error) {
-          console.error(`Error inserting allergy batch ${Math.floor(i/batchSize) + 1}:`, error);
-          return NextResponse.json({
-            success: false,
-            message: 'Failed to insert allergies into database',
-            details: error instanceof Error ? error.message : 'Database insertion error'
-          }, { status: 500 });
+    if (allergiesBuffer && parseResult.allergyProductCodesInSheet.length > 0) {
+      // Replace allergies for every product on the sheet so cleared cells / removed allergens
+      // do not leave stale rows (previously we only upserted Y/N/May cells).
+      console.log(
+        `Replacing allergies for ${parseResult.allergyProductCodesInSheet.length} product code(s) from sheet; ${parseResult.allergies.length} parsed cell value(s)...`
+      );
+      try {
+        await db.deleteAllergiesForProductCodes(parseResult.allergyProductCodesInSheet);
+      } catch (error) {
+        console.error('Error clearing existing allergies before import:', error);
+        return NextResponse.json({
+          success: false,
+          message: 'Failed to clear existing allergies before import',
+          details: error instanceof Error ? error.message : 'Database error'
+        }, { status: 500 });
+      }
+
+      if (parseResult.allergies.length > 0) {
+        const batchSize = 50;
+        for (let i = 0; i < parseResult.allergies.length; i += batchSize) {
+          const batch = parseResult.allergies.slice(i, i + batchSize);
+          console.log(`Processing allergy batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(parseResult.allergies.length / batchSize)}`);
+          try {
+            await db.insertAllergies(batch);
+          } catch (error) {
+            console.error(`Error inserting allergy batch ${Math.floor(i / batchSize) + 1}:`, error);
+            return NextResponse.json({
+              success: false,
+              message: 'Failed to insert allergies into database',
+              details: error instanceof Error ? error.message : 'Database insertion error'
+            }, { status: 500 });
+          }
         }
       }
-      console.log('Allergies inserted successfully');
+
+      try {
+        await db.syncSnapshotsForProductCodes(parseResult.allergyProductCodesInSheet);
+      } catch (error) {
+        console.error('Error syncing recipe ingredient snapshots after allergy import:', error);
+        return NextResponse.json({
+          success: false,
+          message: 'Allergies saved but failed to refresh recipes that use these ingredients',
+          details: error instanceof Error ? error.message : 'Database error'
+        }, { status: 500 });
+      }
+      console.log('Allergies import completed successfully');
     }
 
     console.log('Upload completed successfully');
@@ -301,7 +329,8 @@ export async function POST(request: NextRequest) {
         ? 'Prices updated successfully' 
         : 'Excel files processed successfully',
       ingredientsProcessed: parseResult.ingredients.length,
-      allergiesProcessed: allergiesBuffer ? parseResult.allergies.length : 0
+      allergiesProcessed: allergiesBuffer ? parseResult.allergies.length : 0,
+      allergyProductCodesRefreshed: allergiesBuffer ? parseResult.allergyProductCodesInSheet.length : 0
     });
 
   } catch (error) {

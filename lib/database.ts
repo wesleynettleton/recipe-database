@@ -187,6 +187,25 @@ export class DatabaseConnection {
     }
   }
 
+  /** Remove all allergy rows for these product codes (used before a full allergy-sheet re-import). */
+  async deleteAllergiesForProductCodes(productCodes: string[]): Promise<void> {
+    const unique = [...new Set(productCodes.map((c) => c.trim()).filter(Boolean))];
+    if (unique.length === 0) return;
+    await this.query('DELETE FROM allergies WHERE productcode = ANY($1)', [unique]);
+  }
+
+  /** Refresh recipe_ingredients snapshots for codes that exist as ingredients. */
+  async syncSnapshotsForProductCodes(productCodes: string[]): Promise<void> {
+    const unique = [...new Set(productCodes.map((c) => c.trim()).filter(Boolean))];
+    if (unique.length === 0) return;
+    const res = await this.query(
+      'SELECT productcode FROM ingredients WHERE productcode = ANY($1)',
+      [unique]
+    );
+    if (res.rows.length === 0) return;
+    await this.syncRecipeIngredientSnapshots(res.rows.map((r) => ({ productCode: r.productcode })));
+  }
+
   // Get all recipes
   async getAllRecipes(): Promise<Recipe[]> {
     const result = await this.query('SELECT id, name, code, servings, totalcost, costperserving, created_at FROM recipes ORDER BY name');

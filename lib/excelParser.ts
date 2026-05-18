@@ -4,6 +4,8 @@ import { Ingredient, Allergy } from './types';
 export interface ParsedExcelData {
   ingredients: Omit<Ingredient, 'id' | 'createdAt' | 'updatedAt'>[];
   allergies: Omit<Allergy, 'id' | 'createdAt' | 'updatedAt'>[];
+  /** Every product code that appears on the allergies sheet (even if all allergy cells are blank). */
+  allergyProductCodesInSheet: string[];
   errors: string[];
 }
 
@@ -130,10 +132,12 @@ export function parseHoldsworthPricesExcel(buffer: Buffer): {
 export function parseHoldsworthAllergiesExcel(buffer: Buffer): { 
   allergies: Omit<Allergy, 'id' | 'createdAt' | 'updatedAt'>[], 
   errors: string[],
-  skipped: number
+  skipped: number,
+  productCodesInSheet: string[],
 } {
   const errors: string[] = [];
   const allergies: Omit<Allergy, 'id' | 'createdAt' | 'updatedAt'>[] = [];
+  const productCodesInSheetSet = new Set<string>();
   let skipped = 0;
 
   try {
@@ -144,7 +148,7 @@ export function parseHoldsworthAllergiesExcel(buffer: Buffer): {
 
     if (!jsonData || jsonData.length < 2) {
       errors.push('Excel file appears to be empty or missing data rows');
-      return { allergies, errors, skipped };
+      return { allergies, errors, skipped, productCodesInSheet: [] };
     }
 
     // Headers: ['Code', 'Description', 'Celery', 'Gluten', 'Crustaceans', 'Milk', etc.]
@@ -155,7 +159,7 @@ export function parseHoldsworthAllergiesExcel(buffer: Buffer): {
     
     if (codeIndex === -1) {
       errors.push(`Missing required Code column. Found: ${headers.join(', ')}`);
-      return { allergies, errors, skipped };
+      return { allergies, errors, skipped, productCodesInSheet: [] };
     }
 
     // Get allergy column indices (skip Code and Description columns)
@@ -185,6 +189,8 @@ export function parseHoldsworthAllergiesExcel(buffer: Buffer): {
         skipped++;
         continue;
       }
+
+      productCodesInSheetSet.add(productCode);
 
       // Check each allergy column
       for (const allergyCol of allergyColumns) {
@@ -218,7 +224,7 @@ export function parseHoldsworthAllergiesExcel(buffer: Buffer): {
     errors.push(`Failed to parse Excel file: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 
-  return { allergies, errors, skipped };
+  return { allergies, errors, skipped, productCodesInSheet: [...productCodesInSheetSet] };
 }
 
 // Generic fallback parsers (keeping for compatibility)
@@ -238,11 +244,12 @@ export function parseIngredientsExcel(buffer: Buffer): {
 
 export function parseAllergiesExcel(buffer: Buffer): { 
   allergies: Omit<Allergy, 'id' | 'createdAt' | 'updatedAt'>[], 
-  errors: string[] 
+  errors: string[],
+  productCodesInSheet: string[],
 } {
   // Try Holdsworth format first
   const result = parseHoldsworthAllergiesExcel(buffer);
-  return { allergies: result.allergies, errors: result.errors };
+  return { allergies: result.allergies, errors: result.errors, productCodesInSheet: result.productCodesInSheet };
 }
 
 export function parseExcelFiles(
@@ -266,6 +273,7 @@ export function parseExcelFiles(
   return {
     ingredients: ingredientsResult.ingredients,
     allergies: allergiesResult.allergies,
+    allergyProductCodesInSheet: allergiesResult.productCodesInSheet,
     errors
   };
-} 
+}
