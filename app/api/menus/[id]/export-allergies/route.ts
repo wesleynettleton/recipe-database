@@ -159,12 +159,10 @@ export async function GET(request: Request, { params }: { params: { id: string }
     // Process recipes for the "Daily Options" section
     if (dayRowMapping.dailyOptions && menu.dailyOptions) {
         let currentRow = dayRowMapping.dailyOptions + 1; // Start below the "Daily Options" header
-        const dailyRecipes = [
-            menu.dailyOptions.option1,
-            menu.dailyOptions.option2,
-            menu.dailyOptions.option3,
-            menu.dailyOptions.option4,
-        ].filter(Boolean);
+        const dailyRecipes = Array.from(
+            { length: 10 },
+            (_, index) => menu.dailyOptions[`option${index + 1}`]
+        ).filter(Boolean);
         
         for(const recipe of dailyRecipes) {
             await writeRecipeRow(recipe, currentRow);

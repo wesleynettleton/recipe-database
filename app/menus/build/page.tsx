@@ -23,6 +23,12 @@ interface DailyOptions {
   option2: Recipe | null
   option3: Recipe | null
   option4: Recipe | null
+  option5: Recipe | null
+  option6: Recipe | null
+  option7: Recipe | null
+  option8: Recipe | null
+  option9: Recipe | null
+  option10: Recipe | null
 }
 
 interface WeeklyMenu {
@@ -53,6 +59,12 @@ const initialWeeklyMenu: WeeklyMenu = {
     option2: null,
     option3: null,
     option4: null,
+    option5: null,
+    option6: null,
+    option7: null,
+    option8: null,
+    option9: null,
+    option10: null,
   },
 }
 
@@ -186,7 +198,7 @@ function BuildMenuPageComponent() {
   const [success, setSuccess] = useState<string | null>(null)
 
   const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'] as const
-  const dailyOptionKeys = ['option1', 'option2', 'option3', 'option4'] as const
+  const dailyOptionKeys = ['option1', 'option2', 'option3', 'option4', 'option5', 'option6', 'option7', 'option8', 'option9', 'option10'] as const
 
   const loadMenuForDate = async (date: string) => {
     setIsLoading(true)

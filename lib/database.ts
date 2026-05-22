@@ -485,12 +485,12 @@ export class DatabaseConnection {
     // Structure the data for the daily_options JSONB column
     const dailyOptions = weeklyMenu.dailyOptions;
     if (dailyOptions) {
-      menuToSave.daily_options = {
-        option1: getRecipeId(dailyOptions.option1),
-        option2: getRecipeId(dailyOptions.option2),
-        option3: getRecipeId(dailyOptions.option3),
-        option4: getRecipeId(dailyOptions.option4),
-      };
+      menuToSave.daily_options = Object.fromEntries(
+        Array.from({ length: 10 }, (_, index) => {
+          const key = `option${index + 1}`;
+          return [key, getRecipeId(dailyOptions[key])];
+        })
+      );
     } else {
       menuToSave.daily_options = null;
     }
@@ -555,12 +555,14 @@ export class DatabaseConnection {
     // Helper to process daily options from JSON
     const processDailyOptions = async (optionsData: any) => {
         if (!optionsData) return null;
-        return {
-            option1: await getRecipeDetails(optionsData.option1),
-            option2: await getRecipeDetails(optionsData.option2),
-            option3: await getRecipeDetails(optionsData.option3),
-            option4: await getRecipeDetails(optionsData.option4),
-        };
+        return Object.fromEntries(
+          await Promise.all(
+            Array.from({ length: 10 }, async (_, index) => {
+              const key = `option${index + 1}`;
+              return [key, await getRecipeDetails(optionsData[key])];
+            })
+          )
+        );
     };
 
     // Map snake_case to camelCase and expand the JSONB columns
@@ -757,12 +759,14 @@ export class DatabaseConnection {
     const processDailyOptions = async (optionsData: any) => {
         if (!optionsData) return null;
         const data = typeof optionsData === 'string' ? JSON.parse(optionsData) : optionsData;
-        return {
-            option1: await getRecipeDetails(data.option1),
-            option2: await getRecipeDetails(data.option2),
-            option3: await getRecipeDetails(data.option3),
-            option4: await getRecipeDetails(data.option4),
-        };
+        return Object.fromEntries(
+          await Promise.all(
+            Array.from({ length: 10 }, async (_, index) => {
+              const key = `option${index + 1}`;
+              return [key, await getRecipeDetails(data[key])];
+            })
+          )
+        );
     };
     
     // Map snake_case to camelCase and expand the JSONB columns
@@ -813,12 +817,14 @@ export class DatabaseConnection {
     const processDailyOptions = async (optionsData: any) => {
         if (!optionsData) return null;
         const data = typeof optionsData === 'string' ? JSON.parse(optionsData) : optionsData;
-        return {
-            option1: await getRecipeDetails(data.option1),
-            option2: await getRecipeDetails(data.option2),
-            option3: await getRecipeDetails(data.option3),
-            option4: await getRecipeDetails(data.option4),
-        };
+        return Object.fromEntries(
+          await Promise.all(
+            Array.from({ length: 10 }, async (_, index) => {
+              const key = `option${index + 1}`;
+              return [key, await getRecipeDetails(data[key])];
+            })
+          )
+        );
     };
     
     // Map snake_case to camelCase and expand the JSONB columns

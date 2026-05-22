@@ -23,10 +23,7 @@ interface MenuDay {
 }
 
 interface DailyOptions {
-  option1: RecipeWithCosts | null;
-  option2: RecipeWithCosts | null;
-  option3: RecipeWithCosts | null;
-  option4: RecipeWithCosts | null;
+  [key: string]: RecipeWithCosts | null;
 }
 
 interface MenuWithCosts {
@@ -123,10 +120,12 @@ export default function MenuCostingDetailPage({ params }: { params: { id: string
           <h3 className="text-xl font-semibold text-gray-900">Daily Options</h3>
         </div>
 
-        {renderRecipeWithCost(dailyOptions.option1, 'Option 1')}
-        {renderRecipeWithCost(dailyOptions.option2, 'Option 2')}
-        {renderRecipeWithCost(dailyOptions.option3, 'Option 3')}
-        {renderRecipeWithCost(dailyOptions.option4, 'Option 4')}
+        {Object.entries(dailyOptions)
+          .sort(([a], [b]) => Number(a.replace('option', '')) - Number(b.replace('option', '')))
+          .map(([key, recipe]) => {
+            const optionNumber = key.replace('option', '');
+            return renderRecipeWithCost(recipe, `Option ${optionNumber}`);
+          })}
       </div>
     );
   };
