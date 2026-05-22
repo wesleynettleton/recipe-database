@@ -25,6 +25,7 @@ interface DailyMenu {
   lunchOption2: Recipe | null;
   lunchOption3: Recipe | null;
   servedWith123: Recipe | null;
+  baguetteOption: Recipe | null;
   dessertOptionD: Recipe | null;
 }
 
@@ -157,6 +158,7 @@ const DayCard = ({ day, menu }: { day: string; menu: DailyMenu | null }) => {
         {renderRecipe(menu.lunchOption2, 'Lunch 2')}
         {renderRecipe(menu.lunchOption3, 'Lunch 3')}
         {renderRecipe(menu.servedWith123, 'Served With')}
+        {renderRecipe(menu.baguetteOption, 'Baguette')}
         {renderRecipe(menu.dessertOptionD, 'Dessert')}
       </div>
     </div>

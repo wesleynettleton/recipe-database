@@ -146,6 +146,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
                 dayData.lunchOption2,
                 dayData.lunchOption3,
                 dayData.servedWith123,
+                dayData.baguetteOption,
                 dayData.dessertOptionD,
             ].filter(Boolean);
 

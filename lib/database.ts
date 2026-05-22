@@ -544,6 +544,7 @@ export class DatabaseConnection {
           lunchOption2: getRecipeId(dayMenu.lunchOption2),
           lunchOption3: getRecipeId(dayMenu.lunchOption3),
           servedWith123: getRecipeId(dayMenu.servedWith123),
+          baguetteOption: getRecipeId(dayMenu.baguetteOption),
           dessertOptionD: getRecipeId(dayMenu.dessertOptionD),
         };
       } else {
@@ -617,6 +618,7 @@ export class DatabaseConnection {
             lunchOption2: await getRecipeDetails(dayData.lunchOption2),
             lunchOption3: await getRecipeDetails(dayData.lunchOption3),
             servedWith123: await getRecipeDetails(dayData.servedWith123),
+            baguetteOption: await getRecipeDetails(dayData.baguetteOption),
             dessertOptionD: await getRecipeDetails(dayData.dessertOptionD),
         };
     };
@@ -820,6 +822,7 @@ export class DatabaseConnection {
             lunchOption2: await getRecipeDetails(data.lunchOption2),
             lunchOption3: await getRecipeDetails(data.lunchOption3),
             servedWith123: await getRecipeDetails(data.servedWith123),
+            baguetteOption: await getRecipeDetails(data.baguetteOption),
             dessertOptionD: await getRecipeDetails(data.dessertOptionD),
         };
     };
@@ -878,6 +881,7 @@ export class DatabaseConnection {
             lunchOption2: await getRecipeDetails(data.lunchOption2),
             lunchOption3: await getRecipeDetails(data.lunchOption3),
             servedWith123: await getRecipeDetails(data.servedWith123),
+            baguetteOption: await getRecipeDetails(data.baguetteOption),
             dessertOptionD: await getRecipeDetails(data.dessertOptionD),
         };
     };

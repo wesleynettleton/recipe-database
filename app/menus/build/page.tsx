@@ -11,6 +11,7 @@ interface DayMenu {
   lunchOption2: Recipe | null
   lunchOption3: Recipe | null
   servedWith123: Recipe | null
+  baguetteOption: Recipe | null
   dessertOptionD: Recipe | null
 }
 
@@ -30,6 +31,7 @@ const initialDayMenu: DayMenu = {
   lunchOption2: null,
   lunchOption3: null,
   servedWith123: null,
+  baguetteOption: null,
   dessertOptionD: null,
 }
 
@@ -232,6 +234,7 @@ function BuildMenuPageComponent() {
               <AutocompleteRecipeSelector label="Lunch Option 2" value={weeklyMenu[day].lunchOption2} onChange={(r) => updateDayMenu(day, 'lunchOption2', r)} placeholder="Search for a recipe..." />
               <AutocompleteRecipeSelector label="Lunch Option 3" value={weeklyMenu[day].lunchOption3} onChange={(r) => updateDayMenu(day, 'lunchOption3', r)} placeholder="Search for a recipe..." />
               <AutocompleteRecipeSelector label="Served With" value={weeklyMenu[day].servedWith123} onChange={(r) => updateDayMenu(day, 'servedWith123', r)} placeholder="Search for a recipe..." />
+              <AutocompleteRecipeSelector label="Baguette" value={weeklyMenu[day].baguetteOption} onChange={(r) => updateDayMenu(day, 'baguetteOption', r)} placeholder="Search for a recipe..." />
               <AutocompleteRecipeSelector label="Dessert" value={weeklyMenu[day].dessertOptionD} onChange={(r) => updateDayMenu(day, 'dessertOptionD', r)} placeholder="Search for a recipe..." />
             </div>
           </div>

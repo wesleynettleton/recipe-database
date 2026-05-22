@@ -19,6 +19,7 @@ interface MenuDay {
   lunchOption2: RecipeWithCosts | null;
   lunchOption3: RecipeWithCosts | null;
   servedWith123: RecipeWithCosts | null;
+  baguetteOption: RecipeWithCosts | null;
   dessertOptionD: RecipeWithCosts | null;
 }
 
@@ -106,6 +107,7 @@ export default function MenuCostingDetailPage({ params }: { params: { id: string
         {renderRecipeWithCost(dayData.lunchOption2, 'Lunch Option 2')}
         {renderRecipeWithCost(dayData.lunchOption3, 'Lunch Option 3')}
         {renderRecipeWithCost(dayData.servedWith123, 'Served With')}
+        {renderRecipeWithCost(dayData.baguetteOption, 'Baguette')}
         {renderRecipeWithCost(dayData.dessertOptionD, 'Dessert')}
       </div>
     );

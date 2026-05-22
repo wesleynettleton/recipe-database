@@ -100,6 +100,7 @@ const MenuCoverPage = ({ menu, menuDate }: { menu: any; menuDate: string }) => {
                     renderCoverRow('Lunch Option 2', dayData.lunchOption2),
                     renderCoverRow('Lunch Option 3', dayData.lunchOption3),
                     renderCoverRow('Served With', dayData.servedWith123),
+                    renderCoverRow('Baguette', dayData.baguetteOption),
                     renderCoverRow('Dessert', dayData.dessertOptionD),
                 ].filter(Boolean) : [];
 
