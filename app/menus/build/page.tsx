@@ -1,14 +1,10 @@
 'use client'
 
-import React, { useState, useEffect, Suspense, useRef } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-
-interface Recipe {
-  id: number
-  name: string
-  code: string
-}
+import AutocompleteRecipeSelector, { RecipeStub as Recipe } from '../../components/AutocompleteRecipeSelector'
+import { dailyOptionKeys, DailyOptionKey } from '../../../lib/menuDailyOptions'
 
 interface DayMenu {
   lunchOption1: Recipe | null
@@ -18,18 +14,7 @@ interface DayMenu {
   dessertOptionD: Recipe | null
 }
 
-interface DailyOptions {
-  option1: Recipe | null
-  option2: Recipe | null
-  option3: Recipe | null
-  option4: Recipe | null
-  option5: Recipe | null
-  option6: Recipe | null
-  option7: Recipe | null
-  option8: Recipe | null
-  option9: Recipe | null
-  option10: Recipe | null
-}
+type DailyOptions = Record<DailyOptionKey, Recipe | null>
 
 interface WeeklyMenu {
   monday: DayMenu
@@ -54,134 +39,26 @@ const initialWeeklyMenu: WeeklyMenu = {
   wednesday: { ...initialDayMenu },
   thursday: { ...initialDayMenu },
   friday: { ...initialDayMenu },
-  dailyOptions: {
-    option1: null,
-    option2: null,
-    option3: null,
-    option4: null,
-    option5: null,
-    option6: null,
-    option7: null,
-    option8: null,
-    option9: null,
-    option10: null,
-  },
+  dailyOptions: Object.fromEntries(dailyOptionKeys().map((key) => [key, null])) as DailyOptions,
 }
 
-function AutocompleteRecipeSelector({ 
-  value, 
-  onChange, 
-  placeholder,
-  label 
-}: { 
-  value: Recipe | null
-  onChange: (recipe: Recipe | null) => void
-  placeholder: string
-  label: string
-}) {
-  const [searchTerm, setSearchTerm] = useState('')
-  const [searchResults, setSearchResults] = useState<Recipe[]>([])
-  const [showDropdown, setShowDropdown] = useState(false)
-  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const dropdownRef = useRef<HTMLDivElement>(null)
-  
-  useEffect(() => {
-    setSearchTerm(value?.name || '')
-  }, [value])
-
-  useEffect(() => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current)
-    }
-
-    if (searchTerm.trim().length < 2) {
-      setSearchResults([])
-      setShowDropdown(false)
-      return
-    }
-
-    if (value && value.name === searchTerm) {
-        setShowDropdown(false);
-        return;
-    }
-
-    searchTimeoutRef.current = setTimeout(async () => {
-      try {
-        const response = await fetch(`/api/recipes?q=${encodeURIComponent(searchTerm)}`)
-        const data = await response.json()
-        if (data.success) {
-          const results = data.recipes || []
-          setSearchResults(results)
-          setShowDropdown(results.length > 0)
-        } else {
-          setSearchResults([])
-          setShowDropdown(false)
-        }
-      } catch (error) {
-        console.error('Error searching recipes:', error)
-        setSearchResults([])
-        setShowDropdown(false)
-      }
-    }, 300)
-
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current)
-      }
-    }
-  }, [searchTerm, value])
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowDropdown(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
-  const handleSelectRecipe = (recipe: Recipe) => {
-    setSearchTerm(recipe.name)
-    setShowDropdown(false)
-    onChange(recipe)
+async function fetchDefaultDailyOptions(): Promise<DailyOptions> {
+  try {
+    const response = await fetch('/api/settings/daily-options')
+    if (!response.ok) return initialWeeklyMenu.dailyOptions
+    const data = await response.json()
+    if (!data.success || !data.dailyOptions) return initialWeeklyMenu.dailyOptions
+    return { ...initialWeeklyMenu.dailyOptions, ...data.dailyOptions } as DailyOptions
+  } catch {
+    return initialWeeklyMenu.dailyOptions
   }
+}
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const term = e.target.value
-    setSearchTerm(term)
-    if (term === '') {
-      onChange(null)
-    }
+function weeklyMenuWithDefaultDailyOptions(defaults: DailyOptions): WeeklyMenu {
+  return {
+    ...initialWeeklyMenu,
+    dailyOptions: defaults,
   }
-
-  return (
-    <div className="flex items-center space-x-3">
-      <label className="text-sm font-medium text-gray-700 w-32 text-right">{label}:</label>
-      <div className="relative flex-1" ref={dropdownRef}>
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={handleInputChange}
-          onFocus={() => {
-            if (searchResults.length > 0) setShowDropdown(true)
-          }}
-          placeholder={placeholder}
-          className="w-full p-2 border border-gray-300 rounded-md text-sm text-black focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        />
-        {showDropdown && searchResults.length > 0 && (
-          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-            {searchResults.map(recipe => (
-              <div key={recipe.id} onClick={() => handleSelectRecipe(recipe)} className="px-3 py-2 cursor-pointer hover:bg-gray-100">
-                <div className="font-medium text-gray-900">{recipe.name}</div>
-                <div className="text-sm text-gray-500">{recipe.code}</div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  )
 }
 
 function BuildMenuPageComponent() {
@@ -198,7 +75,7 @@ function BuildMenuPageComponent() {
   const [success, setSuccess] = useState<string | null>(null)
 
   const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'] as const
-  const dailyOptionKeys = ['option1', 'option2', 'option3', 'option4', 'option5', 'option6', 'option7', 'option8', 'option9', 'option10'] as const
+  const dailyOptionKeysList = dailyOptionKeys()
 
   const loadMenuForDate = async (date: string) => {
     setIsLoading(true)
@@ -214,20 +91,23 @@ function BuildMenuPageComponent() {
           setWeeklyMenu(data.menu.weeklyMenu || initialWeeklyMenu)
           console.log('[Menu Builder] Loaded menu:', data.menu)
         } else {
+          const defaults = await fetchDefaultDailyOptions()
           setMenuName('')
-          setWeeklyMenu(initialWeeklyMenu)
-          console.log('[Menu Builder] No menu found, resetting form')
+          setWeeklyMenu(weeklyMenuWithDefaultDailyOptions(defaults))
+          console.log('[Menu Builder] No menu found, applied default daily options')
         }
       } else {
         setError('Failed to load menu for the selected date.')
         setMenuName('')
-        setWeeklyMenu(initialWeeklyMenu)
+        const defaults = await fetchDefaultDailyOptions()
+        setWeeklyMenu(weeklyMenuWithDefaultDailyOptions(defaults))
         console.log('[Menu Builder] API response not ok')
       }
     } catch (err) {
       setError('An error occurred while loading menu data.')
       setMenuName('')
-      setWeeklyMenu(initialWeeklyMenu)
+      const defaults = await fetchDefaultDailyOptions()
+      setWeeklyMenu(weeklyMenuWithDefaultDailyOptions(defaults))
       console.error('[Menu Builder] Error loading menu:', err)
     } finally {
       setIsLoading(false)
@@ -241,12 +121,16 @@ function BuildMenuPageComponent() {
       loadMenuForDate(dateParam);
     } else {
       setMenuName('');
-      setWeeklyMenu(initialWeeklyMenu);
       const today = new Date();
       const monday = new Date(today);
       monday.setDate(today.getDate() - (today.getDay() === 0 ? 6 : today.getDay() - 1));
-      setMenuDate(monday.toISOString().split('T')[0]);
-      setIsLoading(false);
+      const mondayStr = monday.toISOString().split('T')[0];
+      setMenuDate(mondayStr);
+      fetchDefaultDailyOptions().then((defaults) => {
+        setWeeklyMenu(weeklyMenuWithDefaultDailyOptions(defaults));
+        setIsLoading(false);
+      });
+      return;
     }
   }, [searchParams]);
 
@@ -356,7 +240,7 @@ function BuildMenuPageComponent() {
         <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
           <h2 className="text-xl font-semibold text-gray-800 capitalize mb-4">Daily Options</h2>
           <div className="space-y-4">
-            {dailyOptionKeys.map((key, index) => (
+            {dailyOptionKeysList.map((key, index) => (
               <AutocompleteRecipeSelector 
                 key={key}
                 label={`Daily Option ${index + 1}`} 

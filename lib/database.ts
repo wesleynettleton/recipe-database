@@ -1,5 +1,12 @@
 import { Pool } from 'pg';
 import { Ingredient, IngredientWithAllergies, Allergy, Recipe, RecipeIngredient, RecipeWithIngredients, Menu } from './types';
+import {
+  DEFAULT_DAILY_OPTIONS_KEY,
+  DailyOptionKey,
+  buildEmptyDailyOptionIds,
+  dailyOptionKeys,
+  dailyOptionsToRecipeIds,
+} from './menuDailyOptions';
 
 export class DatabaseConnection {
   private pool: Pool;
@@ -453,6 +460,68 @@ export class DatabaseConnection {
     });
 
     return result;
+  }
+
+  private async ensureAppSettingsTable(): Promise<void> {
+    await this.query(`
+      CREATE TABLE IF NOT EXISTS app_settings (
+        key VARCHAR(255) PRIMARY KEY,
+        value JSONB NOT NULL DEFAULT '{}'::jsonb,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+  }
+
+  async getAppSetting(key: string): Promise<unknown | null> {
+    await this.ensureAppSettingsTable();
+    const result = await this.query('SELECT value FROM app_settings WHERE key = $1', [key]);
+    if (result.rows.length === 0) return null;
+    return result.rows[0].value;
+  }
+
+  async setAppSetting(key: string, value: unknown): Promise<void> {
+    await this.ensureAppSettingsTable();
+    await this.query(
+      `
+      INSERT INTO app_settings (key, value, updated_at)
+      VALUES ($1, $2::jsonb, CURRENT_TIMESTAMP)
+      ON CONFLICT (key) DO UPDATE SET
+        value = EXCLUDED.value,
+        updated_at = CURRENT_TIMESTAMP
+      `,
+      [key, JSON.stringify(value)]
+    );
+  }
+
+  /** Recipe stubs (id, name, code) for each default daily option slot. */
+  async getDefaultDailyOptions(): Promise<Record<string, Recipe | null>> {
+    const stored = (await this.getAppSetting(DEFAULT_DAILY_OPTIONS_KEY)) as Record<
+      string,
+      number | null
+    > | null;
+    const ids: Record<DailyOptionKey, number | null> = {
+      ...buildEmptyDailyOptionIds(),
+      ...(stored || {}),
+    };
+
+    const getRecipeDetails = async (id: number | null): Promise<Recipe | null> => {
+      if (!id) return null;
+      const recipeResult = await this.query('SELECT id, name, code FROM recipes WHERE id = $1', [id]);
+      return recipeResult.rows[0] || null;
+    };
+
+    return Object.fromEntries(
+      await Promise.all(
+        dailyOptionKeys().map(async (key) => [key, await getRecipeDetails(ids[key] ?? null)])
+      )
+    );
+  }
+
+  async saveDefaultDailyOptions(
+    dailyOptions: Record<string, { id?: number } | null> | null | undefined
+  ): Promise<void> {
+    await this.setAppSetting(DEFAULT_DAILY_OPTIONS_KEY, dailyOptionsToRecipeIds(dailyOptions));
   }
 
   // Save menu
