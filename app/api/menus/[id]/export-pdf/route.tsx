@@ -11,39 +11,47 @@ const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
 
 const coverStyles = StyleSheet.create({
     page: {
-        padding: 40,
+        padding: 24,
         fontFamily: 'Helvetica',
-        fontSize: 10,
+        fontSize: 8,
         color: '#000000',
         backgroundColor: '#ffffff',
     },
     title: {
-        fontSize: 24,
+        fontSize: 18,
         fontFamily: 'Helvetica-Bold',
-        marginBottom: 6,
+        marginBottom: 4,
         color: '#1a1a1a',
     },
     subtitle: {
-        fontSize: 12,
-        marginBottom: 24,
+        fontSize: 9,
+        marginBottom: 10,
         color: '#4a4a4a',
     },
+    dayGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+    },
     section: {
-        marginBottom: 14,
-        paddingBottom: 10,
+        marginBottom: 7,
+        paddingBottom: 5,
         borderBottomWidth: 1,
         borderBottomColor: '#e0e0e0',
     },
+    daySection: {
+        width: '48%',
+    },
     sectionTitle: {
-        fontSize: 14,
+        fontSize: 10,
         fontFamily: 'Helvetica-Bold',
-        marginBottom: 8,
+        marginBottom: 4,
         textTransform: 'capitalize',
         color: '#1a1a1a',
     },
     recipeRow: {
         flexDirection: 'row',
-        marginBottom: 4,
+        marginBottom: 2,
     },
     mealLabel: {
         width: '28%',
@@ -57,13 +65,20 @@ const coverStyles = StyleSheet.create({
         fontStyle: 'italic',
         color: '#777777',
     },
+    dailyOptionsGrid: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    dailyOptionsColumn: {
+        width: '48%',
+    },
     footer: {
         position: 'absolute',
-        bottom: 20,
-        left: 40,
-        right: 40,
+        bottom: 12,
+        left: 24,
+        right: 24,
         textAlign: 'center',
-        fontSize: 8,
+        fontSize: 6,
         color: '#777777',
     },
 });
@@ -93,32 +108,45 @@ const MenuCoverPage = ({ menu, menuDate }: { menu: any; menuDate: string }) => {
             <Text style={coverStyles.title}>{menu.name}</Text>
             <Text style={coverStyles.subtitle}>Recipe Pack - Week commencing {formattedDate}</Text>
 
-            {DAYS.map(day => {
-                const dayData = menu[day];
-                const rows = dayData ? [
-                    renderCoverRow('Lunch Option 1', dayData.lunchOption1),
-                    renderCoverRow('Lunch Option 2', dayData.lunchOption2),
-                    renderCoverRow('Lunch Option 3', dayData.lunchOption3),
-                    renderCoverRow('Served With', dayData.servedWith123),
-                    renderCoverRow('Baguette', dayData.baguetteOption),
-                    renderCoverRow('Dessert', dayData.dessertOptionD),
-                ].filter(Boolean) : [];
+            <View style={coverStyles.dayGrid}>
+                {DAYS.map(day => {
+                    const dayData = menu[day];
+                    const rows = dayData ? [
+                        renderCoverRow('Lunch 1', dayData.lunchOption1),
+                        renderCoverRow('Lunch 2', dayData.lunchOption2),
+                        renderCoverRow('Lunch 3', dayData.lunchOption3),
+                        renderCoverRow('Served With', dayData.servedWith123),
+                        renderCoverRow('Baguette', dayData.baguetteOption),
+                        renderCoverRow('Dessert', dayData.dessertOptionD),
+                    ].filter(Boolean) : [];
 
-                return (
-                    <View key={day} style={coverStyles.section}>
-                        <Text style={coverStyles.sectionTitle}>{day}</Text>
-                        {rows.length > 0 ? rows : <Text style={coverStyles.emptyText}>No recipes selected</Text>}
-                    </View>
-                );
-            })}
+                    return (
+                        <View key={day} style={[coverStyles.section, coverStyles.daySection]}>
+                            <Text style={coverStyles.sectionTitle}>{day}</Text>
+                            {rows.length > 0 ? rows : <Text style={coverStyles.emptyText}>No recipes selected</Text>}
+                        </View>
+                    );
+                })}
+            </View>
 
             {menu.dailyOptions && (
                 <View style={coverStyles.section}>
                     <Text style={coverStyles.sectionTitle}>Daily Options</Text>
-                    {Array.from({ length: 10 }, (_, index) => {
-                        const key = `option${index + 1}`;
-                        return renderCoverRow(`Option ${index + 1}`, menu.dailyOptions[key]);
-                    }).filter(Boolean)}
+                    <View style={coverStyles.dailyOptionsGrid}>
+                        <View style={coverStyles.dailyOptionsColumn}>
+                            {Array.from({ length: 5 }, (_, index) => {
+                                const key = `option${index + 1}`;
+                                return renderCoverRow(`Option ${index + 1}`, menu.dailyOptions[key]);
+                            }).filter(Boolean)}
+                        </View>
+                        <View style={coverStyles.dailyOptionsColumn}>
+                            {Array.from({ length: 5 }, (_, index) => {
+                                const optionNumber = index + 6;
+                                const key = `option${optionNumber}`;
+                                return renderCoverRow(`Option ${optionNumber}`, menu.dailyOptions[key]);
+                            }).filter(Boolean)}
+                        </View>
+                    </View>
                 </View>
             )}
 
