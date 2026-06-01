@@ -11,21 +11,21 @@ const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
 
 const coverStyles = StyleSheet.create({
     page: {
-        padding: 24,
+        padding: 30,
         fontFamily: 'Helvetica',
-        fontSize: 8,
+        fontSize: 9,
         color: '#000000',
         backgroundColor: '#ffffff',
     },
     title: {
-        fontSize: 18,
+        fontSize: 21,
         fontFamily: 'Helvetica-Bold',
         marginBottom: 4,
         color: '#1a1a1a',
     },
     subtitle: {
-        fontSize: 9,
-        marginBottom: 10,
+        fontSize: 10,
+        marginBottom: 16,
         color: '#4a4a4a',
     },
     dayGrid: {
@@ -34,8 +34,8 @@ const coverStyles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     section: {
-        marginBottom: 7,
-        paddingBottom: 5,
+        marginBottom: 10,
+        paddingBottom: 7,
         borderBottomWidth: 1,
         borderBottomColor: '#e0e0e0',
     },
@@ -43,15 +43,15 @@ const coverStyles = StyleSheet.create({
         width: '48%',
     },
     sectionTitle: {
-        fontSize: 10,
+        fontSize: 12,
         fontFamily: 'Helvetica-Bold',
-        marginBottom: 4,
+        marginBottom: 6,
         textTransform: 'capitalize',
         color: '#1a1a1a',
     },
     recipeRow: {
         flexDirection: 'row',
-        marginBottom: 2,
+        marginBottom: 3,
     },
     mealLabel: {
         width: '28%',
@@ -65,20 +65,13 @@ const coverStyles = StyleSheet.create({
         fontStyle: 'italic',
         color: '#777777',
     },
-    dailyOptionsGrid: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    dailyOptionsColumn: {
-        width: '48%',
-    },
     footer: {
         position: 'absolute',
-        bottom: 12,
-        left: 24,
-        right: 24,
+        bottom: 16,
+        left: 30,
+        right: 30,
         textAlign: 'center',
-        fontSize: 6,
+        fontSize: 7,
         color: '#777777',
     },
 });
@@ -132,21 +125,11 @@ const MenuCoverPage = ({ menu, menuDate }: { menu: any; menuDate: string }) => {
             {menu.dailyOptions && (
                 <View style={coverStyles.section}>
                     <Text style={coverStyles.sectionTitle}>Daily Options</Text>
-                    <View style={coverStyles.dailyOptionsGrid}>
-                        <View style={coverStyles.dailyOptionsColumn}>
-                            {Array.from({ length: 5 }, (_, index) => {
-                                const key = `option${index + 1}`;
-                                return renderCoverRow(`Option ${index + 1}`, menu.dailyOptions[key]);
-                            }).filter(Boolean)}
-                        </View>
-                        <View style={coverStyles.dailyOptionsColumn}>
-                            {Array.from({ length: 5 }, (_, index) => {
-                                const optionNumber = index + 6;
-                                const key = `option${optionNumber}`;
-                                return renderCoverRow(`Option ${optionNumber}`, menu.dailyOptions[key]);
-                            }).filter(Boolean)}
-                        </View>
-                    </View>
+                    {Array.from({ length: 10 }, (_, index) => {
+                        const optionNumber = index + 1;
+                        const key = `option${optionNumber}`;
+                        return renderCoverRow(`Option ${optionNumber}`, menu.dailyOptions[key]);
+                    }).filter(Boolean)}
                 </View>
             )}
 
