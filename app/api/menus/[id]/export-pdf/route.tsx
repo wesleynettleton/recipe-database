@@ -211,8 +211,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         pdfStream.pipe(passthrough);
 
         const sanitizedMenuName = menu.name.replace(/[\/\\?%*:|"<>]/g, '-');
-        const formattedDate = format(parseISO(menuDate), 'yyyy-MM-dd');
-        const filename = `${sanitizedMenuName}_${formattedDate}.pdf`;
+        const filename = `${sanitizedMenuName} Recipes.pdf`;
 
         return new NextResponse(passthrough as any, {
             status: 200,
